@@ -1,0 +1,43 @@
+// Read-only Prisma model for Neon Auth's own `neon_auth` schema.
+//
+// This is a DELIBERATELY SEPARATE schema file with its own `datasource`
+// block — never merge it into schema.prisma or add "neon_auth" to that
+// file's `datasource.schemas`. Prisma's migrate/db push diffs every table
+// it finds in every schema listed in a datasource's `schemas` array, and
+// drops anything not declared as a model. `neon_auth` is a whole schema
+// Neon Auth owns (user/session/account/verification/jwks/organization/
+// member/invitation/project_config) — if this file's datasource were ever
+// merged into the app's migrated schema, the very first `db push` would
+// silently drop every one of those tables except the one declared below.
+//
+// Only ever run `prisma generate --schema=prisma/neon-auth.schema.prisma`
+// against this file. NEVER `migrate dev/deploy` or `db push` against it —
+// there is no migration history for it and there never should be.
+
+generator neonAuthClient {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/neon-auth-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["neon_auth"]
+}
+
+model NeonAuthUser {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  role          String?
+  banned        Boolean?
+  banReason     String?
+  banExpires    DateTime?
+
+  @@map("user")
+  @@schema("neon_auth")
+}

@@ -1,0 +1,144 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { PlanGuard } from "./plan.guard";
+import { ForbiddenException } from "@nestjs/common";
+
+const FREE_PLAN = {
+  id: "plan-free",
+  name: "Free",
+  slug: "free",
+  maxProjects: 2,
+  maxStorageMb: 100,
+  maxMembers: 1,
+  maxClients: 3,
+};
+
+const PRO_PLAN = {
+  id: "plan-pro",
+  name: "Pro",
+  slug: "pro",
+  maxProjects: -1,
+  maxStorageMb: 10240,
+  maxMembers: 5,
+  maxClients: -1,
+};
+
+const mockReflector = {
+  getAllAndOverride: vi.fn(() => undefined),
+};
+
+const mockConfig = {
+  get: vi.fn((key: string, defaultValue?: string) => {
+    if (key === "BILLING_ENABLED") return "true";
+    return defaultValue;
+  }),
+};
+
+const mockBillingService = {
+  getSubscription: vi.fn(() =>
+    Promise.resolve({ plan: FREE_PLAN }),
+  ),
+  getUsage: vi.fn(() =>
+    Promise.resolve({ projects: 1, storageMb: 50, members: 1, clients: 1 }),
+  ),
+};
+
+function createMockContext(orgId?: string) {
+  return {
+    getHandler: () => ({}),
+    getClass: () => ({}),
+    switchToHttp: () => ({
+      getRequest: () => ({
+        organization: orgId ? { id: orgId } : undefined,
+      }),
+    }),
+  } as any;
+}
+
+describe("PlanGuard", () => {
+  let guard: PlanGuard;
+
+  beforeEach(() => {
+    mockReflector.getAllAndOverride.mockClear();
+    mockBillingService.getSubscription.mockClear();
+    mockBillingService.getUsage.mockClear();
+    guard = new PlanGuard(
+      mockReflector as any,
+      mockConfig as any,
+      mockBillingService as any,
+    );
+  });
+
+  it("passes when no @PlanLimit decorator", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue(undefined);
+    const result = await guard.canActivate(createMockContext("org-1"));
+    expect(result).toBe(true);
+  });
+
+  it("passes when billing is disabled", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    mockConfig.get.mockImplementation((key: string, defaultValue?: string) => {
+      if (key === "BILLING_ENABLED") return "false";
+      return defaultValue;
+    });
+    const result = await guard.canActivate(createMockContext("org-1"));
+    expect(result).toBe(true);
+    // Restore
+    mockConfig.get.mockImplementation((key: string, defaultValue?: string) => {
+      if (key === "BILLING_ENABLED") return "true";
+      return defaultValue;
+    });
+  });
+
+  it("passes when no org context", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    const result = await guard.canActivate(createMockContext(undefined));
+    expect(result).toBe(true);
+  });
+
+  it("passes when under limit", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    mockBillingService.getSubscription.mockResolvedValue({ plan: FREE_PLAN });
+    mockBillingService.getUsage.mockResolvedValue({
+      projects: 1,
+      storageMb: 50,
+      members: 1,
+      clients: 1,
+    });
+    const result = await guard.canActivate(createMockContext("org-1"));
+    expect(result).toBe(true);
+  });
+
+  it("throws when at limit", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    mockBillingService.getSubscription.mockResolvedValue({ plan: FREE_PLAN });
+    mockBillingService.getUsage.mockResolvedValue({
+      projects: 2,
+      storageMb: 50,
+      members: 1,
+      clients: 1,
+    });
+    await expect(
+      guard.canActivate(createMockContext("org-1")),
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it("passes for unlimited plan", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    mockBillingService.getSubscription.mockResolvedValue({ plan: PRO_PLAN });
+    mockBillingService.getUsage.mockResolvedValue({
+      projects: 100,
+      storageMb: 5000,
+      members: 3,
+      clients: 50,
+    });
+    const result = await guard.canActivate(createMockContext("org-1"));
+    expect(result).toBe(true);
+  });
+
+  it("passes when no subscription found", async () => {
+    mockReflector.getAllAndOverride.mockReturnValue("projects");
+    mockBillingService.getSubscription.mockResolvedValue(null);
+    const result = await guard.canActivate(createMockContext("org-1"));
+    expect(result).toBe(true);
+  });
+});

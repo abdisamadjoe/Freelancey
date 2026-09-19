@@ -1,0 +1,1172 @@
+import * as Sentry from "@sentry/nestjs";
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { InjectPinoLogger, PinoLogger } from "nestjs-pino";
+import { render } from "@react-email/render";
+import {
+  ProjectUpdateEmail,
+  TaskAssignedEmail,
+  InvoiceSentEmail,
+  InvoicePaidEmail,
+  DecisionClosedEmail,
+  DocumentUploadedEmail,
+  DocumentRespondedEmail,
+  DocumentReminderEmail,
+  DocumentSigningTurnEmail,
+} from "@/email";
+import { MailService } from "../mail/mail.service";
+import { PrismaService } from "../prisma/prisma.service";
+import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { InAppNotificationsService } from "./in-app-notifications.service";
+import { PushService } from "./push.service";
+import { calculateInvoiceTotal } from "../payments/invoice-total";
+
+/**
+ * Tab ids on the two project pages in frontend. These mirror the `tabs` arrays
+ * in `(portal)/portal/projects/[id]/page.tsx` and
+ * `(dashboard)/dashboard/projects/[id]/page.tsx`; an id that no longer exists
+ * there is ignored by the page and the visitor lands on Updates.
+ */
+type PortalTab = "updates" | "tasks" | "files" | "invoices";
+type DashboardTab = PortalTab | "time" | "notes";
+
+@Injectable()
+export class NotificationsService {
+  private webUrl: string;
+
+  constructor(
+    private mail: MailService,
+    private prisma: PrismaService,
+    private config: ConfigService,
+    private inApp: InAppNotificationsService,
+    private push: PushService,
+    private neonAuthUsers: NeonAuthUsersRepository,
+    @InjectPinoLogger(NotificationsService.name)
+    private readonly logger: PinoLogger,
+  ) {
+    // Every link here is built as `${webUrl}${path}`, so a configured trailing
+    // slash would produce a double slash in every notification URL.
+    this.webUrl = this.config
+      .get("WEB_URL", "http://localhost:3000")
+      .replace(/\/+$/, "");
+  }
+
+  /**
+   * Build a portal project path, optionally deep-linking to a tab.
+   *
+   * The portal project page renders invoices, files/documents and tasks as
+   * tabs, so a notification about one of those has to say which tab it means
+   * or the recipient lands on Updates and has to go hunting.
+   */
+  private portalProjectPath(projectId: string, tab?: PortalTab): string {
+    const path = `/portal/projects/${projectId}`;
+    return tab ? `${path}?tab=${tab}` : path;
+  }
+
+  /** Dashboard equivalent of {@link portalProjectPath}, for agency recipients. */
+  private dashboardProjectPath(projectId: string, tab?: DashboardTab): string {
+    const path = `/dashboard/projects/${projectId}`;
+    return tab ? `${path}?tab=${tab}` : path;
+  }
+
+  /**
+   * Notify all clients assigned to a project about a new update.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyProjectUpdate(projectId: string, updateContent: string): void {
+    this.sendProjectUpdateEmails(projectId, updateContent).catch((err) => {
+      this.logger.error(
+        { err, projectId },
+        "Failed to send project update notifications",
+      );
+    });
+  }
+
+  /**
+   * Notify all clients assigned to a project about a new task.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyTaskCreated(
+    projectId: string,
+    taskTitle: string,
+    dueDate?: Date,
+  ): void {
+    this.sendTaskCreatedEmails(projectId, taskTitle, dueDate).catch((err) => {
+      this.logger.error(
+        { err, projectId },
+        "Failed to send task created notifications",
+      );
+    });
+  }
+
+  /**
+   * Notify org owners/admins that a client submitted a new request.
+   * Fire-and-forget.
+   */
+  notifyClientRequestCreated(
+    projectId: string,
+    orgId: string,
+    taskTitle: string,
+    clientName: string,
+  ): void {
+    this.sendClientRequestCreatedNotifications(projectId, orgId, taskTitle, clientName).catch(
+      (err) => {
+        this.logger.error({ err, projectId }, "Failed to send client request notifications");
+      },
+    );
+  }
+
+  /**
+   * Notify relevant users when a task's status changes.
+   * Fire-and-forget.
+   */
+  notifyTaskStatusChanged(
+    taskId: string,
+    taskTitle: string,
+    projectId: string,
+    orgId: string,
+    newStatus: string,
+    requestedById: string | null,
+    assigneeId: string | null,
+  ): void {
+    this.sendTaskStatusChangedNotifications(
+      taskId,
+      taskTitle,
+      projectId,
+      orgId,
+      newStatus,
+      requestedById,
+      assigneeId,
+    ).catch((err) => {
+      this.logger.error({ err, taskId }, "Failed to send task status changed notifications");
+    });
+  }
+
+  /**
+   * Notify an agency member that they have been assigned to a task.
+   * Fire-and-forget.
+   */
+  notifyTaskAssigned(
+    taskTitle: string,
+    projectId: string,
+    orgId: string,
+    assigneeId: string,
+  ): void {
+    this.sendTaskAssignedNotification(taskTitle, projectId, orgId, assigneeId).catch((err) => {
+      this.logger.error({ err, assigneeId }, "Failed to send task assigned notification");
+    });
+  }
+
+  /**
+   * Notify all clients assigned to the invoice's project about the invoice.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyInvoiceSent(invoiceId: string): void {
+    this.sendInvoiceSentEmails(invoiceId).catch((err) => {
+      this.logger.error(
+        { err, invoiceId },
+        "Failed to send invoice sent notifications",
+      );
+    });
+  }
+
+  /**
+   * Notify org owners/admins that an invoice was paid via Stripe.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyInvoicePaid(invoiceId: string): void {
+    this.sendInvoicePaidEmails(invoiceId).catch((err) => {
+      this.logger.error(
+        { err, invoiceId },
+        "Failed to send invoice paid notifications",
+      );
+    });
+  }
+
+  private async sendInvoicePaidEmails(invoiceId: string): Promise<void> {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        lineItems: { select: { quantity: true, unitPrice: true } },
+        project: { select: { id: true, name: true } },
+      },
+    });
+    if (!invoice) return;
+
+    const totalCents = calculateInvoiceTotal(invoice);
+    const amount = `$${(totalCents / 100).toFixed(2)}`;
+    const projectName = invoice.project?.name ?? "Unknown project";
+
+    const admins = await this.getOrgAdmins(invoice.organizationId, true);
+    if (admins.length === 0) return;
+
+    const link = invoice.project
+      ? this.dashboardProjectPath(invoice.project.id, "invoices")
+      : `/dashboard`;
+    const dashboardUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      invoice.organizationId,
+      "invoice_paid",
+      `Invoice ${invoice.invoiceNumber} paid`,
+      `${amount} received for ${projectName}`,
+      link,
+    );
+
+    await Promise.allSettled(
+      admins.map(async (admin) => {
+        try {
+          if (!admin.user.email) return;
+          const html = await render(
+            InvoicePaidEmail({
+              recipientName: admin.user.name ?? admin.user.email,
+              invoiceNumber: invoice.invoiceNumber,
+              amount,
+              projectName,
+              dashboardUrl,
+            }),
+          );
+          await this.mail.send(
+            admin.user.email,
+            `Invoice ${invoice.invoiceNumber} paid — ${amount}`,
+            html,
+            invoice.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: admin.user.email, invoiceId },
+            "Failed to send invoice paid email to admin",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Notify org owners that their Stripe account was disconnected externally.
+   * Fire-and-forget.
+   */
+  notifyStripeDisconnected(organizationId: string): void {
+    this.sendStripeDisconnectedNotifications(organizationId).catch((err) => {
+      this.logger.error(
+        { err, organizationId },
+        "Failed to send Stripe disconnected notifications",
+      );
+    });
+  }
+
+  private async sendStripeDisconnectedNotifications(
+    organizationId: string,
+  ): Promise<void> {
+    const admins = await this.getOrgAdmins(organizationId);
+    if (admins.length === 0) return;
+
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      organizationId,
+      "stripe_disconnected",
+      "Stripe account disconnected",
+      "Your Stripe account was disconnected. Clients can no longer pay invoices online. Reconnect from Settings.",
+      "/dashboard/settings/payments",
+    );
+  }
+
+  private async sendProjectUpdateEmails(
+    projectId: string,
+    updateContent: string,
+  ): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true, organizationId: true },
+    });
+    if (!project) return;
+
+    const clients = await this.getProjectClients(projectId);
+    if (clients.length === 0) return;
+
+    const link = this.portalProjectPath(projectId);
+    const portalUrl = `${this.webUrl}${link}`;
+
+    // In-app + push (fire-and-forget)
+    this.createInAppAndPush(
+      clients.map((c) => c.id),
+      project.organizationId,
+      "project_update",
+      `New update on ${project.name}`,
+      updateContent.length > 100 ? updateContent.slice(0, 100) + "…" : updateContent,
+      link,
+    );
+
+    await Promise.allSettled(
+      clients.map(async (client) => {
+        try {
+          const html = await render(
+            ProjectUpdateEmail({
+              clientName: client.name,
+              projectName: project.name,
+              updateContent,
+              portalUrl,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `New update on ${project.name}`,
+            html,
+            project.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, projectId },
+            "Failed to send project update email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  private async sendTaskCreatedEmails(
+    projectId: string,
+    taskTitle: string,
+    dueDate?: Date,
+  ): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true, organizationId: true },
+    });
+    if (!project) return;
+
+    const clients = await this.getProjectClients(projectId);
+    if (clients.length === 0) return;
+
+    const link = this.portalProjectPath(projectId, "tasks");
+    const portalUrl = `${this.webUrl}${link}`;
+    const formattedDueDate = dueDate
+      ? dueDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : undefined;
+
+    // In-app + push
+    this.createInAppAndPush(
+      clients.map((c) => c.id),
+      project.organizationId,
+      "task_created",
+      `New task on ${project.name}`,
+      taskTitle,
+      link,
+    );
+
+    await Promise.allSettled(
+      clients.map(async (client) => {
+        try {
+          const html = await render(
+            TaskAssignedEmail({
+              clientName: client.name,
+              projectName: project.name,
+              taskTitle,
+              dueDate: formattedDueDate,
+              portalUrl,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `New task on ${project.name}: ${taskTitle}`,
+            html,
+            project.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, projectId },
+            "Failed to send task created email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Notify all clients assigned to a decision task's project that voting is closed.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyDecisionClosed(taskId: string): void {
+    this.sendDecisionClosedEmails(taskId).catch((err) => {
+      this.logger.error(
+        { err, taskId },
+        "Failed to send decision closed notifications",
+      );
+    });
+  }
+
+  private async sendDecisionClosedEmails(taskId: string): Promise<void> {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        question: true,
+        projectId: true,
+        project: { select: { name: true, organizationId: true } },
+        options: {
+          select: {
+            label: true,
+            votes: { select: { id: true } },
+          },
+        },
+      },
+    });
+    if (!task || !task.question) return;
+
+    const clients = await this.getProjectClients(task.projectId);
+    if (clients.length === 0) return;
+
+    const optionsWithCounts = task.options.map((opt) => ({
+      label: opt.label,
+      voteCount: opt.votes.length,
+      isWinner: false,
+    }));
+
+    const maxVotes = optionsWithCounts.length > 0
+      ? Math.max(...optionsWithCounts.map((o) => o.voteCount))
+      : 0;
+    if (maxVotes > 0) {
+      for (const opt of optionsWithCounts) {
+        if (opt.voteCount === maxVotes) opt.isWinner = true;
+      }
+    }
+
+    const link = this.portalProjectPath(task.projectId, "tasks");
+    const portalUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      clients.map((c) => c.id),
+      task.project.organizationId,
+      "decision_closed",
+      `Decision closed on ${task.project.name}`,
+      task.question,
+      link,
+    );
+
+    await Promise.allSettled(
+      clients.map(async (client) => {
+        try {
+          const html = await render(
+            DecisionClosedEmail({
+              clientName: client.name,
+              projectName: task.project.name,
+              question: task.question!,
+              options: optionsWithCounts,
+              portalUrl,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `Decision closed on ${task.project.name}: ${task.question}`,
+            html,
+            task.project.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, taskId },
+            "Failed to send decision closed email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  private async sendInvoiceSentEmails(invoiceId: string): Promise<void> {
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { id: invoiceId },
+      include: {
+        lineItems: { select: { quantity: true, unitPrice: true } },
+      },
+    });
+    if (!invoice || !invoice.projectId) return;
+
+    const clients = await this.getProjectClients(invoice.projectId);
+    if (clients.length === 0) return;
+
+    const totalCents = calculateInvoiceTotal(invoice);
+    const amount = `$${(totalCents / 100).toFixed(2)}`;
+    const dueDate = invoice.dueDate
+      ? invoice.dueDate.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "upon receipt";
+    const link = this.portalProjectPath(invoice.projectId, "invoices");
+    const portalUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      clients.map((c) => c.id),
+      invoice.organizationId,
+      "invoice_sent",
+      `Invoice ${invoice.invoiceNumber}`,
+      `${amount} due ${dueDate}`,
+      link,
+    );
+
+    await Promise.allSettled(
+      clients.map(async (client) => {
+        try {
+          const html = await render(
+            InvoiceSentEmail({
+              clientName: client.name,
+              invoiceNumber: invoice.invoiceNumber,
+              amount,
+              dueDate,
+              portalUrl,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `Invoice ${invoice.invoiceNumber} — ${amount}`,
+            html,
+            invoice.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, invoiceId },
+            "Failed to send invoice email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Notify all clients assigned to a document's project that a new document was uploaded.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyDocumentUploaded(documentId: string): void {
+    this.sendDocumentUploadedEmails(documentId).catch((err) => {
+      this.logger.error(
+        { err, documentId },
+        "Failed to send document uploaded notifications",
+      );
+    });
+  }
+
+  /**
+   * Notify org owners/admins that a client responded to a document.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyDocumentResponded(
+    documentId: string,
+    userId: string,
+    action: string,
+  ): void {
+    this.sendDocumentRespondedEmails(documentId, userId, action).catch(
+      (err) => {
+        this.logger.error(
+          { err, documentId, userId, action },
+          "Failed to send document responded notifications",
+        );
+      },
+    );
+  }
+
+  private async sendDocumentUploadedEmails(
+    documentId: string,
+  ): Promise<void> {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      select: {
+        title: true,
+        type: true,
+        projectId: true,
+        organizationId: true,
+      },
+    });
+    if (!doc) return;
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: doc.projectId },
+      select: { name: true },
+    });
+    if (!project) return;
+
+    const clients = await this.getProjectClients(doc.projectId);
+    if (clients.length === 0) return;
+
+    const link = this.portalProjectPath(doc.projectId, "files");
+    const portalUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      clients.map((c) => c.id),
+      doc.organizationId,
+      "document_uploaded",
+      `New ${doc.type} on ${project.name}`,
+      doc.title,
+      link,
+    );
+
+    await Promise.allSettled(
+      clients.map(async (client) => {
+        try {
+          const html = await render(
+            DocumentUploadedEmail({
+              clientName: client.name,
+              projectName: project.name,
+              documentTitle: doc.title,
+              documentType: doc.type,
+              portalUrl,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `New ${doc.type} on ${project.name}: ${doc.title}`,
+            html,
+            doc.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, documentId },
+            "Failed to send document uploaded email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  private async sendDocumentRespondedEmails(
+    documentId: string,
+    userId: string,
+    action: string,
+  ): Promise<void> {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      select: {
+        title: true,
+        type: true,
+        projectId: true,
+        organizationId: true,
+      },
+    });
+    if (!doc) return;
+
+    const [project, respondent] = await Promise.all([
+      this.prisma.project.findUnique({
+        where: { id: doc.projectId },
+        select: { name: true },
+      }),
+      this.neonAuthUsers.findUnique(userId),
+    ]);
+    if (!project) return;
+
+    const clientName = respondent?.name || "A client";
+
+    const admins = await this.getOrgAdmins(doc.organizationId, true);
+    if (admins.length === 0) return;
+
+    const link = this.dashboardProjectPath(doc.projectId, "files");
+    const dashboardUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      doc.organizationId,
+      "document_responded",
+      `${clientName} ${action} ${doc.type}`,
+      doc.title,
+      link,
+    );
+
+    await Promise.allSettled(
+      admins.map(async (admin) => {
+        try {
+          if (!admin.user.email) return;
+          const html = await render(
+            DocumentRespondedEmail({
+              recipientName: admin.user.name ?? admin.user.email,
+              clientName,
+              projectName: project.name,
+              documentTitle: doc.title,
+              documentType: doc.type,
+              action,
+              dashboardUrl,
+            }),
+          );
+          await this.mail.send(
+            admin.user.email,
+            `${clientName} ${action} ${doc.type}: ${doc.title}`,
+            html,
+            doc.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: admin.user.email, documentId },
+            "Failed to send document responded email to admin",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Notify all clients assigned to a document's project about a reminder.
+   * Fire-and-forget: errors are logged but never thrown.
+   */
+  notifyDocumentReminder(documentId: string): void {
+    this.sendDocumentReminderEmails(documentId).catch((err) => {
+      this.logger.error(
+        { err, documentId },
+        "Failed to send document reminder notifications",
+      );
+    });
+  }
+
+  private async sendDocumentReminderEmails(
+    documentId: string,
+  ): Promise<void> {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      select: {
+        title: true,
+        type: true,
+        projectId: true,
+        organizationId: true,
+        expiresAt: true,
+        responses: { select: { userId: true, action: true } },
+      },
+    });
+    if (!doc) return;
+
+    const project = await this.prisma.project.findUnique({
+      where: { id: doc.projectId },
+      select: { name: true },
+    });
+    if (!project) return;
+
+    // Only remind clients who haven't responded
+    const respondedUserIds = new Set(doc.responses.map((r) => r.userId));
+    const clients = await this.getProjectClients(doc.projectId);
+    const unrespondedClients = clients.filter(
+      (c) => !respondedUserIds.has(c.id),
+    );
+    if (unrespondedClients.length === 0) return;
+
+    const link = this.portalProjectPath(doc.projectId, "files");
+    const portalUrl = `${this.webUrl}${link}`;
+    const expiresAt = doc.expiresAt
+      ? doc.expiresAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : undefined;
+
+    // In-app + push
+    this.createInAppAndPush(
+      unrespondedClients.map((c) => c.id),
+      doc.organizationId,
+      "document_reminder",
+      `Reminder: ${doc.type} awaiting response`,
+      doc.title,
+      link,
+    );
+
+    await Promise.allSettled(
+      unrespondedClients.map(async (client) => {
+        try {
+          const html = await render(
+            DocumentReminderEmail({
+              clientName: client.name,
+              projectName: project.name,
+              documentTitle: doc.title,
+              documentType: doc.type,
+              portalUrl,
+              expiresAt,
+            }),
+          );
+          await this.mail.send(
+            client.email,
+            `Reminder: ${doc.type} awaiting your response — ${doc.title}`,
+            html,
+            doc.organizationId,
+          );
+        } catch (err) {
+          Sentry.captureException(err);
+          this.logger.warn(
+            { err, email: client.email, documentId },
+            "Failed to send document reminder email to client",
+          );
+        }
+      }),
+    );
+  }
+
+  /**
+   * Notify a specific user that it's their turn to sign a document.
+   * Fire-and-forget.
+   */
+  notifyDocumentSigningTurn(documentId: string, userId: string): void {
+    this.sendDocumentSigningTurnEmail(documentId, userId).catch((err) => {
+      this.logger.error(
+        { err, documentId, userId },
+        "Failed to send signing turn notification",
+      );
+    });
+  }
+
+  private async sendDocumentSigningTurnEmail(
+    documentId: string,
+    userId: string,
+  ): Promise<void> {
+    const doc = await this.prisma.document.findUnique({
+      where: { id: documentId },
+      select: {
+        title: true,
+        type: true,
+        projectId: true,
+        organizationId: true,
+      },
+    });
+    if (!doc) return;
+
+    const [project, user] = await Promise.all([
+      this.prisma.project.findUnique({
+        where: { id: doc.projectId },
+        select: { name: true },
+      }),
+      this.neonAuthUsers.findUnique(userId),
+    ]);
+    if (!project || !user) return;
+
+    const link = this.portalProjectPath(doc.projectId, "files");
+    const portalUrl = `${this.webUrl}${link}`;
+
+    // In-app + push
+    this.createInAppAndPush(
+      [userId],
+      doc.organizationId,
+      "signing_turn",
+      `Your turn to sign: ${doc.title}`,
+      `${doc.type} on ${project.name}`,
+      link,
+    );
+
+    try {
+      const html = await render(
+        DocumentSigningTurnEmail({
+          clientName: user.name ?? user.email ?? "there",
+          projectName: project.name,
+          documentTitle: doc.title,
+          documentType: doc.type,
+          portalUrl,
+        }),
+      );
+      if (!user.email) return;
+      await this.mail.send(
+        user.email,
+        `Your turn to sign: ${doc.title}`,
+        html,
+        doc.organizationId,
+      );
+    } catch (err) {
+      Sentry.captureException(err);
+      this.logger.warn(
+        { err, email: user.email, documentId },
+        "Failed to send signing turn email",
+      );
+    }
+  }
+
+  /**
+   * Create in-app notifications and send push notifications for a set of users.
+   * Fire-and-forget — errors are swallowed.
+   */
+  private createInAppAndPush(
+    userIds: string[],
+    organizationId: string,
+    type: string,
+    title: string,
+    message: string,
+    link?: string,
+  ): void {
+    const notifications = userIds.map((userId) => ({
+      userId,
+      organizationId,
+      type,
+      title,
+      message,
+      link,
+    }));
+
+    this.inApp.createMany(notifications).catch((err) => {
+      this.logger.warn({ err }, "Failed to create in-app notifications");
+    });
+
+    this.push
+      .sendToMany(userIds, organizationId, { title, message, link })
+      .catch((err) => {
+        this.logger.warn({ err }, "Failed to send push notifications");
+      });
+  }
+
+  /**
+   * Send comment notification to relevant users.
+   * Called from CommentsService.
+   */
+  async notifyComment(
+    projectId: string,
+    organizationId: string,
+    authorId: string,
+    authorRole: string,
+    content: string,
+    targetType: "update" | "task",
+    taskContext?: { requestedById: string | null; assigneeId: string | null },
+  ): Promise<void> {
+    const project = await this.prisma.project.findUnique({
+      where: { id: projectId },
+      select: { name: true },
+    });
+    if (!project) return;
+
+    const truncatedContent =
+      content.length > 100 ? content.slice(0, 100) + "…" : content;
+
+    const isClientComment = authorRole === "member";
+    const isTask = targetType === "task";
+
+    if (isTask && taskContext) {
+      const title = `New comment on ${project.name}`;
+
+      if (isClientComment) {
+        // Client commented: notify agency admins + assignee (all dashboard)
+        const admins = await this.getOrgAdmins(organizationId);
+        const targets = new Set<string>(admins.map((a) => a.userId));
+        if (taskContext.assigneeId) targets.add(taskContext.assigneeId);
+        targets.delete(authorId);
+        if (targets.size === 0) return;
+
+        this.createInAppAndPush(
+          Array.from(targets),
+          organizationId,
+          "comment",
+          title,
+          truncatedContent,
+          `/dashboard/projects/${projectId}`,
+        );
+        return;
+      }
+
+      // Agency member commented: split recipients by audience.
+      // Dashboard: assignee + agency-member requesters.
+      // Portal: client requesters, or fallback to project clients when no requester.
+      const dashboardTargets = new Set<string>();
+      const portalTargets = new Set<string>();
+
+      if (taskContext.assigneeId && taskContext.assigneeId !== authorId) {
+        dashboardTargets.add(taskContext.assigneeId);
+      }
+
+      const requesterId = taskContext.requestedById;
+      if (requesterId && requesterId !== authorId) {
+        const member = await this.prisma.member.findFirst({
+          where: { userId: requesterId, organizationId },
+          select: { role: true },
+        });
+        const isRequesterClient = !member || member.role === "member";
+        if (isRequesterClient) {
+          portalTargets.add(requesterId);
+        } else {
+          dashboardTargets.add(requesterId);
+        }
+      } else if (!requesterId) {
+        // Agency-created task — broadcast to all project clients
+        const clients = await this.getProjectClients(projectId);
+        for (const c of clients) {
+          if (c.id !== authorId) portalTargets.add(c.id);
+        }
+      }
+
+      // Dedup across audiences: dashboard takes precedence (agency members)
+      for (const id of dashboardTargets) portalTargets.delete(id);
+
+      if (dashboardTargets.size > 0) {
+        this.createInAppAndPush(
+          Array.from(dashboardTargets),
+          organizationId,
+          "comment",
+          title,
+          truncatedContent,
+          `/dashboard/projects/${projectId}`,
+        );
+      }
+      if (portalTargets.size > 0) {
+        this.createInAppAndPush(
+          Array.from(portalTargets),
+          organizationId,
+          "comment",
+          title,
+          truncatedContent,
+          `/portal/projects/${projectId}`,
+        );
+      }
+      return;
+    }
+
+    if (isClientComment) {
+      const admins = await this.getOrgAdmins(organizationId);
+      const adminIds = admins.map((a) => a.userId);
+      if (adminIds.length === 0) return;
+
+      this.createInAppAndPush(
+        adminIds,
+        organizationId,
+        "comment",
+        `New comment on ${project.name}`,
+        truncatedContent,
+        `/dashboard/projects/${projectId}`,
+      );
+    } else {
+      // Notify project clients
+      const clients = await this.getProjectClients(projectId);
+      const clientIds = clients
+        .filter((c) => c.id !== authorId)
+        .map((c) => c.id);
+      if (clientIds.length === 0) return;
+
+      this.createInAppAndPush(
+        clientIds,
+        organizationId,
+        "comment",
+        `New comment on ${project.name}`,
+        truncatedContent,
+        `/portal/projects/${projectId}`,
+      );
+    }
+  }
+
+  private async getOrgAdmins(
+    organizationId: string,
+    includeDetails?: false,
+  ): Promise<Array<{ userId: string }>>;
+  private async getOrgAdmins(
+    organizationId: string,
+    includeDetails: true,
+  ): Promise<Array<{ userId: string; user: { name: string | null; email: string | null } }>>;
+  private async getOrgAdmins(organizationId: string, includeDetails = false) {
+    const admins = await this.prisma.member.findMany({
+      where: {
+        organizationId,
+        role: { in: ["owner", "admin"] },
+      },
+      select: { userId: true },
+    });
+    if (!includeDetails) return admins;
+
+    const users = await this.neonAuthUsers.findMany(admins.map((a) => a.userId));
+    const userMap = new Map(users.map((u) => [u.id, { name: u.name, email: u.email }]));
+    return admins.map((a) => ({
+      ...a,
+      user: userMap.get(a.userId) ?? { name: null, email: null },
+    }));
+  }
+
+  private async getProjectClients(
+    projectId: string,
+  ): Promise<Array<{ id: string; name: string; email: string }>> {
+    const assignments = await this.prisma.projectClient.findMany({
+      where: { projectId },
+      select: { userId: true },
+    });
+    const users = await this.neonAuthUsers.findMany(assignments.map((a) => a.userId));
+    return users.map((u) => ({ id: u.id, name: u.name, email: u.email }));
+  }
+
+  private async sendClientRequestCreatedNotifications(
+    projectId: string,
+    orgId: string,
+    taskTitle: string,
+    clientName: string,
+  ): Promise<void> {
+    const admins = await this.getOrgAdmins(orgId);
+    if (admins.length === 0) return;
+    const link = this.dashboardProjectPath(projectId, "tasks");
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      orgId,
+      "client_request_created",
+      `New request from ${clientName}`,
+      taskTitle,
+      link,
+    );
+  }
+
+  private async sendTaskStatusChangedNotifications(
+    taskId: string,
+    taskTitle: string,
+    projectId: string,
+    orgId: string,
+    newStatus: string,
+    requestedById: string | null,
+    assigneeId: string | null,
+  ): Promise<void> {
+    // Deduplicate: if requester and assignee are the same person, notify once
+    const userIds = [...new Set(
+      [requestedById, assigneeId].filter((id): id is string => id !== null && id !== undefined),
+    )];
+    if (userIds.length === 0) return;
+
+    const statusLabel: Record<string, string> = {
+      open: "Open",
+      in_progress: "In Progress",
+      done: "Done",
+      cancelled: "Cancelled",
+    };
+
+    // Single DB query instead of one per user
+    const members = await this.prisma.member.findMany({
+      where: { userId: { in: userIds }, organizationId: orgId },
+      select: { userId: true },
+    });
+    const memberUserIds = new Set(members.map((m) => m.userId));
+
+    for (const userId of userIds) {
+      const isClient = !memberUserIds.has(userId);
+      const link = isClient
+        ? this.portalProjectPath(projectId, "tasks")
+        : this.dashboardProjectPath(projectId, "tasks");
+      this.createInAppAndPush(
+        [userId],
+        orgId,
+        "task_status_changed",
+        `"${taskTitle}" is now ${statusLabel[newStatus] ?? newStatus}`,
+        taskTitle,
+        link,
+      );
+    }
+  }
+
+  private async sendTaskAssignedNotification(
+    taskTitle: string,
+    projectId: string,
+    orgId: string,
+    assigneeId: string,
+  ): Promise<void> {
+    const link = this.dashboardProjectPath(projectId, "tasks");
+    this.createInAppAndPush(
+      [assigneeId],
+      orgId,
+      "task_assigned",
+      `You've been assigned: ${taskTitle}`,
+      taskTitle,
+      link,
+    );
+  }
+}

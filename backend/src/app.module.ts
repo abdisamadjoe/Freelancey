@@ -1,0 +1,121 @@
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
+import { ConfigModule } from "@nestjs/config";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
+import { LoggerModule } from "nestjs-pino";
+import { IncomingMessage, ServerResponse } from "http";
+import { PrismaModule } from "./prisma/prisma.module";
+import { AuthModule } from "./auth/auth.module";
+import { ProjectsModule } from "./projects/projects.module";
+import { FilesModule } from "./files/files.module";
+import { BrandingModule } from "./branding/branding.module";
+import { MailModule } from "./mail/mail.module";
+import { ClientsModule } from "./clients/clients.module";
+import { OnboardingModule } from "./onboarding/onboarding.module";
+import { UpdatesModule } from "./updates/updates.module";
+import { NotesModule } from "./notes/notes.module";
+import { TasksModule } from "./tasks/tasks.module";
+import { InvoicesModule } from "./invoices/invoices.module";
+import { SearchModule } from "./search/search.module";
+import { SettingsModule } from "./settings/settings.module";
+import { SetupModule } from "./setup/setup.module";
+import { BillingModule } from "./billing/billing.module";
+import { AccountModule } from "./account/account.module";
+import { DocumentsModule } from "./documents/documents.module";
+import { ActivityModule } from "./activity/activity.module";
+import { CommentsModule } from "./comments/comments.module";
+import { LabelsModule } from "./labels/labels.module";
+import { PaymentsModule } from "./payments/payments.module";
+import { EmbedsModule } from "./embeds/embeds.module";
+import { TimeEntriesModule } from "./time-entries/time-entries.module";
+import { CalendarModule } from "./calendar/calendar.module";
+import { OrganizationsModule } from "./organizations/organizations.module";
+import { ContractsModule } from "./contracts/contracts.module";
+import { AppController } from "./app.controller";
+import { HealthController } from "./health.controller";
+import { SessionMiddleware } from "./auth/session.middleware";
+import { PreviewModeMiddleware } from "./auth/preview-mode.middleware";
+import { PreviewModeGuard } from "./auth/preview-mode.guard";
+import { AllExceptionsFilter } from "./common";
+import { PlanGuard } from "./common/guards/plan.guard";
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport:
+          process.env.NODE_ENV !== "production"
+            ? { target: "pino-pretty", options: { colorize: true } }
+            : undefined,
+        level: process.env.LOG_LEVEL || "info",
+        autoLogging: {
+          ignore: (req: IncomingMessage) => req.url === "/api/health",
+        },
+        serializers: {
+          req: (req: IncomingMessage) => ({
+            method: req.method,
+            url: req.url,
+          }),
+          res: (res: ServerResponse) => ({
+            statusCode: res.statusCode,
+          }),
+        },
+      },
+    }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: parseInt(process.env.THROTTLE_LIMIT || "100", 10) }]),
+    PrismaModule,
+    AuthModule,
+    ProjectsModule,
+    FilesModule,
+    BrandingModule,
+    MailModule,
+    ClientsModule,
+    OnboardingModule,
+    UpdatesModule,
+    NotesModule,
+    TasksModule,
+    InvoicesModule,
+    SearchModule,
+    SettingsModule,
+    SetupModule,
+    BillingModule,
+    AccountModule,
+    DocumentsModule,
+    ActivityModule,
+    CommentsModule,
+    LabelsModule,
+    PaymentsModule,
+    EmbedsModule,
+    TimeEntriesModule,
+    CalendarModule,
+    OrganizationsModule,
+    ContractsModule,
+  ],
+  controllers: [AppController, HealthController],
+  providers: [
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PlanGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PreviewModeGuard,
+    },
+  ],
+})
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(SessionMiddleware, PreviewModeMiddleware)
+      .forRoutes("*");
+  }
+}

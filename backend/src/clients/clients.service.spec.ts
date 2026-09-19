@@ -1,0 +1,556 @@
+import { describe, expect, it, vi, beforeEach } from "vitest";
+import { ClientsService } from "./clients.service";
+import {
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from "@nestjs/common";
+import type { PrismaService } from "../prisma/prisma.service";
+import type { AuthService } from "../auth/auth.service";
+import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+
+interface PrismaArgs {
+  where?: Record<string, unknown>;
+  data?: Record<string, unknown>;
+}
+
+// ---------------------------------------------------------------------------
+// Mock Prisma client
+// ---------------------------------------------------------------------------
+const mockPrisma = {
+  member: {
+    findFirst: vi.fn(() => Promise.resolve(null)),
+    count: vi.fn(() => Promise.resolve(0)),
+    delete: vi.fn((args: PrismaArgs) => Promise.resolve({ id: args.where?.id })),
+    update: vi.fn((args: PrismaArgs) =>
+      Promise.resolve({ id: args.where?.id, ...args.data }),
+    ),
+  },
+  project: {
+    findMany: vi.fn(() => Promise.resolve([])),
+  },
+  projectClient: {
+    deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
+  },
+  $transaction: vi.fn((ops: Promise<unknown>[]) => Promise.all(ops)),
+};
+
+const mockAuthService = {
+  sendAdminPasswordReset: vi.fn(() => Promise.resolve({ emailSent: true })),
+};
+
+const mockNeonAuthUsers = {
+  findUnique: vi.fn((id: string) =>
+    Promise.resolve({ id, name: null, email: `${id}@test.com` }),
+  ),
+};
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+function makeMember(overrides: Partial<{
+  id: string;
+  userId: string;
+  organizationId: string;
+  role: string;
+}> = {}) {
+  return {
+    id: "member-1",
+    userId: "user-target",
+    organizationId: "org-1",
+    role: "member",
+    ...overrides,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Suite
+// ---------------------------------------------------------------------------
+describe("ClientsService", () => {
+  let service: ClientsService;
+
+  beforeEach(() => {
+    service = new ClientsService(
+      mockPrisma as unknown as PrismaService,
+      mockAuthService as unknown as AuthService,
+      { send: vi.fn(() => Promise.resolve()) } as unknown as import("../mail/mail.service").MailService,
+      { get: vi.fn((_key: string, fallback?: string) => fallback) } as unknown as import("@nestjs/config").ConfigService,
+      mockNeonAuthUsers as unknown as NeonAuthUsersRepository,
+    );
+    mockPrisma.member.findFirst.mockClear();
+    mockPrisma.member.count.mockClear();
+    mockPrisma.member.delete.mockClear();
+    mockPrisma.member.update.mockClear();
+    mockPrisma.project.findMany.mockClear();
+    mockPrisma.projectClient.deleteMany.mockClear();
+    mockPrisma.$transaction.mockClear();
+    mockAuthService.sendAdminPasswordReset.mockClear();
+  });
+
+  // -------------------------------------------------------------------------
+  // removeMember
+  // -------------------------------------------------------------------------
+  describe("removeMember", () => {
+    it("throws NotFoundException when member does not exist", async () => {
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(null));
+
+      try {
+        await service.removeMember("nonexistent-member", "org-1", "user-requester", "owner");
+        expect(true).toBe(false); // must not reach
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+        expect((e as NotFoundException).message).toBe("Member not found");
+      }
+    });
+
+    it("throws BadRequestException when requesting user tries to remove themselves", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-self", role: "admin" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      try {
+        // requestingUserId matches member.userId
+        await service.removeMember("member-1", "org-1", "user-self", "owner");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Cannot remove yourself");
+      }
+    });
+
+    it("throws BadRequestException when an admin tries to remove an owner", async () => {
+      const ownerMember = makeMember({ id: "member-owner", userId: "user-owner", role: "owner" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(ownerMember));
+
+      try {
+        await service.removeMember("member-owner", "org-1", "user-admin", "admin");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Only owners can remove other owners");
+      }
+    });
+
+    it("allows an owner to remove another owner", async () => {
+      const ownerMember = makeMember({ id: "member-owner2", userId: "user-owner2", role: "owner" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(ownerMember));
+      mockPrisma.project.findMany.mockReturnValue(
+        Promise.resolve([{ id: "proj-1" }, { id: "proj-2" }]),
+      );
+
+      // Should not throw
+      await service.removeMember("member-owner2", "org-1", "user-requesting-owner", "owner");
+
+      // Confirm the transaction was called
+      expect(mockPrisma.$transaction).toHaveBeenCalled();
+    });
+
+    it("scopes ProjectClient deletion to only the current org's projects", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.project.findMany.mockReturnValue(
+        Promise.resolve([{ id: "proj-a" }, { id: "proj-b" }]),
+      );
+
+      await service.removeMember("member-1", "org-1", "user-requester", "admin");
+
+      // project.findMany must be called with the correct org scope
+      expect(mockPrisma.project.findMany).toHaveBeenCalledWith({
+        where: { organizationId: "org-1" },
+        select: { id: true },
+      });
+
+      // The deleteMany must restrict to the org's project IDs — not all projects globally
+      expect(mockPrisma.projectClient.deleteMany).toHaveBeenCalledWith({
+        where: { userId: "user-target", projectId: { in: ["proj-a", "proj-b"] } },
+      });
+    });
+
+    it("successfully removes a regular member and runs both ops in a transaction", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.project.findMany.mockReturnValue(
+        Promise.resolve([{ id: "proj-1" }]),
+      );
+
+      await service.removeMember("member-1", "org-1", "user-requester", "admin");
+
+      // Both the projectClient cleanup and member deletion must be wrapped in a transaction
+      expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.member.delete).toHaveBeenCalledWith({
+        where: { id: "member-1" },
+      });
+    });
+
+    it("handles org with no projects (empty projectIds array)", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      // No projects in this org
+      mockPrisma.project.findMany.mockReturnValue(Promise.resolve([]));
+
+      await service.removeMember("member-1", "org-1", "user-requester", "admin");
+
+      expect(mockPrisma.projectClient.deleteMany).toHaveBeenCalledWith({
+        where: { userId: "user-target", projectId: { in: [] } },
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // changeRole
+  // -------------------------------------------------------------------------
+  describe("changeRole", () => {
+    it("throws NotFoundException when member does not exist", async () => {
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(null));
+
+      try {
+        await service.changeRole("nonexistent-member", "admin", "org-1", "user-requester");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+        expect((e as NotFoundException).message).toBe("Member not found");
+      }
+    });
+
+    it("throws BadRequestException when a user tries to change their own role", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-self", role: "admin" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      try {
+        await service.changeRole("member-1", "member", "org-1", "user-self");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Cannot change your own role");
+      }
+    });
+
+    it("throws BadRequestException when demoting the last owner", async () => {
+      const owner = makeMember({ id: "member-owner", userId: "user-owner", role: "owner" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(owner));
+      // Only one owner in the org
+      mockPrisma.member.count.mockReturnValue(Promise.resolve(1));
+
+      try {
+        await service.changeRole("member-owner", "admin", "org-1", "user-requester");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Cannot demote the last owner");
+      }
+    });
+
+    it("allows demoting an owner when multiple owners exist", async () => {
+      const owner = makeMember({ id: "member-owner", userId: "user-owner", role: "owner" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(owner));
+      // Two owners exist — safe to demote
+      mockPrisma.member.count.mockReturnValue(Promise.resolve(2));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-owner", role: "admin" }),
+      );
+
+      const result = await service.changeRole("member-owner", "admin", "org-1", "user-requester");
+
+      expect(result.role).toBe("admin");
+      expect(mockPrisma.member.update).toHaveBeenCalledWith({
+        where: { id: "member-owner" },
+        data: { role: "admin" },
+      });
+    });
+
+    it("throws BadRequestException for an invalid role value", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      try {
+        await service.changeRole("member-1", "superuser", "org-1", "user-requester");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Invalid role");
+      }
+    });
+
+    it("rejects an empty-string role", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      try {
+        await service.changeRole("member-1", "", "org-1", "user-requester");
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+        expect((e as BadRequestException).message).toBe("Invalid role");
+      }
+    });
+
+    it("successfully promotes a member to admin", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-1", role: "admin" }),
+      );
+
+      const result = await service.changeRole("member-1", "admin", "org-1", "user-requester");
+
+      expect(result.role).toBe("admin");
+      expect(mockPrisma.member.update).toHaveBeenCalledWith({
+        where: { id: "member-1" },
+        data: { role: "admin" },
+      });
+    });
+
+    it("successfully promotes a member to owner", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-1", role: "owner" }),
+      );
+
+      const result = await service.changeRole("member-1", "owner", "org-1", "user-requester");
+
+      expect(result.role).toBe("owner");
+    });
+
+    it("does not check owner count when the target member is not an owner", async () => {
+      const member = makeMember({ id: "member-1", userId: "user-target", role: "member" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-1", role: "admin" }),
+      );
+
+      await service.changeRole("member-1", "admin", "org-1", "user-requester");
+
+      // count should NOT have been called — only needed when demoting an owner
+      expect(mockPrisma.member.count).not.toHaveBeenCalled();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // setMemberRate
+  // -------------------------------------------------------------------------
+  describe("setMemberRate", () => {
+    it("updates member.hourlyRateCents when called by an owner", async () => {
+      const member = makeMember({ id: "member-admin", userId: "user-admin", role: "admin" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-admin", hourlyRateCents: 7500 }),
+      );
+
+      const result = await service.setMemberRate(
+        "member-admin",
+        "org-1",
+        "user-owner",
+        "owner",
+        7500,
+      );
+
+      expect(result.hourlyRateCents).toBe(7500);
+      expect(mockPrisma.member.update).toHaveBeenCalledWith({
+        where: { id: "member-admin" },
+        data: { hourlyRateCents: 7500 },
+      });
+    });
+
+    it("rejects non-owner callers with ForbiddenException", async () => {
+      try {
+        await service.setMemberRate(
+          "member-admin",
+          "org-1",
+          "user-other-admin",
+          "admin",
+          7500,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+      // Must short-circuit before any DB lookup
+      expect(mockPrisma.member.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.member.update).not.toHaveBeenCalled();
+    });
+
+    it("throws NotFoundException when member does not exist", async () => {
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(null));
+
+      try {
+        await service.setMemberRate(
+          "missing-member",
+          "org-1",
+          "user-owner",
+          "owner",
+          5000,
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
+      expect(mockPrisma.member.update).not.toHaveBeenCalled();
+    });
+
+    it("clears the rate when null is passed", async () => {
+      const member = makeMember({ id: "member-admin", userId: "user-admin", role: "admin" });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockPrisma.member.update.mockReturnValue(
+        Promise.resolve({ id: "member-admin", hourlyRateCents: null }),
+      );
+
+      await service.setMemberRate("member-admin", "org-1", "user-owner", "owner", null);
+
+      expect(mockPrisma.member.update).toHaveBeenCalledWith({
+        where: { id: "member-admin" },
+        data: { hourlyRateCents: null },
+      });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // generateResetLink
+  // -------------------------------------------------------------------------
+  describe("generateResetLink", () => {
+    function memberWithUser(overrides: Partial<{ id: string; userId: string; role: string }> = {}) {
+      const m = makeMember(overrides);
+      return { ...m, user: { id: m.userId, email: `${m.userId}@test.com` } };
+    }
+
+    it("throws NotFoundException when the member does not exist", async () => {
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(null));
+
+      try {
+        await service.generateResetLink(
+          "missing-member",
+          "org-1",
+          "user-admin",
+          "admin",
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(NotFoundException);
+      }
+    });
+
+    it("throws BadRequestException when caller targets themselves", async () => {
+      const selfMember = memberWithUser({
+        id: "member-self",
+        userId: "user-self",
+        role: "admin",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(selfMember));
+
+      try {
+        await service.generateResetLink(
+          "member-self",
+          "org-1",
+          "user-self",
+          "admin",
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(BadRequestException);
+      }
+      expect(mockAuthService.sendAdminPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it("throws ForbiddenException when admin tries to reset an owner", async () => {
+      const ownerMember = memberWithUser({
+        id: "member-owner",
+        userId: "user-owner",
+        role: "owner",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(ownerMember));
+
+      try {
+        await service.generateResetLink(
+          "member-owner",
+          "org-1",
+          "user-admin",
+          "admin",
+        );
+        expect(true).toBe(false);
+      } catch (e) {
+        expect(e).toBeInstanceOf(ForbiddenException);
+      }
+      expect(mockAuthService.sendAdminPasswordReset).not.toHaveBeenCalled();
+    });
+
+    it("allows owner to reset another owner", async () => {
+      const otherOwner = memberWithUser({
+        id: "member-owner-2",
+        userId: "user-owner-2",
+        role: "owner",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(otherOwner));
+
+      const result = await service.generateResetLink(
+        "member-owner-2",
+        "org-1",
+        "user-owner-1",
+        "owner",
+      );
+
+      expect(result.email).toBe("user-owner-2@test.com");
+      expect(mockAuthService.sendAdminPasswordReset).toHaveBeenCalledWith(
+        "user-owner-2@test.com",
+      );
+    });
+
+    it("returns the email and emailSent when admin resets a regular member", async () => {
+      const member = memberWithUser({
+        id: "member-1",
+        userId: "user-target",
+        role: "member",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      const result = await service.generateResetLink(
+        "member-1",
+        "org-1",
+        "user-admin",
+        "admin",
+      );
+
+      expect(result.email).toBe("user-target@test.com");
+      expect(result.emailSent).toBe(true);
+      expect(mockAuthService.sendAdminPasswordReset).toHaveBeenCalledWith(
+        "user-target@test.com",
+      );
+    });
+
+    it("propagates emailSent=false when delivery fails", async () => {
+      const member = memberWithUser({
+        id: "member-1",
+        userId: "user-target",
+        role: "member",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+      mockAuthService.sendAdminPasswordReset.mockReturnValueOnce(
+        Promise.resolve({ emailSent: false }),
+      );
+
+      const result = await service.generateResetLink(
+        "member-1",
+        "org-1",
+        "user-admin",
+        "admin",
+      );
+
+      expect(result.emailSent).toBe(false);
+    });
+
+    it("scopes member lookup to the caller's org", async () => {
+      const member = memberWithUser({
+        id: "member-1",
+        userId: "user-target",
+        role: "member",
+      });
+      mockPrisma.member.findFirst.mockReturnValue(Promise.resolve(member));
+
+      await service.generateResetLink("member-1", "org-1", "user-admin", "admin");
+
+      expect(mockPrisma.member.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: "member-1", organizationId: "org-1" },
+        }),
+      );
+    });
+  });
+});

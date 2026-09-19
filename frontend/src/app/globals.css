@@ -1,0 +1,546 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Design tokens ported from the NextAdmin (dashboard/) template.
+ * Source of truth: dashboard/src/app/css/default.css (light theme).
+ * Do not hardcode hex values in components — use the semantic Tailwind
+ * tokens defined in tailwind.config.ts, or the CSS variables below.
+ */
+@layer base {
+  :root {
+    /* ================= Brand anchor =================
+     * `--primary` is the single source of truth for the workspace brand
+     * colour. Layouts override it with an inline style when an organisation
+     * has custom branding, and every brand-derived token below (buttons,
+     * badges, focus rings, active states) follows it automatically.
+     */
+    --primary: #5750f1;
+
+    /* ================= Brand / Primary ================= */
+    --primary-50: #eff3ff;
+    --primary-100: #dae2ff;
+    --primary-200: #becdff;
+    --primary-300: #91aeff;
+    --primary-400: #5e84fc;
+    --primary-500: var(--primary);
+    --primary-600: var(--brand-600);
+    --primary-700: #1a25db;
+    --primary-800: #1c20b1;
+    --primary-900: #1c228c;
+    --primary-950: #161755;
+
+    --primary-text: #ffffff;
+    --neutral-brand-color: var(--primary);
+
+    /* ================= Text ================= */
+    --text-50: #374151;
+    --text-100: #6b7280;
+    --text-200: #9ca3af;
+    --text-300: #e5e7eb;
+    --title-50: #1f2937;
+
+    /* ================= Context ================= */
+    --error-500: #ef4444;
+    --success-500: #22c55e;
+    --warning-500: #eab308;
+    --info-500: #0ea5e9;
+
+    /* ================= White ================= */
+    --white-100: #ffffff;
+    --white-90: #ffffffcc;
+    --white-80: #ffffffcc;
+    --white-70: #ffffffb3;
+    --white-60: #ffffff99;
+
+    /* ================= Borders ================= */
+    --border-color-base-50: #f3f4f6;
+    --border-color-base-100: #e5e7eb;
+    --border-color-base-200: #e5e7eb;
+    --border-color-base-300: #d1d5db;
+    --chart-line: #e5e7eb;
+
+    /* ================= Foreground ================= */
+    --foreground-50: #030712;
+    --foreground-100: #111827;
+    --foreground-soft-50: #111827;
+    --foreground-soft-100: #111827;
+    --foreground-soft-200: #1f2937;
+    --foreground-soft-300: #030712;
+    --foreground-soft-400: #1f2937;
+    --foreground-soft-500: #374151;
+
+    /* ================= Backgrounds ================= */
+    --background-50: #ffffff;
+    --background-100: #ffffff;
+    --background-soft-50: #f9fafb;
+    --background-soft-100: #f3f4f6;
+    --background-soft-200: #f3f4f6;
+    --background-soft-300: #f3f4f6;
+    --background-soft-400: #e5e7eb;
+    --background-soft-500: #d1d5db;
+    --background-success-600: #16a34a;
+
+    /* ================= Buttons =================
+     * Primary button colours derive from the brand anchor so workspace
+     * branding keeps working. `color-mix` darkens/tints the anchor; the plain
+     * fallback declaration above each one covers browsers without it.
+     */
+    --button-primary-background: #5750f1;
+    --button-primary-background: var(--primary);
+    --button-primary-hover-background: #3c35d8;
+    --button-primary-hover-background: color-mix(in srgb, var(--primary), #000 15%);
+    --button-primary-text: #ffffff;
+    --button-primary-focus-ring: rgba(87, 80, 241, 0.2);
+    --button-primary-focus-ring: color-mix(in srgb, var(--primary) 20%, transparent);
+
+    --button-outline-background: #ffffff;
+    --button-outline-hover-background: #f3f4f6;
+    --button-outline-border: #d1d5db;
+    --button-outline-focus-ring: rgba(152, 162, 179, 0.14);
+    --button-outline-text: #1f2937;
+    --button-outline-hover-text: #111827;
+    --button-outline-disabled-background: #ffffff;
+    --button-outline-disabled-text: #9ca3af;
+    --button-outline-disabled-border: #f3f4f6;
+
+    --button-disabled-background: #f3f4f6;
+    --button-disabled-border: #f3f4f6;
+    --button-disabled-text: #9ca3af;
+
+    --button-error-background: #dc2626;
+    --button-error-hover-background: #b91c1c;
+    --button-error-border: #ef4444;
+    --button-error-text: #ffffff;
+    --button-error-focus-ring: rgba(220, 38, 38, 0.2);
+
+    --button-error-outline-background: #fef2f2;
+    --button-error-outline-hover-background: #fecaca;
+    --button-error-outline-border: #ef4444;
+    --button-error-outline-text: #b91c1c;
+    --button-error-outline-hover-text: #b91c1c;
+    --button-error-outline-focus-ring: rgba(220, 38, 38, 0.2);
+
+    --button-success-background: #16a34a;
+    --button-success-hover-background: #15803d;
+    --button-success-border: #22c55e;
+    --button-success-text: #ffffff;
+    --button-success-focus-ring: rgba(22, 163, 74, 0.2);
+
+    --button-success-outline-background: #f0fdf4;
+    --button-success-outline-hover-background: #bbf7d0;
+    --button-success-outline-border: #22c55e;
+    --button-success-outline-text: #15803d;
+    --button-success-outline-hover-text: #15803d;
+    --button-success-outline-focus-ring: rgba(22, 163, 74, 0.2);
+
+    --button-ghost-text: #9ca3af;
+    --button-ghost-hover-text: #6b7280;
+    --button-ghost-hover-background: #f3f4f6;
+
+    --button-group-primary-background: #ffffff;
+    --button-group-primary-hover-background: var(--primary);
+    --button-group-primary-text: var(--primary);
+    --button-group-primary-hover-text: #ffffff;
+    --button-group-secondary-background: #ffffff;
+    --button-group-secondary-text: #374151;
+
+    /* ================= Badges ================= */
+    --badge-neutral-background: #f3f4f6;
+    --badge-neutral-text: #374151;
+    --badge-neutral-icon-color: #6b7280;
+    --badge-primary-background: #eff3ff;
+    --badge-primary-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+    --badge-primary-text: var(--primary);
+    --badge-primary-icon-color: var(--primary);
+    --badge-error-background: #fef2f2;
+    --badge-error-text: #b91c1c;
+    --badge-error-icon-color: #ef4444;
+    --badge-warning-background: #fffbeb;
+    --badge-warning-text: #b45309;
+    --badge-warning-icon-color: #f59e0b;
+    --badge-success-background: #f0fdf4;
+    --badge-success-text: #15803d;
+    --badge-success-icon-color: #22c55e;
+    --badge-cyan-background: #ecfeff;
+    --badge-cyan-text: #0e7490;
+    --badge-cyan-icon-color: #06b6d4;
+    --badge-sky-background: #f0f9ff;
+    --badge-sky-text: #0369a1;
+    --badge-sky-icon-color: #0ea5e9;
+    --badge-blue-background: #eff6ff;
+    --badge-blue-text: #1d4ed8;
+    --badge-blue-icon-color: #3b82f6;
+    --badge-violet-background: #f5f3ff;
+    --badge-violet-text: #6d28d9;
+    --badge-violet-icon-color: #8b5cf6;
+    --badge-purple-background: #faf5ff;
+    --badge-purple-text: #7e22ce;
+    --badge-purple-icon-color: #a855f7;
+    --badge-pink-background: #fdf2f8;
+    --badge-pink-text: #be185d;
+    --badge-pink-icon-color: #ec4899;
+    --badge-rose-background: #fff1f2;
+    --badge-rose-text: #be123c;
+    --badge-rose-icon-color: #f43f5e;
+    --badge-orange-background: #fff7ed;
+    --badge-orange-text: #c2410c;
+    --badge-orange-icon-color: #f97316;
+    --badge-gray-background: #f4f4f5;
+    --badge-gray-icon: #71717a;
+
+    /* ================= Sidebar ================= */
+    --sidebar-nav-default-background: #ffffff;
+    --sidebar-nav-hover-background: #f9fafb;
+    --sidebar-nav-secondary-hover-background: #f3f4f6;
+    --sidebar-nav-hover-text: #374151;
+    --sidebar-nav-active-text: var(--primary);
+    --sidebar-nav-active-background: #eff3ff;
+    --sidebar-nav-active-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+    --sidebar-nav-focused-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+    --sidebar-nav-default-text: #374151;
+    --sidebar-nav-icon: #6b7280;
+    --sidebar-badge-background: var(--primary);
+    --sidebar-badge-text: #ffffff;
+    --sidebar-footer-background: #f9fafb;
+    --sidebar-footer-title: #111827;
+    --sidebar-footer-subtitle: #6b7280;
+    --sidebar-footer-button-text: #ffffff;
+
+    /* ================= Cards ================= */
+    --card-background-50: #ffffff;
+    --card-background-100: #ffffff;
+    --card-background-200: #f3f4f6;
+    --card-background-300: #f9fafb;
+
+    /* ================= Alerts ================= */
+    --alert-success-background: #f0fdf4;
+    --alert-success-icon-background: #16a34a;
+    --alert-success-border: #bbf7d0;
+    --alert-success-close-icon: #16a34a;
+    --alert-success-title: #166534;
+    --alert-success-description: #15803d;
+    --alert-success-button-background: #16a34a;
+    --alert-success-button-hover-background: #15803d;
+    --alert-success-button-text: #15803d;
+
+    --alert-danger-background: #fef2f2;
+    --alert-danger-icon-background: #dc2626;
+    --alert-danger-border: #fecaca;
+    --alert-danger-close-icon: #b91c1c;
+    --alert-danger-title: #991b1b;
+    --alert-danger-description: #b91c1c;
+    --alert-danger-button-background: #dc2626;
+    --alert-danger-button-hover-background: #b91c1c;
+    --alert-danger-button-text: #b91c1c;
+
+    --alert-info-background: #f0f9ff;
+    --alert-info-icon-background: #0ea5e9;
+    --alert-info-border: #bae6fd;
+    --alert-info-close-icon: #0284c7;
+    --alert-info-title: #075985;
+    --alert-info-description: #0369a1;
+    --alert-info-button-background: #0284c7;
+    --alert-info-button-hover-background: #0369a1;
+    --alert-info-button-text: #0369a1;
+
+    --alert-warning-background: #fefce8;
+    --alert-warning-icon-background: #eab308;
+    --alert-warning-border: #fef08a;
+    --alert-warning-close-icon: #ca8a04;
+    --alert-warning-title: #854d0e;
+    --alert-warning-description: #a16207;
+    --alert-warning-button-background: #ca8a04;
+    --alert-warning-button-hover-background: #a16207;
+    --alert-warning-button-text: #ca8a04;
+
+    --alert-default-background: #f9fafb;
+    --alert-default-icon-background: #6b7280;
+    --alert-default-border: #e5e7eb;
+    --alert-default-close-icon: #4b5563;
+    --alert-default-title: #1f2937;
+    --alert-default-description: #374151;
+    --alert-default-button-background: #52525b;
+    --alert-default-button-hover-background: #374151;
+    --alert-default-button-text: #374151;
+
+    /* ================= Inputs ================= */
+    --input-background: #ffffff;
+    --input-label-text: #374151;
+    --input-label-text-color: #52525b;
+    --input-disabled-text: #d1d5db;
+    --input-disabled-background: #fafafa;
+    --input-disabled-border: #e4e4e7;
+    --input-placeholder-text: #9ca3af;
+    --input-placeholder-text-color: #a1a1aa;
+    --input-primary-focus-border: var(--primary);
+    --input-error-focus-border: #ef4444;
+    --input-success-focus-border: #22c55e;
+    --input-error: #ef4444;
+    --input-success: #22c55e;
+    --input-border: #d4d4d8;
+
+    /* ================= Tabs / Checkbox / Toggle ================= */
+    --tab-background: #f4f4f5;
+    --tab-active-background: #ffffff;
+    --tab-secondary-active-background: #eff3ff;
+    --tab-secondary-active-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+    --checkbox-background: #ffffff;
+    --checkbox-checked-border: var(--primary);
+    --checkbox-checked-background: var(--primary);
+    --checkbox-checked-icon-color: #ffffff;
+    --toggle-default-background: #e4e4e7;
+    --toggle-disabled-foreground: #ffffff;
+    --toggle-disabled-background: #f3f4f6;
+    --toggle-active-background: var(--primary);
+
+    /* ================= Overlays ================= */
+    --scrollbar-background: #e5e7eb;
+    --datepicker-background: #ffffff;
+    --datepicker-selected-background: var(--primary);
+    --datepicker-selected-hover-background: #f9fafb;
+    --dropdown-background: #ffffff;
+    --dropdown-hover-background: #f4f4f5;
+    --dropdown-secondary-background: #ffffff;
+    --dropdown-divider: #f3f4f6;
+    --dropdowns-background: #ffffff;
+    --tooltip-text: #374151;
+    --tooltip-text-color: #52525b;
+    --tooltip-border: #e5e7eb;
+    --tooltip-background: #ffffff;
+    --popover-title-background: #f3f4f6;
+    --popover-border: #e5e7eb;
+
+    /* ================= Calendar ================= */
+    --calendar-primary-badge: var(--primary);
+    --calendar-primary-background: #eff3ff;
+    --calendar-primary-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+    --calendar-success-badge: #22c55e;
+    --calendar-success-background: #f0fdf4;
+    --calendar-warning-badge: #f97316;
+    --calendar-warning-background: #fff7ed;
+    --calendar-danger-badge: #ef4444;
+    --calendar-danger-background: #fef2f2;
+    --calendar-info-badge: #0ea5e9;
+    --calendar-info-background: #f0f9ff;
+    --calendar-text: #374151;
+    --calendar-menu-text: #9ca3af;
+    --calendar-dropdown-background: #ffffff;
+
+    /* ================= Skeleton / Modal ================= */
+    --skeleton-gradient-50: #e5e7eb;
+    --skeleton-gradient-100: #f9fafb;
+    --skeleton-gradient-200: #e5e7eb;
+    --modal-button-success-background: #16a34a;
+    --modal-button-info-background: #0284c7;
+    --modal-button-warning-background: #ca8a04;
+    --modal-button-error-background: #dc2626;
+
+    /* ================= Chart ================= */
+    --chart-tick: var(--text-50);
+    --chart-legend: var(--text-50);
+    --chart-grid: var(--border-color-base-100);
+
+    /* ================= NextAdmin app shell ================= */
+    --background-gray-secondary_alt_2: #f4f4f5;
+    --background-gray-secondary_alt: #f4f4f5;
+    --background-gray-primary: #fafafa;
+    --background-gray-secondary: #f4f4f5;
+    --background-gray-tertiary: #e4e4e7;
+    --background-gray-quaternary: #d4d4d8;
+    --card-surface-area: #fcfcfd;
+    --card-background: #ffffff;
+    --card-border: #e8e8e8;
+    --card-surface-border: #e5e5e5;
+    --background-white-primary: #ffffff;
+    --background-white-secondary: #ffffff;
+    --sidebar-navigation-nav-item-nav-hover-background: rgba(0, 0, 0, 0.05);
+    --button-primary-outline-background: #ffffff;
+    --button-primary-outline-hover-background: #f4f4f5;
+    --button-primary-outline-text: #27272a;
+    --button-primary-outline-stroke: #d4d4d8;
+    --button-error-outline-background: #fef2f2;
+    --button-error-outline-text: #b91c1c;
+    --button-error-outline-stroke: #ef4444;
+
+    --brand-100: #e0e7ff;
+    --brand-200: #c7d2fe;
+    --brand-300: #a5b4fc;
+    --brand-400: #818cf8;
+    --brand-500: var(--primary);
+    --brand-600: #3c35d8;
+    --brand-600: color-mix(in srgb, var(--primary), #000 15%);
+    --base-white: #ffffff;
+    --green-600: #16a34a;
+    --red-600: #dc2626;
+    --gray-100: #f4f4f5;
+
+    --text-tertiary: #71717a;
+    --text-secondary: #52525b;
+    --text-primary: #18181b;
+    --text-disable: #a1a1aa;
+
+    --icon-tertiary: #71717a;
+    --icon-secondary: #52525b;
+    --icon-primary: #27272a;
+
+    --border-primary: #f4f4f5;
+    --border-secondary: #e4e4e7;
+    --border-secondary-alt: #e4e4e7;
+
+    /* ================= Shadows ================= */
+    --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+    --shadow-sm: 0px 1px 3px 0px rgba(16, 24, 40, 0.1);
+    --shadow-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.06);
+    --shadow-lg: 0px 12px 16px -4px rgba(16, 24, 40, 0.08), 0px 4px 6px -2px rgba(16, 24, 40, 0.03);
+    --shadow-xl: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+    --shadow-2xl: 0px 1px 2px 0px rgba(16, 24, 40, 0.05);
+    --shadow-3xl: 0 32px 64px -12px rgba(16, 24, 40, 0.14);
+    --popover-shadow: 0px 5px 5px -2px rgba(16, 24, 40, 0.04);
+
+    /* ================= Legacy aliases =================
+     * The pre-migration UI referenced these variables directly. They now
+     * resolve to template tokens so nothing renders off-palette while the
+     * remaining screens are migrated. Prefer the semantic tokens above.
+     */
+    --primary-foreground: #ffffff;
+    --accent: var(--brand-600);
+    --background: #ffffff;
+    --foreground: var(--text-primary);
+    --card: var(--card-background);
+    --card-foreground: var(--text-primary);
+    --muted: var(--background-gray-secondary);
+    --muted-foreground: var(--text-tertiary);
+    --border: var(--border-secondary);
+    --ring: var(--brand-500);
+    --surface: var(--card-surface-area);
+    --radius: 0.75rem;
+    --sidebar-background: var(--card-surface-area);
+    --sidebar-foreground: var(--text-primary);
+    --sidebar-border: var(--card-border);
+  }
+}
+
+/* Layered so utility classes (e.g. `font-numeric`) can override the default
+   font-family — an unlayered rule would otherwise beat any `@layer
+   utilities` class regardless of selector specificity. */
+@layer base {
+  body {
+    background: var(--background-gray-secondary_alt_2);
+    color: var(--text-primary);
+    font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, "SF Pro Text",
+      "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Native form controls adopt the brand color without a forms plugin */
+input[type="checkbox"],
+input[type="radio"],
+input[type="range"],
+progress {
+  accent-color: var(--brand-500);
+}
+
+/* Custom Minimalist Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-background);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--background-gray-quaternary);
+}
+
+/* Autofill fixes */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset;
+  -webkit-text-fill-color: var(--text-primary);
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+@layer utilities {
+  /* Thin scrollbar used by the app shell panes */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-background) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-background);
+    border-radius: 9999px;
+  }
+
+  .animate-shimmer {
+    animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes toast-in {
+  from {
+    transform: translateY(12px) scale(0.96);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float-a {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(14px, -22px) rotate(6deg);
+  }
+}
+
+@keyframes float-b {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-16px, 20px) rotate(-5deg);
+  }
+}
+
+.animate-float-a {
+  animation: float-a 9s ease-in-out infinite;
+}
+
+.animate-float-b {
+  animation: float-b 11s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-a,
+  .animate-float-b {
+    animation: none;
+  }
+}

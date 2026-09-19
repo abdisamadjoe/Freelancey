@@ -1,0 +1,14 @@
+export { MagicLinkEmail } from "./templates/magic-link";
+export { WelcomeEmail } from "./templates/welcome";
+export { InvitationEmail } from "./templates/invitation";
+export { ResetPasswordEmail } from "./templates/reset-password";
+export { VerifyEmail } from "./templates/verify-email";
+export { ProjectUpdateEmail } from "./templates/project-update";
+export { TaskAssignedEmail } from "./templates/task-assigned";
+export { InvoiceSentEmail } from "./templates/invoice-sent";
+export { DecisionClosedEmail } from "./templates/decision-closed";
+export { DocumentUploadedEmail } from "./templates/document-uploaded";
+export { DocumentRespondedEmail } from "./templates/document-responded";
+export { DocumentReminderEmail } from "./templates/document-reminder";
+export { DocumentSigningTurnEmail } from "./templates/document-signing-turn";
+export { InvoicePaidEmail } from "./templates/invoice-paid";

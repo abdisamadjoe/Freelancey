@@ -1,0 +1,14 @@
+{
+  "$schema": "https://railway.com/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build -w @freelancey/database -w @freelancey/shared -w @freelancey/email -w @freelancey/api"
+  },
+  "deploy": {
+    "startCommand": "npm run start:prod -w @freelancey/api",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 30,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
