@@ -31,6 +31,7 @@ import { TimeEntriesModule } from "./time-entries/time-entries.module";
 import { CalendarModule } from "./calendar/calendar.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { ContractsModule } from "./contracts/contracts.module";
+import { ClientRecordsModule } from "./client-records/client-records.module";
 import { AppController } from "./app.controller";
 import { HealthController } from "./health.controller";
 import { SessionMiddleware } from "./auth/session.middleware";
@@ -91,6 +92,7 @@ import { PlanGuard } from "./common/guards/plan.guard";
     CalendarModule,
     OrganizationsModule,
     ContractsModule,
+    ClientRecordsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

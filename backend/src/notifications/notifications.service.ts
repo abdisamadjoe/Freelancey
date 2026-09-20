@@ -116,6 +116,20 @@ export class NotificationsService {
     );
   }
 
+  /** One digest per workspace listing leads whose follow-up is due. Fire-and-forget. */
+  notifyLeadFollowUps(orgId: string, names: string[], total: number): void {
+    this.sendLeadFollowUpDigest(orgId, names, total).catch((err) => {
+      this.logger.error({ err, orgId }, "Failed to send lead follow-up digest");
+    });
+  }
+
+  /** Tell the workspace's owners/admins about a lead from the public form. Fire-and-forget. */
+  notifyNewLead(orgId: string, clientId: string, name: string, summary: string): void {
+    this.sendNewLeadNotifications(orgId, clientId, name, summary).catch((err) => {
+      this.logger.error({ err, clientId }, "Failed to send new lead notifications");
+    });
+  }
+
   /**
    * Notify relevant users when a task's status changes.
    * Fire-and-forget.
@@ -1087,6 +1101,34 @@ export class NotificationsService {
     });
     const users = await this.neonAuthUsers.findMany(assignments.map((a) => a.userId));
     return users.map((u) => ({ id: u.id, name: u.name, email: u.email }));
+  }
+
+  private async sendNewLeadNotifications(orgId: string, clientId: string, name: string, summary: string) {
+    const admins = await this.getOrgAdmins(orgId);
+    if (admins.length === 0) return;
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      orgId,
+      "new_lead",
+      `New lead: ${name}`,
+      summary,
+      `/dashboard/leads/${clientId}`,
+    );
+  }
+
+  private async sendLeadFollowUpDigest(orgId: string, names: string[], total: number) {
+    const admins = await this.getOrgAdmins(orgId);
+    if (admins.length === 0) return;
+    const shown = names.slice(0, 3).join(", ");
+    const more = total > 3 ? ` and ${total - 3} more` : "";
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      orgId,
+      "lead_follow_up",
+      total === 1 ? "1 lead to follow up" : `${total} leads to follow up`,
+      `${shown}${more}`,
+      "/dashboard/leads",
+    );
   }
 
   private async sendClientRequestCreatedNotifications(

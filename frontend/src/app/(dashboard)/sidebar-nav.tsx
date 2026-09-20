@@ -13,6 +13,7 @@ import {
   type LucideIcon,
   ScrollText,
   Settings,
+  UserPlus,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -43,6 +44,7 @@ const NAV_SECTIONS: NavSection[] = [
     label: "Main Menu",
     items: [
       { title: "Overview", href: "/dashboard", icon: LayoutDashboard },
+      { title: "Leads", href: "/dashboard/leads", icon: UserPlus },
       { title: "Projects", href: "/dashboard/projects", icon: FolderKanban },
       { title: "Calendar", href: "/dashboard/calendar", icon: Calendar },
       { title: "Clients", href: "/dashboard/clients", icon: Users },
