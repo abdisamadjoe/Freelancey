@@ -51,6 +51,9 @@ const mockPrisma = {
   member: {
     count: vi.fn(() => Promise.resolve(2)),
   },
+  client: {
+    findFirst: vi.fn((): Promise<unknown> => Promise.resolve(null)),
+  },
   $transaction: vi.fn((arg: unknown) => {
     if (typeof arg === "function") {
       return (arg as (tx: typeof mockPrisma) => Promise<unknown>)(mockPrisma);
@@ -116,6 +119,35 @@ describe("ProjectsService", () => {
         },
       },
       include: { clients: { select: { userId: true } } },
+    });
+  });
+
+  describe("create for a client record", () => {
+    it("links the project to the client and gives its portal contacts access, merged with explicit assignees", async () => {
+      mockPrisma.client.findFirst.mockResolvedValue({
+        id: "client-1",
+        contacts: [{ userId: "user-2" }, { userId: null }, { userId: "user-3" }],
+      });
+      await service.create({ name: "Site", clientId: "client-1", clientUserIds: ["user-1", "user-2"] } as never, "org-1");
+
+      expect(mockPrisma.client.findFirst).toHaveBeenCalledWith({
+        where: { id: "client-1", organizationId: "org-1" },
+        select: { id: true, contacts: { select: { userId: true } } },
+      });
+      const data = (mockPrisma.project.create.mock.calls.at(-1)![0] as { data: Record<string, unknown> }).data;
+      expect(data.clientId).toBe("client-1");
+      expect(data.clients).toEqual({
+        create: [{ userId: "user-1" }, { userId: "user-2" }, { userId: "user-3" }],
+      });
+    });
+
+    it("rejects a client record from another workspace and creates nothing", async () => {
+      mockPrisma.client.findFirst.mockResolvedValue(null);
+      const before = mockPrisma.project.create.mock.calls.length;
+      await expect(service.create({ name: "Site", clientId: "foreign" } as never, "org-1")).rejects.toThrow(
+        "Client does not belong to this organization",
+      );
+      expect(mockPrisma.project.create.mock.calls.length).toBe(before);
     });
   });
 

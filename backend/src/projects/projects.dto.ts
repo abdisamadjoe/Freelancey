@@ -28,6 +28,11 @@ export class CreateProjectDto {
   @IsString({ each: true })
   @IsOptional()
   clientUserIds?: string[];
+
+  /** The client (relationship) record this project is for. Its portal contacts get access automatically. */
+  @IsString()
+  @IsOptional()
+  clientId?: string;
 }
 
 export class ClientProjectListQueryDto extends PaginationQueryDto {

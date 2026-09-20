@@ -32,6 +32,7 @@ import { CalendarModule } from "./calendar/calendar.module";
 import { OrganizationsModule } from "./organizations/organizations.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { ClientRecordsModule } from "./client-records/client-records.module";
+import { ClientOnboardingModule } from "./client-onboarding/client-onboarding.module";
 import { AppController } from "./app.controller";
 import { HealthController } from "./health.controller";
 import { SessionMiddleware } from "./auth/session.middleware";
@@ -93,6 +94,7 @@ import { PlanGuard } from "./common/guards/plan.guard";
     OrganizationsModule,
     ContractsModule,
     ClientRecordsModule,
+    ClientOnboardingModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

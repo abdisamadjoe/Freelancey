@@ -1,9 +1,13 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
+import { ClientOnboardingService } from "../client-onboarding/client-onboarding.service";
 
 @Injectable()
 export class OrganizationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private clientOnboarding: ClientOnboardingService,
+  ) {}
 
   /** Lists every organization the given user is a member of. */
   async listForUser(userId: string) {
@@ -49,7 +53,7 @@ export class OrganizationsService {
    * their Member row. Replaces Better Auth's organization/accept-invitation
    * endpoint now that Invitation is an app-owned table.
    */
-  async acceptInvitation(invitationId: string, userId: string, userEmail: string) {
+  async acceptInvitation(invitationId: string, userId: string, userEmail: string, userName: string | null = null) {
     const invitation = await this.prisma.invitation.findUnique({ where: { id: invitationId } });
     if (!invitation || invitation.status !== "pending") {
       throw new NotFoundException("Invitation not found or already used");
@@ -75,6 +79,16 @@ export class OrganizationsService {
       }),
       this.prisma.invitation.update({ where: { id: invitationId }, data: { status: "accepted" } }),
     ]);
+
+    // Connect the new login to the client record with this email, give it access
+    // to that client's projects, and tell the owner. Never blocks acceptance.
+    await this.clientOnboarding.onInvitationAccepted({
+      userId,
+      userName,
+      email: userEmail,
+      orgId: invitation.organizationId,
+      role: member.role,
+    });
 
     return { organizationId: invitation.organizationId, memberId: member.id, role: member.role };
   }

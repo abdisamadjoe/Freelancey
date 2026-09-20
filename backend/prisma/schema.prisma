@@ -43,6 +43,7 @@ model Organization {
   labels         Label[]
   timeEntries    TimeEntry[]
   clientRecords  Client[]
+  formTemplates  FormTemplate[]
 
   @@map("organization")
 }
@@ -695,6 +696,8 @@ model Client {
   projects     Project[]
   invoices     Invoice[]
   activities   ActivityLog[]
+  onboarding   OnboardingItem[]
+  formResponses FormResponse[]
 
   @@index([organizationId, stage])
   @@index([organizationId, nextFollowUpAt])
@@ -875,3 +878,70 @@ model ContractVersion {
   @@map("contract_version")
 }
 
+// ─── Client onboarding ───
+// A short checklist per client. Items linked to a document, invoice or form
+// derive their done state from that object at read time, so nothing has to be
+// kept in sync when a document is signed or an invoice is paid. Unlinked items
+// (upload assets, custom) use `done` directly.
+
+model OnboardingItem {
+  id             String    @id @default(cuid())
+  organizationId String
+  clientId       String
+  projectId      String?
+  title          String
+  description    String?
+  kind           String    // "sign_agreement" | "pay_deposit" | "intake" | "upload_assets" | "custom"
+  order          Int       @default(0)
+  done           Boolean   @default(false)
+  doneAt         DateTime?
+  linkedType     String?   // "document" | "invoice" | "form"
+  linkedId       String?
+  createdAt      DateTime  @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@index([organizationId])
+  @@map("onboarding_item")
+}
+
+// Generic questionnaires. `fields` is a JSON array of
+// { key, label, type: "text" | "textarea" | "select" | "url", section, required, options? }.
+model FormTemplate {
+  id             String   @id @default(cuid())
+  organizationId String
+  key            String   // stable identifier, e.g. "website-intake"
+  name           String
+  fields         Json
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  responses    FormResponse[]
+
+  @@unique([organizationId, key])
+  @@map("form_template")
+}
+
+model FormResponse {
+  id             String    @id @default(cuid())
+  organizationId String
+  templateId     String
+  clientId       String
+  projectId      String?
+  answers        Json      @default("{}")
+  status         String    @default("draft") // "draft" | "submitted"
+  submittedAt    DateTime?
+  submittedById  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  template FormTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  client   Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, clientId])
+  @@index([clientId])
+  @@index([organizationId])
+  @@map("form_response")
+}

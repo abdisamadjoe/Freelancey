@@ -55,8 +55,9 @@ export class OrganizationsController {
     @Body() dto: AcceptInvitationDto,
     @CurrentUser("id") userId: string,
     @CurrentUser("email") userEmail: string,
+    @CurrentUser("name") userName: string,
   ) {
-    return this.organizations.acceptInvitation(dto.invitationId, userId, userEmail);
+    return this.organizations.acceptInvitation(dto.invitationId, userId, userEmail, userName);
   }
 
   @Patch("current")
