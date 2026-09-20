@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { Card } from "@/components/ui";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 /**
  * Split-screen authentication shell, composed to the NextAdmin auth layout:
@@ -33,7 +34,8 @@ export function AuthLayout({
       </div>
 
       {/* Form panel */}
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-4 sm:p-8 lg:p-10 xl:p-12">
+      <div className="relative flex flex-1 items-center justify-center overflow-y-auto p-4 sm:p-8 lg:p-10 xl:p-12">
+        <ThemeToggle className="absolute top-4 right-4" />
         <div className={`w-full ${wide ? "max-w-3xl" : "max-w-sm"}`}>
           <div className="mb-6 flex justify-center">
             <Image

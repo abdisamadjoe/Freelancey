@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Inter } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "./providers";
+import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
 // Only regular/medium/semibold are loaded — bold (700) and heavier weights
@@ -73,6 +74,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
         {trackers.map((tracker, i) => (
           <Script
             key={tracker.src || i}
