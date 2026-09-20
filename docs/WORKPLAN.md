@@ -196,3 +196,10 @@ Do not start Phase 2 until the answers to decisions 1 to 4 are in.
 7. Existing clients: run `npm run db:backfill-clients` (dry run) and check the counts before `--apply`.
 8. Regression: existing clients still see their projects, invoices and documents; a client cannot see any lead or another client's checklist.
 
+## Testing log (2026-09-21)
+
+- Backend: 715 unit tests, 43 end-to-end tests over HTTP against a real Postgres, 35 integration tests, mutation check (6 of 6 caught). Migrations verified from an empty database with zero drift. See audit Appendix E.
+- Fixed while testing: stale "no organization" session after accepting an invitation, workspace switching ignored by the session cache, case-sensitive email lookup, optimistic tick in the onboarding panel.
+- Browser: 25 functional checks (leads, public form, detail, won, create project, onboarding, portal questionnaire, isolation) and 28 dark mode checks passing.
+- Found, not fixed (need your decision): undeclared Sentry dependencies (P0), account deletion and admin password reset throwing, custom brand colors not reaching buttons and links.
+
