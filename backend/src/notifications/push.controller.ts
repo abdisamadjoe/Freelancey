@@ -4,7 +4,9 @@ import {
   Post,
   Body,
   Req,
+  UseGuards,
 } from "@nestjs/common";
+import { AuthGuard } from "../common";
 import { IsString, IsNotEmpty, IsDefined, ValidateNested, IsUrl } from "class-validator";
 import { Type } from "class-transformer";
 import { PushService } from "./push.service";
@@ -35,6 +37,7 @@ class UnsubscribeDto {
 }
 
 @Controller("push")
+@UseGuards(AuthGuard)
 export class PushController {
   constructor(private readonly pushService: PushService) {}
 

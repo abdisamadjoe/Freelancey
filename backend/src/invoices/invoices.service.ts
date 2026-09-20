@@ -8,6 +8,7 @@ import type { Invoice, InvoiceLineItem } from "@/database";
 import { PrismaService } from "../prisma/prisma.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { paginationArgs, paginatedResponse } from "../common";
+import { calculateInvoiceTotal } from "../payments/invoice-total";
 import { CreateInvoiceDto, CreateUploadedInvoiceDto, UpdateInvoiceDto, InvoiceListQueryDto } from "./invoices.dto";
 
 interface InvoiceWhereInput {
@@ -37,7 +38,7 @@ export class InvoicesService {
       return await this.prisma.$transaction(async (tx) => {
         const lastInvoice = await tx.invoice.findFirst({
           where: { organizationId: orgId },
-          orderBy: { invoiceNumber: "desc" },
+          orderBy: { createdAt: "desc" },
           select: { invoiceNumber: true },
         });
 
@@ -89,7 +90,7 @@ export class InvoicesService {
       return await this.prisma.$transaction(async (tx) => {
         const lastInvoice = await tx.invoice.findFirst({
           where: { organizationId: orgId },
-          orderBy: { invoiceNumber: "desc" },
+          orderBy: { createdAt: "desc" },
           select: { invoiceNumber: true },
         });
 
@@ -241,8 +242,15 @@ export class InvoicesService {
   async update(id: string, dto: UpdateInvoiceDto, orgId: string) {
     const invoice = await this.prisma.invoice.findFirst({
       where: { id, organizationId: orgId },
+      include: { lineItems: true },
     });
     if (!invoice) throw new NotFoundException("Invoice not found");
+
+    // Once an invoice has gone out, its amounts are part of the record the
+    // client saw (and possibly paid), so only drafts can change line items.
+    if (dto.lineItems && invoice.status !== "draft") {
+      throw new BadRequestException("Only draft invoices can have their line items changed");
+    }
 
     if (dto.status && dto.status !== invoice.status) {
       const allowedTransitions: Record<string, string[]> = {
@@ -262,6 +270,12 @@ export class InvoicesService {
 
     const isTransitionToSent =
       dto.status === "sent" && invoice.status !== "sent";
+    const isTransitionToPaid =
+      dto.status === "paid" && invoice.status !== "paid";
+    // Manual (off-platform) payments must leave the same trace as Stripe ones.
+    const paidFields = isTransitionToPaid
+      ? { paidAt: new Date(), paidAmount: calculateInvoiceTotal(invoice) }
+      : {};
 
     const dueDateValue =
       dto.dueDate === null
@@ -281,6 +295,7 @@ export class InvoicesService {
           where: { id, organizationId: orgId },
           data: {
             status: dto.status,
+            ...paidFields,
             dueDate: dueDateValue,
             notes: dto.notes,
             lineItems: {
@@ -299,6 +314,7 @@ export class InvoicesService {
         where: { id, organizationId: orgId },
         data: {
           status: dto.status,
+          ...paidFields,
           dueDate: dueDateValue,
           notes: dto.notes,
         },
@@ -308,6 +324,9 @@ export class InvoicesService {
 
     if (isTransitionToSent) {
       this.notifications.notifyInvoiceSent(id);
+    }
+    if (isTransitionToPaid) {
+      this.notifications.notifyInvoicePaid(id);
     }
 
     return updated;

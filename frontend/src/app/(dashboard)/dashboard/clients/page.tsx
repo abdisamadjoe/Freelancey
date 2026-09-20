@@ -552,7 +552,7 @@ export default function PeoplePage() {
                       className="sm:w-40"
                     >
                       <option value="admin">Admin</option>
-                      <option value="owner">Owner</option>
+                      {currentRole === "owner" && <option value="owner">Owner</option>}
                     </NativeSelect>
                     <Button type="submit" disabled={teamInviting}>
                       <UserPlus />

@@ -12,7 +12,16 @@ export class SearchService {
   async search(orgId: string, q: string) {
     // Members are matched by their Neon Auth user's name/email, which isn't
     // a Prisma relation — resolve matching user ids first.
-    const matchingUsers = await this.neonAuthUsers.searchByNameOrEmail(q, 20);
+    // Only this organization's clients are searched; the auth table is global.
+    const orgClientIds = (
+      await this.prisma.member.findMany({
+        where: { organizationId: orgId, role: "member" },
+        select: { userId: true },
+      })
+    ).map((m) => m.userId);
+    const matchingUsers = orgClientIds.length
+      ? await this.neonAuthUsers.searchByNameOrEmail(q, 20, orgClientIds)
+      : [];
     const matchingUserIds = matchingUsers.map((u) => u.id);
     const userById = new Map(matchingUsers.map((u) => [u.id, u]));
 
@@ -86,7 +95,7 @@ export class SearchService {
     const clientProfiles =
       memberUserIds.length > 0
         ? await this.prisma.clientProfile.findMany({
-            where: { userId: { in: memberUserIds } },
+            where: { userId: { in: memberUserIds }, organizationId: orgId },
             select: { userId: true, company: true },
           })
         : [];

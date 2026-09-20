@@ -13,6 +13,7 @@ describe("ContractsService", () => {
       project: { findFirst: vi.fn() },
       organization: { findUnique: vi.fn() },
       clientProfile: { findUnique: vi.fn() },
+      member: { findFirst: vi.fn() },
       contract: {
         create: vi.fn(),
         findMany: vi.fn(),
@@ -43,6 +44,28 @@ describe("ContractsService", () => {
       pdfServiceMock,
       neonAuthUsersMock,
     );
+  });
+
+  describe("client must belong to the organization", () => {
+    it("create rejects a clientId that is not an org member and never reads the user", async () => {
+      prismaMock.project.findFirst.mockResolvedValue({ id: "p1", name: "P", clients: [], tasks: [] });
+      prismaMock.organization.findUnique.mockResolvedValue({ name: "Org" });
+      prismaMock.member.findFirst.mockResolvedValue(null);
+      await expect(
+        service.create("p1", { title: "T", template: "website-design", clientId: "foreign-user" } as any, "org-1", "u1"),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(neonAuthUsersMock.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.contract.create).not.toHaveBeenCalled();
+    });
+
+    it("update rejects a clientId that is not an org member", async () => {
+      prismaMock.contract.findFirst.mockResolvedValue({ id: "c1", status: "draft", version: 1 });
+      prismaMock.member.findFirst.mockResolvedValue(null);
+      await expect(service.update("c1", { clientId: "foreign-user" } as any, "org-1")).rejects.toBeInstanceOf(
+        BadRequestException,
+      );
+      expect(prismaMock.contract.update).not.toHaveBeenCalled();
+    });
   });
 
   describe("create", () => {

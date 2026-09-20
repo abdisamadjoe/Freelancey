@@ -5,11 +5,14 @@ import {
   Param,
   Query,
   Req,
+  UseGuards,
 } from "@nestjs/common";
+import { AuthGuard } from "../common";
 import { InAppNotificationsService } from "./in-app-notifications.service";
 import { ListNotificationsDto } from "./in-app-notifications.dto";
 
 @Controller("notifications")
+@UseGuards(AuthGuard)
 export class InAppNotificationsController {
   constructor(private readonly inApp: InAppNotificationsService) {}
 

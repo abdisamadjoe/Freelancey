@@ -6,6 +6,6 @@ export class AppController {
   @Public()
   @Get()
   getHello() {
-    return { message: "yeah bro.. Freelance is up and cooking." };
+    return { message: "yeah bro.. Freelancey is up and cooking." };
   }
 }

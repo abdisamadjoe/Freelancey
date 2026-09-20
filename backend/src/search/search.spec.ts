@@ -127,7 +127,12 @@ function resetAllMocksToEmpty() {
   mockPrisma.project.findMany.mockReturnValue(Promise.resolve([]));
   mockPrisma.task.findMany.mockReturnValue(Promise.resolve([]));
   mockPrisma.file.findMany.mockReturnValue(Promise.resolve([]));
-  mockPrisma.member.findMany.mockReturnValue(Promise.resolve([]));
+  // The service first lists the org's client ids (select { userId }) to scope
+  // the global user search, then fetches the matching member rows.
+  mockPrisma.member.findMany.mockImplementation(((args: PrismaArgs) =>
+    Promise.resolve(
+      args?.select && !("id" in args.select) ? [{ userId: "user-1" }] : [],
+    )) as never);
   mockPrisma.clientProfile.findMany.mockReturnValue(Promise.resolve([]));
   // Default: one matching Neon Auth user, so the member query (which is only
   // fired when there's at least one matching user id) still exercises its
@@ -447,17 +452,36 @@ describe("SearchService", () => {
       expect(mockNeonAuthUsers.searchByNameOrEmail).toHaveBeenCalledWith(
         QUERY,
         20,
+        ["user-1"],
       );
     });
 
-    it("skips the member query entirely when no Neon Auth users match", async () => {
+    it("limits the user search to this organization's clients, never the global user table", async () => {
+      await service.search(ORG, QUERY);
+
+      expect(mockPrisma.member.findMany).toHaveBeenCalledWith({
+        where: { organizationId: ORG, role: "member" },
+        select: { userId: true },
+      });
+    });
+
+    it("does not search users at all when the organization has no clients", async () => {
+      mockPrisma.member.findMany.mockReturnValue(Promise.resolve([]));
+
+      await service.search(ORG, QUERY);
+
+      expect(mockNeonAuthUsers.searchByNameOrEmail).not.toHaveBeenCalled();
+    });
+
+    it("skips the member row query when no Neon Auth users match", async () => {
       mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([]),
       );
 
       await service.search(ORG, QUERY);
 
-      expect(mockPrisma.member.findMany).not.toHaveBeenCalled();
+      // Only the client-id scoping query runs.
+      expect(mockPrisma.member.findMany).toHaveBeenCalledTimes(1);
     });
 
     it("queries members scoped to the provided organizationId", async () => {
@@ -571,7 +595,7 @@ describe("SearchService", () => {
 
       expect(mockPrisma.clientProfile.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: { userId: { in: ["user-1"] } },
+          where: { userId: { in: ["user-1"] }, organizationId: ORG },
         }),
       );
     });
@@ -704,7 +728,8 @@ describe("SearchService", () => {
       expect(mockPrisma.project.findMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.task.findMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.file.findMany).toHaveBeenCalledTimes(1);
-      expect(mockPrisma.member.findMany).toHaveBeenCalledTimes(1);
+      // One scoping query (org client ids) plus one for the matching rows.
+      expect(mockPrisma.member.findMany).toHaveBeenCalledTimes(2);
     });
 
     it("always passes the search term to every primary query", async () => {

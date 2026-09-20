@@ -141,6 +141,7 @@ export class ClientsController {
     @CurrentOrg("name") orgName: string,
     @CurrentUser("id") inviterId: string,
     @CurrentUser("name") inviterName: string,
+    @CurrentMember("role") inviterRole: string,
   ) {
     return this.clientsService.inviteMember(
       dto.email,
@@ -149,6 +150,7 @@ export class ClientsController {
       inviterId,
       inviterName,
       orgName,
+      inviterRole,
     );
   }
 
