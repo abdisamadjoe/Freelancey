@@ -40,14 +40,20 @@ export class SessionMiddleware implements NestMiddleware {
         return;
       }
 
-      const cached = this.cache.get(token);
+      // The client SDK reuses one JWT for many requests, so the cache key must
+      // also carry the active workspace: switching workspace (or joining one)
+      // changes the cookie, not the token.
+      const activeOrgCookie = req.cookies?.[ACTIVE_ORG_COOKIE];
+      const cacheKey = `${token}|${activeOrgCookie ?? ""}`;
+
+      const cached = this.cache.get(cacheKey);
       if (cached && cached.expiresAt > Date.now()) {
         authReq.user = cached.user;
         if (cached.organization) authReq.organization = cached.organization;
         if (cached.member) authReq.member = cached.member;
         return next();
       }
-      if (cached) this.cache.delete(token);
+      if (cached) this.cache.delete(cacheKey);
 
       const payload = await this.stackAuth.verifyAccessToken(token);
       if (!payload) {
@@ -74,7 +80,6 @@ export class SessionMiddleware implements NestMiddleware {
       // Resolve the active organization: prefer the org named by the
       // active_org cookie (if the user is actually a member of it),
       // otherwise fall back to their most recently joined org.
-      const activeOrgCookie = req.cookies?.[ACTIVE_ORG_COOKIE];
       const member = await this.prisma.member.findFirst({
         where: activeOrgCookie
           ? { userId: payload.sub, organizationId: activeOrgCookie }
@@ -94,12 +99,17 @@ export class SessionMiddleware implements NestMiddleware {
         };
       }
 
-      this.cache.set(token, {
-        user: authReq.user,
-        organization: authReq.organization,
-        member: authReq.member,
-        expiresAt: Date.now() + SESSION_CACHE_TTL,
-      });
+      // Never cache a session that has no membership: the user is about to
+      // create or join a workspace (accepting an invitation, onboarding), and a
+      // cached "no organization" answer would 401 their very next requests.
+      if (authReq.member) {
+        this.cache.set(cacheKey, {
+          user: authReq.user,
+          organization: authReq.organization,
+          member: authReq.member,
+          expiresAt: Date.now() + SESSION_CACHE_TTL,
+        });
+      }
 
       if (this.cache.size > 1000) {
         const now = Date.now();

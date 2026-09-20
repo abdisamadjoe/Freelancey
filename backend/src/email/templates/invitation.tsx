@@ -14,12 +14,15 @@ interface InvitationEmailProps {
   inviteUrl: string;
   organizationName: string;
   inviterName?: string;
+  /** When set, the invite is framed around getting started on this project. */
+  projectName?: string;
 }
 
 export function InvitationEmail({
   inviteUrl,
   organizationName,
   inviterName,
+  projectName,
 }: InvitationEmailProps) {
   return (
     <Html>
@@ -34,8 +37,10 @@ export function InvitationEmail({
             {inviterName
               ? `${inviterName} has invited you to join`
               : "You have been invited to join"}{" "}
-            {organizationName}&apos;s client portal. Click below to accept the
-            invitation and access your projects.
+            {organizationName}&apos;s client portal.{" "}
+            {projectName
+              ? `Accept the invitation to see ${projectName} and finish a few quick steps to get started.`
+              : "Click below to accept the invitation and access your projects."}
           </Text>
           <Link
             href={inviteUrl}

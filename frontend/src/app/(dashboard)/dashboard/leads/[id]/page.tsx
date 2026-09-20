@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ArrowLeft, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { useParams, useRouter } from "next/navigation";
+import { ArrowLeft, CheckCircle2, FolderPlus, RotateCcw, XCircle } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/toast";
+import { OnboardingPanel } from "@/components/onboarding-panel";
 import {
   Alert,
   Badge,
@@ -49,7 +50,11 @@ const blankToNull = (v: string) => (v.trim() ? v.trim() : null);
 
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const { success, error: showError } = useToast();
+  const [projectOpen, setProjectOpen] = useState(false);
+  const [projectForm, setProjectForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [creatingProject, setCreatingProject] = useState(false);
   const [record, setRecord] = useState<ClientDetail | null>(null);
   const [activity, setActivity] = useState<ClientActivity[]>([]);
   const [loadError, setLoadError] = useState("");
@@ -160,6 +165,28 @@ export default function LeadDetailPage() {
     }
   }
 
+  async function createProject(e: React.FormEvent) {
+    e.preventDefault();
+    setCreatingProject(true);
+    try {
+      const project = await apiFetch<{ id: string }>("/projects", {
+        method: "POST",
+        body: JSON.stringify({
+          name: projectForm.name,
+          clientId: id,
+          startDate: projectForm.startDate || undefined,
+          endDate: projectForm.endDate || undefined,
+        }),
+      });
+      success("Project created");
+      router.push(`/dashboard/projects/${project.id}`);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not create the project");
+    } finally {
+      setCreatingProject(false);
+    }
+  }
+
   async function markLost(e: React.FormEvent) {
     e.preventDefault();
     if (await patch({ stage: "lost", lostReason }, "Marked as lost")) {
@@ -227,6 +254,19 @@ export default function LeadDetailPage() {
                   <span>Lost</span>
                 </Button>
               </>
+            )}
+            {(record.stage === "active" || record.stage === "past") && (
+              <Button
+                size="sm"
+                iconOnly={false}
+                onClick={() => {
+                  setProjectForm({ name: `${record.company || record.name} project`, startDate: "", endDate: "" });
+                  setProjectOpen(true);
+                }}
+              >
+                <FolderPlus />
+                <span>Create project</span>
+              </Button>
             )}
             {(record.stage === "lost" || record.stage === "past") && (
               <Button size="sm" appearance="outline" iconOnly={false} onClick={() => patch({ stage: "lead" }, "Reopened as a lead")}>
@@ -358,6 +398,43 @@ export default function LeadDetailPage() {
           )}
         </Card>
       </div>
+
+      <OnboardingPanel
+        clientId={id}
+        stage={record.stage}
+        hasEmail={Boolean(record.email)}
+        projects={record.projects.filter((p) => !p.archivedAt).map((p) => ({ id: p.id, name: p.name }))}
+      />
+
+      <Modal open={projectOpen} onClose={() => setProjectOpen(false)} size="sm">
+        <form onSubmit={createProject}>
+          <ModalHeader
+            title="Create project"
+            description="Their portal login, if they have one, gets access to it automatically."
+          />
+          <ModalBody className="space-y-4">
+            <Field label="Project name" htmlFor="np-name" required>
+              <Input id="np-name" value={projectForm.name} onChange={(e) => setProjectForm((v) => ({ ...v, name: e.target.value }))} required maxLength={255} />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Start date" htmlFor="np-start">
+                <Input id="np-start" type="date" value={projectForm.startDate} onChange={(e) => setProjectForm((v) => ({ ...v, startDate: e.target.value }))} />
+              </Field>
+              <Field label="Deadline" htmlFor="np-end">
+                <Input id="np-end" type="date" value={projectForm.endDate} onChange={(e) => setProjectForm((v) => ({ ...v, endDate: e.target.value }))} />
+              </Field>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button type="button" appearance="outline" onClick={() => setProjectOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={creatingProject} disabled={!projectForm.name.trim()}>
+              Create project
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
 
       <Modal open={lostOpen} onClose={() => setLostOpen(false)} size="sm">
         <form onSubmit={markLost}>

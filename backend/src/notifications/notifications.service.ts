@@ -116,6 +116,20 @@ export class NotificationsService {
     );
   }
 
+  /** A client accepted their portal invitation. Fire-and-forget. */
+  notifyClientJoined(orgId: string, clientId: string, name: string): void {
+    this.sendToAdmins(orgId, "client_joined", `${name} joined the portal`, "Their invitation was accepted.", `/dashboard/leads/${clientId}`).catch(
+      (err) => this.logger.error({ err, clientId }, "Failed to send client joined notification"),
+    );
+  }
+
+  /** A client submitted the onboarding questionnaire. Fire-and-forget. */
+  notifyIntakeSubmitted(orgId: string, clientId: string, name: string): void {
+    this.sendToAdmins(orgId, "intake_submitted", `${name} completed the questionnaire`, "Their answers are ready to review.", `/dashboard/leads/${clientId}`).catch(
+      (err) => this.logger.error({ err, clientId }, "Failed to send intake notification"),
+    );
+  }
+
   /** One digest per workspace listing leads whose follow-up is due. Fire-and-forget. */
   notifyLeadFollowUps(orgId: string, names: string[], total: number): void {
     this.sendLeadFollowUpDigest(orgId, names, total).catch((err) => {
@@ -1129,6 +1143,12 @@ export class NotificationsService {
       `${shown}${more}`,
       "/dashboard/leads",
     );
+  }
+
+  private async sendToAdmins(orgId: string, type: string, title: string, message: string, link: string) {
+    const admins = await this.getOrgAdmins(orgId);
+    if (admins.length === 0) return;
+    this.createInAppAndPush(admins.map((a) => a.userId), orgId, type, title, message, link);
   }
 
   private async sendClientRequestCreatedNotifications(

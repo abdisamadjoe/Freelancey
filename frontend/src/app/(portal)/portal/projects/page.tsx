@@ -5,6 +5,7 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Pagination } from "@/components/pagination";
+import { PortalOnboardingCard } from "@/components/portal-onboarding-card";
 import { FolderOpen } from "lucide-react";
 import {
   Alert,
@@ -72,6 +73,8 @@ export default function PortalProjectsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Your Projects" />
+
+      <PortalOnboardingCard />
 
       {error && <Alert status="error" title={error} />}
 

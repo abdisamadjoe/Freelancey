@@ -129,7 +129,7 @@ export class ProjectsService {
   }
 
   async create(data: CreateProjectDto, organizationId: string) {
-    const { clientUserIds, startDate, endDate, ...rest } = data;
+    const { clientUserIds, startDate, endDate, clientId, ...rest } = data;
 
     if (clientUserIds?.length) {
       const validMembers = await this.prisma.member.count({
@@ -140,16 +140,30 @@ export class ProjectsService {
       }
     }
 
+    // Portal access for a client record's contacts follows the project, so
+    // nobody has to assign them by hand after creating it.
+    let contactUserIds: string[] = [];
+    if (clientId) {
+      const client = await this.prisma.client.findFirst({
+        where: { id: clientId, organizationId },
+        select: { id: true, contacts: { select: { userId: true } } },
+      });
+      if (!client) throw new BadRequestException("Client does not belong to this organization");
+      contactUserIds = client.contacts.map((c) => c.userId).filter((id): id is string => !!id);
+    }
+    const assignedUserIds = [...new Set([...(clientUserIds ?? []), ...contactUserIds])];
+
     return this.prisma.project.create({
       data: {
         ...rest,
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         organizationId,
-        ...(clientUserIds?.length
+        ...(clientId ? { clientId } : {}),
+        ...(assignedUserIds.length
           ? {
               clients: {
-                create: clientUserIds.map((userId) => ({ userId })),
+                create: assignedUserIds.map((userId) => ({ userId })),
               },
             }
           : {}),

@@ -1651,3 +1651,46 @@ Steps 2–5 deliver "Collecting Leads"; steps 6–8 deliver "Client Onboarding".
 3. Which stages do you really use day to day — is New → Contacted → Qualified → Proposal → Won/Lost enough?
 4. Default onboarding checklist: is Sign agreement → Pay deposit → Complete intake → Upload assets the right starting set?
 5. Should clients be able to complete intake/sign/pay *without* creating an account first?
+
+---
+
+# Appendix E: Corrections and findings from hands-on testing
+
+*Added 2026-09-21 after running the code for real. Where this appendix disagrees with an earlier section, this appendix is right.*
+
+## E.1 How it was tested
+
+| Layer | What was run | Result |
+|---|---|---|
+| Unit tests | Backend (`npm test`) and frontend (`vitest`) | 715 backend + 52 frontend passing |
+| Migrations | All 5 migrations applied to an **empty real Postgres** (embedded, local, throwaway), then `prisma migrate diff` of the live database against `schema.prisma` | Applied cleanly, **zero drift**; the contracts migration re-runs safely on a database that already has the tables |
+| Integration specs | The two real-database specs (`*.int.spec.ts`) on the local database | 35/35 (the 3 that timed out earlier were only network latency to the remote database) |
+| API end to end | The whole Nest app (real guards, validation, controllers, Prisma) over HTTP, only the JWT check and outgoing mail faked: `backend/src/e2e/` | 43/43: leads, public form (throttling, dedupe, markup stripping, bots), onboarding, portal isolation, invitation acceptance, backfill (dry run, apply, re-run), the earlier security fixes |
+| Test strength | Six deliberate mutations (remove tenant scoping, remove the owner-invite rule, remove item ownership, remove the honeypot, remove the invoice lock, restore the session-cache bug) | All six caught by the suite |
+| Production build | `nest build` | Succeeds |
+| Browser | Chromium driving the real pages against the real backend (an isolated copy of the frontend with only the two auth files replaced by test doubles) | 25 functional checks and 28 dark-mode checks passing |
+
+## E.2 Corrections to earlier sections
+
+| # | Earlier claim | Reality | Evidence |
+|---|---|---|---|
+| 1 | §8 "Account deletion with cleanup ✅" and the client "reset password" action | **Broken.** `AccountService` calls `stackAuth.verifyPassword`, and admin reset calls `stackAuth.sendPasswordResetEmail`; both (and `getUser`, `deleteUser`) throw "not yet implemented for Managed Better Auth" | `stack-auth.client.ts`, `account.service.ts:59,153`, `auth.service.ts:70` |
+| 2 | §8 "White-label branding ✅" | **Partial.** A workspace's primary color only reaches elements that read `--primary` directly. Derived tokens (primary buttons, switches, links, active navigation) stay the default indigo in both the dashboard and the portal. Tested with `#e11d48`: buttons stayed `rgb(87, 80, 241)` | CSS custom properties resolve where they are declared (`:root`), but the layouts override `--primary` on a wrapper element |
+| 3 | §5/§40 dependencies | **New P0.** `@sentry/nestjs` (backend) and `@sentry/nextjs` (frontend, including `next.config.ts`) are imported but appear in **neither `package.json` nor either lockfile**. Everything works on this machine only because of leftover packages in the old root `node_modules`. A clean install (CI, Railway, Vercel) fails to build | `grep` of both lockfiles: 0 Sentry entries |
+| 4 | §6 "Session cache 30 s: accept" | **Was a real bug, now fixed.** The API cached a session by token only. The client SDK reuses one JWT for many requests, so a user who had just accepted an invitation got `401 Organization context required` for up to 30 seconds, and switching workspace kept showing the old one. Fixed in `session.middleware.ts` (no caching without a membership; the workspace cookie is part of the cache key) with unit tests and an end-to-end regression test | found by the end-to-end suite |
+| 5 | (not covered) | **Fixed.** `NeonAuthUsersRepository.findByEmail` was case-sensitive, so a team member whose stored email differed only in case could be invited as a client | end-to-end suite |
+| 6 | §7 D2 "cannot exclude drift" | **Resolved.** Migrations and schema match exactly (contracts was the only gap and is now migrated) | `migrate diff` on a real database |
+
+## E.3 An incident worth recording
+
+While reviving the test suite, a spec that calls `time_entry.deleteMany({})` ran against the database named in `backend/.env` (a shared development database) because Prisma loads `.env` by default. Two runs happened before this was noticed. Prevention now in place: unit tests can never reach a real database (`src/test/setup.ts` swaps in an unreachable URL), and real-database specs are named `*.int.spec.ts`, excluded by default, and only run through `npm run test:integration` with an explicit `TEST_DATABASE_URL`.
+
+## E.4 New findings, ranked
+
+| Priority | Finding | Suggested fix |
+|---|---|---|
+| **P0** | Undeclared Sentry dependencies (E.2 #3) | Declare `@sentry/nestjs` and `@sentry/nextjs` in the respective `package.json` files at the versions currently installed. **Needs your approval (dependency change).** |
+| P1 | Account deletion and admin password reset throw (E.2 #1) | Implement against Managed Better Auth's admin API, or hide the two buttons until then |
+| P1 | Custom brand color does not reach derived tokens (E.2 #2) | Apply the brand override on `<html>` (a `<style>` block in the layout) instead of a wrapper element |
+| P2 | `railway.json`, README and the workspace commands still describe a monorepo that no longer exists (see §3.5) | Update or delete |
+| P3 | Frontend has no browser-level tests in the repo | Add Playwright to the frontend if you want the browser suites used in this audit kept (**new dependency, needs approval**) |

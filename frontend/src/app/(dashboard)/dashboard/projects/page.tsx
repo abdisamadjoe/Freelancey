@@ -146,6 +146,17 @@ export default function ProjectsPage() {
   }, [config?.billingEnabled]);
 
   const [creating, setCreating] = useState(false);
+  const [clientChoices, setClientChoices] = useState<{ id: string; name: string; company: string | null }[]>([]);
+  const [newClientId, setNewClientId] = useState("");
+  const [newStart, setNewStart] = useState("");
+  const [newEnd, setNewEnd] = useState("");
+
+  useEffect(() => {
+    if (!showCreate) return;
+    apiFetch<PaginatedResponse<{ id: string; name: string; company: string | null }>>("/client-records?stage=active&limit=100")
+      .then((res) => setClientChoices(res.data))
+      .catch(() => setClientChoices([]));
+  }, [showCreate]);
 
   const atProjectLimit = planLimits !== null && planLimits.maxProjects !== -1 && planLimits.projectsUsed >= planLimits.maxProjects;
   const oneProjectLeft = planLimits !== null && planLimits.maxProjects !== -1 && !atProjectLimit && planLimits.maxProjects - planLimits.projectsUsed === 1;
@@ -157,11 +168,20 @@ export default function ProjectsPage() {
     try {
       await apiFetch<Project>("/projects", {
         method: "POST",
-        body: JSON.stringify({ name, description }),
+        body: JSON.stringify({
+          name,
+          description,
+          clientId: newClientId || undefined,
+          startDate: newStart || undefined,
+          endDate: newEnd || undefined,
+        }),
       });
       track("project_created");
       setName("");
       setDescription("");
+      setNewClientId("");
+      setNewStart("");
+      setNewEnd("");
       setShowCreate(false);
       loadProjects();
       if (planLimits) {
@@ -442,6 +462,26 @@ export default function ProjectsPage() {
                 required
               />
             </Field>
+
+            <Field label="Client" htmlFor="project-client" description="Optional. Their portal login gets access automatically.">
+              <NativeSelect id="project-client" value={newClientId} onChange={(e) => setNewClientId(e.target.value)}>
+                <option value="">No client yet</option>
+                {clientChoices.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.company ? `${c.name} (${c.company})` : c.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Start date" htmlFor="project-start" description="Optional">
+                <Input id="project-start" type="date" value={newStart} onChange={(e) => setNewStart(e.target.value)} />
+              </Field>
+              <Field label="Deadline" htmlFor="project-end" description="Optional">
+                <Input id="project-end" type="date" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} />
+              </Field>
+            </div>
 
             <Field label="Description" htmlFor="project-description" description="Optional">
               <Textarea

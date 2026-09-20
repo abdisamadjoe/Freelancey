@@ -178,3 +178,28 @@ Do not start Phase 2 until the answers to decisions 1 to 4 are in.
 
 - Phase 0 done (branch merged by owner): `@/` alias fixed, integration specs renamed `*.int.spec.ts` and blocked from the `.env` database (`npm run test:integration` needs `TEST_DATABASE_URL`).
 - Phase 1 done on `security-blockers`: owner-invite escalation, contract client and status checks, search scoping, invoice paid and lock rules, guards on 3 controllers, idempotent contracts migration (not applied to any database yet). 1.4 deferred, 1.11 not started.
+- Phase 2 done on `client-record`: `Client` and `ClientContact` tables, nullable `clientId` on projects and invoices, generalised activity log, `/client-records` API (stage, lead status, follow-up, lost reason, manual activity), and `npm run db:backfill-clients` (dry run by default, `--apply` to write). **Not run against any database.**
+- Phase 3 done on `client-record`: Leads page, add-lead dialog, lead detail with status, won/lost and activity log, public contact form at `/contact/<workspace-slug>` (opt-in switch on the Leads page, off by default), owner notification, daily 08:00 follow-up digest, dashboard "Follow-ups due" card. Email notification for new leads is not built yet (in-app and push only).
+- Phase 4 done on `client-onboarding` (contains everything above): checklist with derived completion, portal "Get started" card and questionnaire, invite from the client record with project context, login linked to the client and its projects on acceptance, owner notified on join and on questionnaire submit, project creation from a client, questionnaire answers copied into internal project notes.
+- **Design change:** the checklist is its own small table (`onboarding_item`) rather than an extension of `Task`, and completion is read from the linked document, invoice or form. This avoids touching shared task, document and payment code. Task visibility (internal vs client) is therefore still open (old 4.7).
+- Still open: real ESLint (needs approval), 1.4 verified email, 1.11 docs/railway cleanup, `maxClients` counting `Client` records, Payment table (Phase 5), task visibility flag.
+- **Before merging:** apply the four new migrations to a Neon dev branch and run `db:backfill-clients` there first (dry run, then `--apply`), then click through the checks below.
+
+## Manual check after applying the migrations (about 15 minutes)
+
+1. Leads page: turn the public form on, open the copied `/contact/<slug>` link in a private window, submit with only a WhatsApp number. The lead appears with a follow-up for tomorrow and you get a notification. Submit again with the same email: one lead, two timeline entries.
+2. Add a lead by hand, log a call, change its status, mark it lost (reason required), reopen it.
+3. Mark a lead Won, then Create project: the dialog is prefilled and the project opens.
+4. Start onboarding with "email a portal invitation". Accept the invite in a private window with the same email: you get a "joined the portal" notification, and the client sees a Get started card and the project.
+5. As the client, fill in the questionnaire (save draft, then send). Required answers are enforced. As staff, view the answers and copy them into the project notes.
+6. Link the agreement step to a document and the deposit step to an invoice. Sign the document and pay or mark the invoice paid: the steps tick themselves.
+7. Existing clients: run `npm run db:backfill-clients` (dry run) and check the counts before `--apply`.
+8. Regression: existing clients still see their projects, invoices and documents; a client cannot see any lead or another client's checklist.
+
+## Testing log (2026-09-21)
+
+- Backend: 715 unit tests, 43 end-to-end tests over HTTP against a real Postgres, 35 integration tests, mutation check (6 of 6 caught). Migrations verified from an empty database with zero drift. See audit Appendix E.
+- Fixed while testing: stale "no organization" session after accepting an invitation, workspace switching ignored by the session cache, case-sensitive email lookup, optimistic tick in the onboarding panel.
+- Browser: 25 functional checks (leads, public form, detail, won, create project, onboarding, portal questionnaire, isolation) and 28 dark mode checks passing.
+- Found, not fixed (need your decision): undeclared Sentry dependencies (P0), account deletion and admin password reset throwing, custom brand colors not reaching buttons and links.
+
