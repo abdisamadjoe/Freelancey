@@ -31,6 +31,7 @@ import {
   Plus,
   ArrowUpRight,
   Receipt,
+  UserPlus,
 } from "lucide-react";
 
 interface Project {
@@ -53,6 +54,13 @@ interface InvoiceStats {
   paidAmount: number;
 }
 
+interface DueLead {
+  id: string;
+  name: string;
+  company: string | null;
+  nextFollowUpAt: string | null;
+}
+
 interface PaginatedResponse<T> {
   data: T[];
   meta: { total: number; page: number; limit: number; totalPages: number };
@@ -63,6 +71,7 @@ export default function DashboardPage() {
   const [invoiceStats, setInvoiceStats] = useState<InvoiceStats | null>(null);
   const [recent, setRecent] = useState<Project[]>([]);
   const [error, setError] = useState("");
+  const [dueLeads, setDueLeads] = useState<{ items: DueLead[]; total: number } | null>(null);
   const [me, setMe] = useState<{ user?: { name?: string } } | null>(null);
 
   useEffect(() => {
@@ -75,6 +84,9 @@ export default function DashboardPage() {
     apiFetch<PaginatedResponse<Project>>("/projects?limit=5")
       .then((res) => setRecent(res.data))
       .catch(console.error);
+    apiFetch<PaginatedResponse<DueLead>>("/client-records?stage=lead&followUpDue=true&limit=5")
+      .then((res) => setDueLeads({ items: res.data, total: res.meta.total }))
+      .catch(() => setDueLeads(null));
     apiFetch<InvoiceStats>("/invoices/stats")
       .then(setInvoiceStats)
       .catch(console.error);
@@ -158,6 +170,43 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Follow-ups due */}
+      {dueLeads && dueLeads.total > 0 && (
+        <Card className="p-0 overflow-hidden">
+          <CardHeader className="px-5 py-4">
+            <div className="min-w-0">
+              <CardTitle>Follow-ups due</CardTitle>
+              <CardDescription>
+                {dueLeads.total} {dueLeads.total === 1 ? "lead is" : "leads are"} waiting to hear from you
+              </CardDescription>
+            </div>
+            <Link href="/dashboard/leads" className={buttonStyles({ variant: "ghost", size: "xs" })}>
+              <span>View all</span>
+              <ArrowUpRight aria-hidden />
+            </Link>
+          </CardHeader>
+          <ul className="divide-y divide-card-border border-t border-card-border">
+            {dueLeads.items.map((lead) => (
+              <li key={lead.id}>
+                <Link
+                  href={`/dashboard/leads/${lead.id}`}
+                  className="flex items-center justify-between gap-3 px-5 py-3 transition-colors hover:bg-background-gray-primary"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <UserPlus className="size-4 shrink-0 text-text-tertiary" aria-hidden />
+                    <span className="truncate text-sm font-medium text-text-primary">{lead.name}</span>
+                    {lead.company && <span className="truncate text-xs text-text-tertiary">{lead.company}</span>}
+                  </span>
+                  <span className="shrink-0 text-xs text-alert-danger-title">
+                    {lead.nextFollowUpAt ? new Date(lead.nextFollowUpAt).toLocaleDateString() : ""}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
 
       {/* Recent projects */}
       <Card className="p-0 overflow-hidden">
