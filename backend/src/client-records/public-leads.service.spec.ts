@@ -97,6 +97,15 @@ describe("PublicLeadsService", () => {
     expect(activity.createForClient.mock.calls[0][0].summary).not.toMatch(/<|href/);
   });
 
+  it("keeps ampersands readable while still escaping angle brackets", async () => {
+    await service.submit("acme", { name: "Tom & Jerry", email: "t@x.com", message: "R&D <b>rocks</b> 5 < 6" });
+    const data = prisma.client.create.mock.calls[0][0].data;
+    expect(data.name).toBe("Tom & Jerry");
+    const summary = activity.createForClient.mock.calls[0][0].summary as string;
+    expect(summary).toContain("R&D rocks 5 &lt; 6");
+    expect(summary).not.toContain("<b>");
+  });
+
   it("appends to an existing record for the same email instead of creating a second one", async () => {
     prisma.client.findFirst.mockResolvedValue({ id: "c9", name: "Kim" });
     await service.submit("acme", { name: "Kim", email: "kim@x.com", message: "Again" });

@@ -384,13 +384,14 @@ export class ClientOnboardingService {
   }
 
   private async linkContact(clientId: string, orgId: string, userId: string, name: string, email: string) {
-    const contact = await this.prisma.clientContact.findFirst({ where: { clientId, email } });
-    if (contact) {
-      if (contact.userId !== userId) {
-        await this.prisma.clientContact.update({ where: { id: contact.id }, data: { userId } });
+    const linked = await this.prisma.clientContact.findFirst({ where: { clientId, userId }, select: { id: true } });
+    if (!linked) {
+      const byEmail = await this.prisma.clientContact.findFirst({ where: { clientId, email } });
+      if (byEmail && !byEmail.userId) {
+        await this.prisma.clientContact.update({ where: { id: byEmail.id }, data: { userId } });
+      } else {
+        await this.prisma.clientContact.create({ data: { clientId, userId, name, email, isPrimary: !byEmail } });
       }
-    } else {
-      await this.prisma.clientContact.create({ data: { clientId, userId, name, email, isPrimary: true } });
     }
     const projects = await this.prisma.project.findMany({
       where: { organizationId: orgId, clientId, archivedAt: null },

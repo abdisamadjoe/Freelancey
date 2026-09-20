@@ -213,7 +213,8 @@ describe("ClientOnboardingService (staff)", () => {
 
     it("links the login to the matching client, opens its projects and tells the owner", async () => {
       t.prisma.client.findMany.mockResolvedValue([{ id: CLIENT, name: "Acme" }]);
-      t.prisma.clientContact.findFirst.mockResolvedValue({ id: "cc1", userId: null });
+      // not linked yet, but a contact with this email already exists (invited earlier)
+      t.prisma.clientContact.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: "cc1", userId: null });
       t.prisma.project.findMany.mockResolvedValue([{ id: "p1" }, { id: "p2" }]);
       await t.service.onInvitationAccepted({ userId: "u1", userName: "Kim", email: "Kim@Acme.com", orgId: ORG, role: "member" });
       expect(t.prisma.client.findMany.mock.calls[0][0].where).toEqual({
@@ -223,6 +224,14 @@ describe("ClientOnboardingService (staff)", () => {
       expect(t.prisma.clientContact.update).toHaveBeenCalledWith({ where: { id: "cc1" }, data: { userId: "u1" } });
       expect(t.prisma.projectClient.createMany.mock.calls[0][0].data).toHaveLength(2);
       expect(t.notifications.notifyClientJoined).toHaveBeenCalledWith(ORG, CLIENT, "Acme");
+    });
+
+    it("does not create a second contact when the login is already linked to the client", async () => {
+      t.prisma.client.findMany.mockResolvedValue([{ id: CLIENT, name: "Acme" }]);
+      t.prisma.clientContact.findFirst.mockResolvedValueOnce({ id: "cc1" });
+      await t.service.onInvitationAccepted({ userId: "u1", userName: "Kim", email: "kim@acme.com", orgId: ORG, role: "member" });
+      expect(t.prisma.clientContact.create).not.toHaveBeenCalled();
+      expect(t.prisma.clientContact.update).not.toHaveBeenCalled();
     });
 
     it("never throws, so a failure cannot block a client from joining", async () => {

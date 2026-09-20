@@ -13,7 +13,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** Plain text only: form input is untrusted and ends up in emails, notifications and the UI. */
 function clean(value: string | undefined, max: number): string | undefined {
   if (!value) return undefined;
-  const text = sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} }).trim();
+  // sanitize-html returns HTML-escaped text; "&" must read as "&" when shown as plain text.
+  // "<" and ">" stay escaped on purpose so stored values can never be mistaken for markup.
+  const text = sanitizeHtml(value, { allowedTags: [], allowedAttributes: {} }).replace(/&amp;/g, "&").trim();
   return text ? text.slice(0, max) : undefined;
 }
 
@@ -141,9 +143,10 @@ export class PublicLeadsService {
   }
 
   async setFormEnabled(orgId: string, enabled: boolean) {
-    await this.prisma.systemSettings.update({
+    await this.prisma.systemSettings.upsert({
       where: { organizationId: orgId },
-      data: { leadFormEnabled: enabled },
+      create: { organizationId: orgId, leadFormEnabled: enabled },
+      update: { leadFormEnabled: enabled },
     });
     return this.getFormSettings(orgId);
   }
