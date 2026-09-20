@@ -37,7 +37,7 @@ Phases 0 and 1 are prerequisites. Phases 2 to 4 are the focus. Phase 5 is listed
 |---|---|---|---|
 | 0.1 | Add `resolve.alias` for `@` to `./src` in vitest config | `backend/vitest.config.ts` | `npm test` loads all 39 files |
 | 0.2 | Triage any tests that now fail for real reasons; fix the code or the test expectation, never skip or delete | `backend/src/**/*.spec.ts` | All backend tests pass |
-| 0.3 | Add an ESLint flat config (or pin ESLint 8 to match the script). **Ask before changing dependency versions.** | `backend/eslint.config.mjs` or `package.json` | `npm run lint` exits cleanly |
+| 0.3 | **Partly done.** ESLint is not a dependency of either app. `lint` now runs `tsc --noEmit`. Real ESLint needs new packages: **needs your approval** | `backend/package.json` | Decision pending |
 | 0.4 | Confirm frontend `next lint` works; same fix if not | `frontend/` | Frontend lint runs |
 | 0.5 | Decide what to do with the 3 uncommitted changes (greeting text, `baseUrl` removal, `icon.svg`): commit them on this branch or discard | git | Working tree is clean |
 
@@ -52,11 +52,11 @@ Phases 0 and 1 are prerequisites. Phases 2 to 4 are the focus. Phase 5 is listed
 | 1.1 | Create the missing migration for `contract` and `contract_version`. Generate with `--create-only` on a dev branch, review the SQL, then apply | D1, P0-1 | `backend/prisma/migrations/` | A database built only from migrations has both tables |
 | 1.2 | Diff migrations against the schema with a shadow DB to find any other drift | D2 | prisma CLI | No unexpected diff, or drift documented |
 | 1.3 | Only owners may invite or promote to `owner`. Hide "owner" in the admin UI. Add a test | SEC-1, P0-2 | `clients.service.ts`, `clients.controller.ts`, `clients/page.tsx` | Admin invite with role owner returns 403 |
-| 1.4 | Require verified email to accept an invitation | SEC-7 | `organizations.service.ts` | Unverified user gets a clear error |
+| 1.4 | **Deferred.** Require verified email to accept an invitation. Could lock out invited clients if Neon Auth does not enforce verification at sign-up; verify against a live sign-up first | SEC-7 | `organizations.service.ts` | Unverified user gets a clear error |
 | 1.5 | Validate `Contract.clientId` is a member of the org on create and update | SEC-2 | `contracts.service.ts` | Foreign user id returns 400 |
 | 1.6 | Remove `status` from the contract PATCH DTO, or whitelist it | SEC-5 | `contracts.dto.ts`, `contracts.service.ts` | Arbitrary status rejected |
 | 1.7 | Scope search: resolve org members first, filter `clientProfile` by org | SEC-3 | `search.service.ts` | Test proves no cross-org company leak |
-| 1.8 | Make `AuthGuard` global with `@Public()` opt-out; keep public routes explicit (branding public, webhooks, token signing, health) | SEC-4 | `app.module.ts`, public controllers | Unauthenticated `/notifications` returns 401, public routes still work |
+| 1.8 | **Done differently:** explicit guards on `notifications`, `push` and `auth/me` (a global guard would break the org-less onboarding/account routes). Original idea: make `AuthGuard` global with `@Public()` opt-out; keep public routes explicit (branding public, webhooks, token signing, health) | SEC-4 | `app.module.ts`, public controllers | Unauthenticated `/notifications` returns 401, public routes still work |
 | 1.9 | Manual `paid` sets `paidAt` and `paidAmount` and notifies; block line-item edits unless `draft` | F1, F2 | `invoices.service.ts` | Tests cover both |
 | 1.10 | Add a regression test for each fix above | | specs | Tests fail without the fix |
 | 1.11 | Reconcile README and `railway.json` with the real layout (no root `package.json`). **Confirm with you how production is deployed first** | §3.5 | `README.md`, `railway.json` | Docs match reality |
@@ -173,3 +173,8 @@ Phase 5
 ```
 
 Do not start Phase 2 until the answers to decisions 1 to 4 are in.
+
+## Progress log
+
+- Phase 0 done (branch merged by owner): `@/` alias fixed, integration specs renamed `*.int.spec.ts` and blocked from the `.env` database (`npm run test:integration` needs `TEST_DATABASE_URL`).
+- Phase 1 done on `security-blockers`: owner-invite escalation, contract client and status checks, search scoping, invoice paid and lock rules, guards on 3 controllers, idempotent contracts migration (not applied to any database yet). 1.4 deferred, 1.11 not started.
