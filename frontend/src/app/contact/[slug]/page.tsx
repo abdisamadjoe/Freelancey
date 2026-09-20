@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { ContactForm } from "./contact-form";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
@@ -42,7 +43,8 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
     : undefined;
 
   return (
-    <main style={style} className="min-h-screen bg-background-gray-secondary_alt_2 px-4 py-10 sm:py-16">
+    <main style={style} className="relative min-h-screen bg-background-gray-secondary_alt_2 px-4 py-10 sm:py-16">
+      <ThemeToggle className="absolute top-4 right-4" />
       <div className="mx-auto w-full max-w-lg">
         <div className="mb-6 text-center">
           {form.logoUrl && (

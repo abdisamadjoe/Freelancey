@@ -10,6 +10,8 @@ import type { Config } from "tailwindcss";
  * in `src/app/globals.css` — never hardcode a hex value in a component.
  */
 const config: Config = {
+  // The `dark` class on <html> switches the token values in globals.css.
+  darkMode: "class",
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     extend: {

@@ -6,6 +6,7 @@ import { PanelLeftClose, PanelLeftOpen, Menu } from "lucide-react";
 import { SidebarNav } from "./sidebar-nav";
 import { UserMenu } from "./sign-out-button";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { GlobalSearch } from "@/components/global-search";
 import { Sheet } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -109,6 +110,7 @@ export function AppShell({
               <span className="sm:hidden">
                 <GlobalSearch iconOnly />
               </span>
+              <ThemeToggle />
               <NotificationBell />
               <UserMenu
                 name={userName}

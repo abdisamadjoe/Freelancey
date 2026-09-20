@@ -5,6 +5,7 @@ import { SignOutButton } from "./sign-out-button";
 import { getSession } from "@/lib/auth";
 import { serverApiFetch } from "@/lib/server-api";
 import { NotificationBell } from "@/components/notification-bell";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { DynamicFavicon } from "@/components/dynamic-favicon";
 import { PreviewModeProvider } from "@/lib/preview-mode";
 import { PreviewBanner } from "@/components/preview-banner";
@@ -102,6 +103,7 @@ export default async function PortalLayout({
               </nav>
 
               <div className="flex shrink-0 items-center gap-1.5">
+                <ThemeToggle />
                 <NotificationBell />
                 <SignOutButton />
               </div>
