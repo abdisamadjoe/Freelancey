@@ -183,5 +183,16 @@ Do not start Phase 2 until the answers to decisions 1 to 4 are in.
 - Phase 4 done on `client-onboarding` (contains everything above): checklist with derived completion, portal "Get started" card and questionnaire, invite from the client record with project context, login linked to the client and its projects on acceptance, owner notified on join and on questionnaire submit, project creation from a client, questionnaire answers copied into internal project notes.
 - **Design change:** the checklist is its own small table (`onboarding_item`) rather than an extension of `Task`, and completion is read from the linked document, invoice or form. This avoids touching shared task, document and payment code. Task visibility (internal vs client) is therefore still open (old 4.7).
 - Still open: real ESLint (needs approval), 1.4 verified email, 1.11 docs/railway cleanup, `maxClients` counting `Client` records, Payment table (Phase 5), task visibility flag.
-- **Before merging:** apply the four new migrations to a Neon dev branch and run `db:backfill-clients` there first (dry run, then `--apply`), then click through the flows below.
+- **Before merging:** apply the four new migrations to a Neon dev branch and run `db:backfill-clients` there first (dry run, then `--apply`), then click through the checks below.
+
+## Manual check after applying the migrations (about 15 minutes)
+
+1. Leads page: turn the public form on, open the copied `/contact/<slug>` link in a private window, submit with only a WhatsApp number. The lead appears with a follow-up for tomorrow and you get a notification. Submit again with the same email: one lead, two timeline entries.
+2. Add a lead by hand, log a call, change its status, mark it lost (reason required), reopen it.
+3. Mark a lead Won, then Create project: the dialog is prefilled and the project opens.
+4. Start onboarding with "email a portal invitation". Accept the invite in a private window with the same email: you get a "joined the portal" notification, and the client sees a Get started card and the project.
+5. As the client, fill in the questionnaire (save draft, then send). Required answers are enforced. As staff, view the answers and copy them into the project notes.
+6. Link the agreement step to a document and the deposit step to an invoice. Sign the document and pay or mark the invoice paid: the steps tick themselves.
+7. Existing clients: run `npm run db:backfill-clients` (dry run) and check the counts before `--apply`.
+8. Regression: existing clients still see their projects, invoices and documents; a client cannot see any lead or another client's checklist.
 
