@@ -39,7 +39,8 @@ export class NeonAuthUsersRepository implements OnModuleInit, OnModuleDestroy {
   }
 
   async findByEmail(email: string): Promise<NeonAuthUser | null> {
-    return this.client.neonAuthUser.findFirst({ where: { email } });
+    // Addresses are compared case-insensitively: "Kim@X.com" and "kim@x.com" are the same person.
+    return this.client.neonAuthUser.findFirst({ where: { email: { equals: email, mode: "insensitive" } } });
   }
 
   /**
