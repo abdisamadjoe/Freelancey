@@ -19,7 +19,7 @@
 ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white&style=flat)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white&style=flat)
 ![Railway](https://img.shields.io/badge/Railway-131415?logo=railway&logoColor=white&style=flat)
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)
 
 <br/>
 
@@ -206,8 +206,52 @@ Contributions to Freelancey are welcome!
 
 ---
 
+## Fork Notice
+
+Freelancey is a heavily modified fork of [Atrium](https://github.com/Vibra-Labs/Atrium).
+
+The project has been substantially redesigned and extended with
+new functionality, architecture, UI/UX, workflows, and features.
+
+### Original Project
+
+- Original project: Atrium
+- Original author: [@edgarjc](https://github.com/edgarjc)
+- Original repository: https://github.com/Vibra-Labs/Atrium
+
+### Licensing
+
+This repository contains code derived from Atrium,
+which is licensed under the Elastic License 2.0.
+
+The original license and applicable copyright notices are retained.
+
+Modified portions are identified as required by the applicable
+license terms.
+
+See [LICENSE](LICENSE) for the complete license terms.
+
+### Modifications
+
+This fork includes substantial modifications, including:
+
+- Complete UI/UX redesign
+- New project management workflows
+- New client management functionality
+- New freelancer-oriented features
+- Contracts and e-signature workflows
+- Invoicing with PDF export
+- White-label branding for the client portal
+
+### Attribution
+
+This project is not affiliated with, sponsored by, or endorsed by
+the original project or its author.
+
+---
+
 ## Author & License
 
 Created and maintained by **[@abdisamadjoe](https://github.com/abdisamadjoe)**.
 
-Freelancey is open-source software licensed under the [MIT License](LICENSE).
+Freelancey is source-available software licensed under the [Elastic License 2.0](LICENSE).
