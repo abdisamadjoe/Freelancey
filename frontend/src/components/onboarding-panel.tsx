@@ -59,9 +59,20 @@ export function OnboardingPanel({ clientId, stage, hasEmail, projects }: Props) 
       await load();
     } catch (err) {
       showError(err instanceof Error ? err.message : "Something went wrong");
+      await load(); // undo any optimistic change
     } finally {
       setBusy(false);
     }
+  }
+
+  /** Shows a manual step as ticked straight away; the save that follows confirms or, on failure, `run` reloads the truth. */
+  function tickLocally(itemId: string, done: boolean) {
+    setData((prev) => {
+      if (!prev) return prev;
+      const items = prev.items.map((i) => (i.id === itemId ? { ...i, done } : i));
+      const doneCount = items.filter((i) => i.done).length;
+      return { ...prev, items, progress: { done: doneCount, total: items.length, complete: items.length > 0 && doneCount === items.length } };
+    });
   }
 
   const post = (path: string, body: unknown = {}) =>
@@ -166,16 +177,18 @@ export function OnboardingPanel({ clientId, stage, hasEmail, projects }: Props) 
           return (
             <li key={item.id} className="flex flex-wrap items-center gap-3 px-5 py-3">
               {manual ? (
-                <Checkbox
-                  id={`onb-${item.id}`}
-                  checked={item.done}
-                  onChange={(e) =>
-                    run(() =>
-                      apiFetch(`${base}/items/${item.id}`, { method: "PATCH", body: JSON.stringify({ done: e.target.checked }) }),
-                    )
-                  }
-                  label={<span className={item.done ? "line-through text-text-tertiary" : ""}>{item.title}</span>}
-                />
+                <div className="min-w-0 flex-1">
+                  <Checkbox
+                    id={`onb-${item.id}`}
+                    checked={item.done}
+                    onChange={(e) => {
+                      const done = e.target.checked;
+                      tickLocally(item.id, done);
+                      run(() => apiFetch(`${base}/items/${item.id}`, { method: "PATCH", body: JSON.stringify({ done }) }));
+                    }}
+                    label={<span className={item.done ? "line-through text-text-tertiary" : ""}>{item.title}</span>}
+                  />
+                </div>
               ) : (
                 <div className="flex min-w-0 flex-1 items-center gap-2">
                   {item.done ? (
