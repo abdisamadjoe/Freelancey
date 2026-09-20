@@ -4,7 +4,7 @@ import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
 import { paginationArgs, paginatedResponse } from "../common";
 
 export interface CreateActivityDto {
-  type: "document_response" | "decision_vote" | "decision_closed";
+  type: "document_response" | "decision_vote" | "decision_closed" | "contract_response";
   action: string;
   actorId: string;
   targetId: string;
@@ -12,6 +12,17 @@ export interface CreateActivityDto {
   detail?: string;
   projectId: string;
   organizationId: string;
+}
+
+export interface CreateClientActivityInput {
+  clientId: string;
+  organizationId: string;
+  actorId: string;
+  /** "note" | "call" | "whatsapp" | "email" | "meeting" | "system" */
+  kind: string;
+  action: string;
+  summary: string;
+  occurredAt?: Date;
 }
 
 @Injectable()
@@ -60,6 +71,47 @@ export class ActivityService {
     const enriched = data.map((a) => ({
       ...a,
       actor: actorMap.get(a.actorId) ?? { id: a.actorId, name: "Unknown" },
+    }));
+
+    return paginatedResponse(enriched, total, page, limit);
+  }
+
+  /** Timeline entry on a client/lead (manual entries and system events). */
+  async createForClient(input: CreateClientActivityInput) {
+    return this.prisma.activityLog.create({
+      data: {
+        type: "client_activity",
+        action: input.action,
+        kind: input.kind,
+        actorId: input.actorId,
+        targetId: input.clientId,
+        targetTitle: "client",
+        detail: input.summary,
+        clientId: input.clientId,
+        organizationId: input.organizationId,
+        ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
+      },
+    });
+  }
+
+  async findByClient(clientId: string, organizationId: string, page = 1, limit = 20) {
+    const where = { clientId, organizationId };
+    const [data, total] = await Promise.all([
+      this.prisma.activityLog.findMany({
+        where,
+        orderBy: { occurredAt: "desc" },
+        ...paginationArgs(page, limit),
+      }),
+      this.prisma.activityLog.count({ where }),
+    ]);
+
+    const actorIds = [...new Set(data.map((a) => a.actorId))];
+    const actors = await this.neonAuthUsers.findMany(actorIds);
+    const actorMap = new Map(actors.map((a) => [a.id, a]));
+
+    const enriched = data.map((a) => ({
+      ...a,
+      actor: actorMap.get(a.actorId) ?? { id: a.actorId, name: a.actorId === "system" ? "System" : "Unknown" },
     }));
 
     return paginatedResponse(enriched, total, page, limit);

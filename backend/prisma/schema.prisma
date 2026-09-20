@@ -42,6 +42,7 @@ model Organization {
   subscription   Subscription?
   labels         Label[]
   timeEntries    TimeEntry[]
+  clientRecords  Client[]
 
   @@map("organization")
 }
@@ -94,6 +95,10 @@ model Project {
 
   hourlyRateCents Int?
 
+  // The relationship record (lead/active client). Independent of portal logins.
+  clientId String?
+  client   Client? @relation(fields: [clientId], references: [id], onDelete: SetNull)
+
   files       File[]
   clients     ProjectClient[]
   updates     ProjectUpdate[]
@@ -107,6 +112,7 @@ model Project {
   timeEntries TimeEntry[]
 
   @@index([organizationId])
+  @@index([clientId])
   @@map("project")
 }
 
@@ -271,6 +277,7 @@ model Invoice {
   amount         Int?              // Total in cents, used for uploaded invoices
   uploadedFileId String?
   projectId      String?
+  clientId       String?
   organizationId String
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -282,12 +289,14 @@ model Invoice {
   paidAmount              Int?      // Amount actually paid (cents)
 
   project      Project?          @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  client       Client?           @relation(fields: [clientId], references: [id], onDelete: SetNull)
   uploadedFile File?             @relation("UploadedInvoiceFile", fields: [uploadedFileId], references: [id])
   lineItems    InvoiceLineItem[]
 
   @@unique([organizationId, invoiceNumber])
   @@index([organizationId])
   @@index([projectId])
+  @@index([clientId])
   @@map("invoice")
 }
 
@@ -623,21 +632,87 @@ model PushSubscription {
 
 model ActivityLog {
   id             String   @id @default(cuid())
-  type           String   // "document_response" | "decision_vote" | "decision_closed"
+  type           String   // "document_response" | "decision_vote" | "decision_closed" | "contract_response" | "client_activity"
   action         String
   actorId        String
   targetId       String
   targetTitle    String
   detail         String?
-  projectId      String
+  // Project-scoped events set projectId; client-scoped events (leads, calls,
+  // stage changes) set clientId.
+  projectId      String?
+  clientId       String?
   organizationId String
+  // "note" | "call" | "whatsapp" | "email" | "meeting" | "system" (client activity only)
+  kind           String?
+  occurredAt     DateTime @default(now())
   createdAt      DateTime @default(now())
 
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  client  Client?  @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([projectId, createdAt])
+  @@index([clientId, occurredAt])
   @@index([organizationId])
   @@map("activity_log")
+}
+
+// ─── Client relationship records (leads and clients) ───
+// A Client is the business relationship. It exists without any login; portal
+// access still flows through Member + ProjectClient, linked here by
+// ClientContact.userId. A lead is simply a Client whose stage is "lead".
+
+model Client {
+  id                   String    @id @default(cuid())
+  organizationId       String
+  name                 String
+  company              String?
+  email                String?
+  phone                String?
+  whatsapp             String?
+  website              String?
+  industry             String?
+  location             String?
+  stage                String    @default("lead") // "lead" | "active" | "past" | "lost"
+  leadStatus           String?   @default("new") // while a lead: "new" | "contacted" | "qualified" | "proposal_sent"
+  source               String?
+  interestedIn         String?
+  estimatedBudgetCents Int?
+  priority             String?   // "low" | "normal" | "high"
+  nextFollowUpAt       DateTime?
+  lostReason           String?
+  notes                String?
+  ownerId              String?
+  archivedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  contacts     ClientContact[]
+  projects     Project[]
+  invoices     Invoice[]
+  activities   ActivityLog[]
+
+  @@index([organizationId, stage])
+  @@index([organizationId, nextFollowUpAt])
+  @@map("client")
+}
+
+model ClientContact {
+  id        String   @id @default(cuid())
+  clientId  String
+  userId    String?  // portal login (Neon Auth user id); null until an invite is accepted
+  name      String
+  email     String?
+  phone     String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, userId])
+  @@index([userId])
+  @@map("client_contact")
 }
 
 // ─── Labels ───

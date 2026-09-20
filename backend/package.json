@@ -16,6 +16,7 @@
     "db:migrate": "npx prisma migrate dev",
     "db:migrate:deploy": "npx prisma migrate deploy",
     "db:seed": "tsx src/database/seed.ts",
+    "db:backfill-clients": "tsx src/database/backfill-clients.ts",
     "prebuild": "npm run db:generate"
   },
   "dependencies": {
