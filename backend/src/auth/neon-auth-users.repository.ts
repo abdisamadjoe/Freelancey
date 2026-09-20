@@ -42,9 +42,15 @@ export class NeonAuthUsersRepository implements OnModuleInit, OnModuleDestroy {
     return this.client.neonAuthUser.findFirst({ where: { email } });
   }
 
-  async searchByNameOrEmail(query: string, take = 20): Promise<NeonAuthUser[]> {
+  /**
+   * The auth table is global across tenants, so callers should pass `onlyIds`
+   * (e.g. an organization's member ids) to keep the search, and the `take`
+   * cap, inside their own tenant.
+   */
+  async searchByNameOrEmail(query: string, take = 20, onlyIds?: string[]): Promise<NeonAuthUser[]> {
     return this.client.neonAuthUser.findMany({
       where: {
+        ...(onlyIds ? { id: { in: onlyIds } } : {}),
         OR: [
           { name: { contains: query, mode: "insensitive" } },
           { email: { contains: query, mode: "insensitive" } },

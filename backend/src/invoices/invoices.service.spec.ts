@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeEach, vi } from "vitest";
 import { InvoicesService } from "./invoices.service";
-import { NotFoundException } from "@nestjs/common";
+import { NotFoundException, BadRequestException } from "@nestjs/common";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { NotificationsService } from "../notifications/notifications.service";
 import type { CreateInvoiceDto } from "./invoices.dto";
@@ -14,6 +14,7 @@ interface PrismaArgs {
 
 const mockNotifications = {
   notifyInvoiceSent: vi.fn(() => {}),
+  notifyInvoicePaid: vi.fn(() => {}),
 };
 
 function makeBasePrisma() {
@@ -301,5 +302,71 @@ describe("InvoicesService", () => {
     await service.update("inv-1", { status: "sent" }, orgId);
 
     expect(mockNotifications.notifyInvoiceSent).toHaveBeenCalledWith("inv-1");
+  });
+
+  test("manual paid records paidAt and the full paidAmount, and notifies", async () => {
+    prisma.invoice.findFirst.mockImplementation(() =>
+      Promise.resolve({
+        id: "inv-1",
+        status: "sent",
+        type: "itemized",
+        organizationId: orgId,
+        lineItems: [
+          { quantity: 2, unitPrice: 5000 },
+          { quantity: 1, unitPrice: 2500 },
+        ],
+      }),
+    );
+
+    await service.update("inv-1", { status: "paid" }, orgId);
+
+    const data = (prisma.invoice.update.mock.calls.at(-1)![0] as PrismaArgs).data!;
+    expect(data.status).toBe("paid");
+    expect(data.paidAt).toBeInstanceOf(Date);
+    expect(data.paidAmount).toBe(12500);
+    expect(mockNotifications.notifyInvoicePaid).toHaveBeenCalledWith("inv-1");
+  });
+
+  test("manual paid on an uploaded invoice uses its fixed amount", async () => {
+    prisma.invoice.findFirst.mockImplementation(() =>
+      Promise.resolve({
+        id: "inv-2",
+        status: "overdue",
+        type: "uploaded",
+        amount: 90000,
+        organizationId: orgId,
+        lineItems: [],
+      }),
+    );
+
+    await service.update("inv-2", { status: "paid" }, orgId);
+
+    const data = (prisma.invoice.update.mock.calls.at(-1)![0] as PrismaArgs).data!;
+    expect(data.paidAmount).toBe(90000);
+  });
+
+  test.each(["sent", "overdue", "paid"])(
+    "rejects line item edits on a %s invoice",
+    async (status) => {
+      prisma.invoice.findFirst.mockImplementation(() =>
+        Promise.resolve({ id: "inv-1", status, type: "itemized", organizationId: orgId, lineItems: [] }),
+      );
+
+      await expect(
+        service.update("inv-1", { lineItems: [{ description: "x", quantity: 1, unitPrice: 1 }] }, orgId),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(prisma.invoice.update).not.toHaveBeenCalled();
+    },
+  );
+
+  test("still allows line item edits on a draft", async () => {
+    prisma.invoice.findFirst.mockImplementation(() =>
+      Promise.resolve({ id: "inv-1", status: "draft", type: "itemized", organizationId: orgId, lineItems: [] }),
+    );
+    prisma.$transaction = vi.fn((fn: (tx: unknown) => unknown) => Promise.resolve(fn(prisma))) as never;
+
+    await service.update("inv-1", { lineItems: [{ description: "x", quantity: 1, unitPrice: 1 }] }, orgId);
+
+    expect(prisma.invoice.update).toHaveBeenCalled();
   });
 });

@@ -31,7 +31,13 @@ export class ClientsService {
     inviterId: string,
     inviterName: string,
     organizationName: string,
+    inviterRole: string,
   ) {
+    // Only owners can mint owners; otherwise an admin could promote themselves.
+    if (role === "owner" && inviterRole !== "owner") {
+      throw new ForbiddenException("Only owners can invite another owner");
+    }
+
     const invitation = await this.prisma.invitation.create({
       data: {
         organizationId: orgId,

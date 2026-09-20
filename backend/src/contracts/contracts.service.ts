@@ -20,6 +20,17 @@ export class ContractsService {
     private neonAuthUsers: NeonAuthUsersRepository,
   ) {}
 
+  /** A contract's client must be a client of this organization; otherwise their name/email would be copied from the global user table. */
+  private async assertClientInOrg(clientId: string, organizationId: string) {
+    const member = await this.prisma.member.findFirst({
+      where: { userId: clientId, organizationId },
+      select: { id: true },
+    });
+    if (!member) {
+      throw new BadRequestException("Client is not a member of this organization");
+    }
+  }
+
   async create(projectId: string, dto: CreateContractDto, organizationId: string, userId: string) {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, organizationId },
@@ -42,6 +53,7 @@ export class ContractsService {
       address: "",
     };
 
+    if (dto.clientId) await this.assertClientInOrg(dto.clientId, organizationId);
     const targetClientId = dto.clientId || (project.clients[0] ? project.clients[0].userId : undefined);
     if (targetClientId) {
       const user = await this.neonAuthUsers.findUnique(targetClientId);
@@ -142,9 +154,11 @@ export class ContractsService {
     }
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.template !== undefined) data.template = dto.template;
-    if (dto.clientId !== undefined) data.clientId = dto.clientId;
+    if (dto.clientId !== undefined) {
+      await this.assertClientInOrg(dto.clientId, organizationId);
+      data.clientId = dto.clientId;
+    }
     if (dto.content !== undefined) data.content = dto.content as any;
-    if (dto.status !== undefined && data.status === undefined) data.status = dto.status;
 
     return this.prisma.contract.update({
       where: { id },

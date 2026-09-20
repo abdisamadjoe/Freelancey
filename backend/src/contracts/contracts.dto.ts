@@ -35,10 +35,6 @@ export class UpdateContractDto {
   @IsObject()
   @IsOptional()
   content?: ContractContent;
-
-  @IsString()
-  @IsOptional()
-  status?: string;
 }
 
 export class DuplicateContractDto {
