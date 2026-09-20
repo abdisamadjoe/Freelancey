@@ -1,6 +1,8 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { AuthGuard, CurrentOrg, CurrentUser, PaginationQueryDto, Roles, RolesGuard } from "../common";
 import { ClientRecordsService } from "./client-records.service";
+import { PublicLeadsService } from "./public-leads.service";
+import { LeadFormSettingsDto } from "./client-records.dto";
 import {
   ClientRecordListQueryDto,
   CreateClientActivityDto,
@@ -13,7 +15,21 @@ import {
 @UseGuards(AuthGuard, RolesGuard)
 @Roles("owner", "admin")
 export class ClientRecordsController {
-  constructor(private service: ClientRecordsService) {}
+  constructor(
+    private service: ClientRecordsService,
+    private publicLeads: PublicLeadsService,
+  ) {}
+
+  // Declared before ":id" routes so "lead-form" is never read as an id.
+  @Get("lead-form")
+  getLeadForm(@CurrentOrg("id") orgId: string) {
+    return this.publicLeads.getFormSettings(orgId);
+  }
+
+  @Put("lead-form")
+  setLeadForm(@Body() dto: LeadFormSettingsDto, @CurrentOrg("id") orgId: string) {
+    return this.publicLeads.setFormEnabled(orgId, dto.enabled);
+  }
 
   @Get()
   list(@CurrentOrg("id") orgId: string, @Query() query: ClientRecordListQueryDto) {

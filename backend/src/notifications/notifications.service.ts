@@ -116,6 +116,13 @@ export class NotificationsService {
     );
   }
 
+  /** Tell the workspace's owners/admins about a lead from the public form. Fire-and-forget. */
+  notifyNewLead(orgId: string, clientId: string, name: string, summary: string): void {
+    this.sendNewLeadNotifications(orgId, clientId, name, summary).catch((err) => {
+      this.logger.error({ err, clientId }, "Failed to send new lead notifications");
+    });
+  }
+
   /**
    * Notify relevant users when a task's status changes.
    * Fire-and-forget.
@@ -1087,6 +1094,19 @@ export class NotificationsService {
     });
     const users = await this.neonAuthUsers.findMany(assignments.map((a) => a.userId));
     return users.map((u) => ({ id: u.id, name: u.name, email: u.email }));
+  }
+
+  private async sendNewLeadNotifications(orgId: string, clientId: string, name: string, summary: string) {
+    const admins = await this.getOrgAdmins(orgId);
+    if (admins.length === 0) return;
+    this.createInAppAndPush(
+      admins.map((a) => a.userId),
+      orgId,
+      "new_lead",
+      `New lead: ${name}`,
+      summary,
+      `/dashboard/leads/${clientId}`,
+    );
   }
 
   private async sendClientRequestCreatedNotifications(

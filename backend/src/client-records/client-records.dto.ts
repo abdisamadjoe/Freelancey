@@ -92,6 +92,11 @@ export class ClientRecordListQueryDto extends PaginationQueryDto {
   archived?: string;
 }
 
+export class LeadFormSettingsDto {
+  @IsBoolean()
+  enabled!: boolean;
+}
+
 export class CreateClientActivityDto {
   @IsIn(ACTIVITY_KINDS)
   kind!: string;

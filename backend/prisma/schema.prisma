@@ -396,6 +396,9 @@ model SystemSettings {
   // Telemetry
   telemetryEnabled Boolean?  // null = not yet asked, true = opted in, false = opted out
 
+  // Public lead form (opt-in)
+  leadFormEnabled Boolean @default(false)
+
   // General
   setupCompleted Boolean  @default(false)
 

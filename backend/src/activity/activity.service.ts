@@ -3,6 +3,9 @@ import { PrismaService } from "../prisma/prisma.service";
 import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
 import { paginationArgs, paginatedResponse } from "../common";
 
+/** Non-user actors written by the app itself. */
+const ACTOR_LABELS: Record<string, string> = { system: "System", public: "Contact form" };
+
 export interface CreateActivityDto {
   type: "document_response" | "decision_vote" | "decision_closed" | "contract_response";
   action: string;
@@ -111,7 +114,7 @@ export class ActivityService {
 
     const enriched = data.map((a) => ({
       ...a,
-      actor: actorMap.get(a.actorId) ?? { id: a.actorId, name: a.actorId === "system" ? "System" : "Unknown" },
+      actor: actorMap.get(a.actorId) ?? { id: a.actorId, name: ACTOR_LABELS[a.actorId] ?? "Unknown" },
     }));
 
     return paginatedResponse(enriched, total, page, limit);
