@@ -1,0 +1,22 @@
+/*
+ * Re-themes home1 to match the frontend app's design system (see
+ * frontend/src/app/globals.css for the source values). combined.css is a
+ * byte-for-byte Elementor capture whose colors are almost entirely consumed
+ * via var(--e-global-color-*), all defined once on .elementor-kit-21148
+ * (present on <body>, see (sierra)/layout.tsx). Overriding the values here,
+ * on a selector of equal-or-higher specificity loaded after combined.css,
+ * re-skins every button/badge/checkmark/divider without touching the
+ * captured stylesheet.
+ */
+body.elementor-kit-21148 {
+  --e-global-color-primary: #5750f1;
+  --e-global-color-secondary: #3c35d8;
+  --e-global-color-text: #18181b;
+  --color-text: #52525b;
+  --e-global-color-accent: #eff3ff;
+  --e-global-color-light: #f4f4f5;
+  --global-border-radius: 12px;
+  --button-border-radius: 8px;
+  --color-border: #e4e4e7;
+  --color-border-hard: #e4e4e7;
+}

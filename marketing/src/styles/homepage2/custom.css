@@ -1,0 +1,115 @@
+/*
+ * Hand-authored additions for interactivity that example2-homepage2.html
+ * had no captured JS for. Everything else in this project's styling for
+ * /homepage2 comes from the extracted original CSS (combined.css).
+ */
+
+/*
+ * `.menu_btn.mobile_menu_bar` had no captured CSS dimensions or content
+ * at all — the theme's JS injected the hamburger bars at runtime. These
+ * bars/sizing are new.
+ */
+.mobile_menu_bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 26px;
+  height: 20px;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.menu-btn-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.mobile_menu_bar.active .menu-btn-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.mobile_menu_bar.active .menu-btn-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.mobile_menu_bar.active .menu-btn-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.tj-mobile-menu-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  background: var(--tj-color-common-white, #fff);
+  z-index: 9999;
+  overflow-y: auto;
+  padding: 60px 20px 20px;
+  transition: transform 0.3s ease;
+  box-shadow: -10px 0 30px 0 rgba(0, 0, 0, 0.1);
+}
+
+.tj-mobile-menu-panel__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border: none;
+  background: none;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.tj-mobile-menu-panel .menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tj-mobile-menu-panel .menu-item {
+  border-bottom: 1px solid var(--tj-color-border-2, #eee);
+}
+
+.tj-mobile-menu-panel .menu-item > a,
+.tj-mobile-menu-panel__submenu-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.tj-mobile-menu-panel .sub-menu {
+  list-style: none;
+  margin: 0 0 10px;
+  padding: 0 0 0 16px;
+}
+
+.tj-mobile-menu-panel .sub-menu .menu-item {
+  border-bottom: none;
+}
+
+.tj-mobile-menu-panel .sub-menu a {
+  display: block;
+  padding: 8px 0;
+  font-size: 15px;
+  opacity: 0.8;
+}
+
+@media (min-width: 992px) {
+  .tj-mobile-menu-panel {
+    display: none;
+  }
+}

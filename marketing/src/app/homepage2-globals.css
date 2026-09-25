@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+/*
+ * Extracted verbatim (concatenated in original document order, data: URIs
+ * rewritten to /public/homepage2 files) from the 36 <style> blocks in
+ * example2-homepage2.html: WordPress core, Contact Form 7, Bootstrap,
+ * Swiper, meanmenu, Venobox, the Sasflo theme's own CSS, and several
+ * Elementor per-post CSS blocks. Kept as global CSS rather than ported to
+ * Tailwind for the same reason as the Sierra page: it's generated,
+ * ID-scoped CSS, not something meant to be hand-authored.
+ */
+@import "../styles/homepage2/combined.css";
+@import "../styles/homepage2/custom.css";

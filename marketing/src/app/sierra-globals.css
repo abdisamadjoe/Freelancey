@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+/*
+ * These three files are extracted verbatim from the original SingleFile
+ * capture's <style> blocks (WordPress + Elementor + SiteGround Optimizer's
+ * combined CSS bundle). They are kept as plain global CSS rather than
+ * ported to Tailwind utilities: the rules are keyed to Elementor's
+ * auto-generated element ids/classes, so hand-porting them risks visual
+ * drift with no practical benefit. See README for details.
+ */
+@import "../styles/base.css";
+@import "../styles/theme.css";
+@import "../styles/combined.css";
+@import "../styles/custom.css";
+@import "../styles/sierra-brand-override.css";

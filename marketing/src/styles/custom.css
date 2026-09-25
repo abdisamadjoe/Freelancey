@@ -1,0 +1,46 @@
+/*
+ * Hand-authored additions for interactivity that the original SingleFile
+ * capture had no JS for (mobile nav dropdown state, hamburger icon bars).
+ * The captured `#nav-toggle` button was empty in the source HTML — its
+ * hamburger bars were injected by the theme's JS at runtime, which
+ * SingleFile did not capture — so the bars/animation here are new.
+ * Everything else in this project's styling comes from the extracted
+ * original CSS.
+ */
+
+.nav-toggle-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  margin: 3px 0;
+  background: currentColor;
+  transition: var(--global-transition, all 0.2s ease);
+}
+
+.nav-toggle--active .nav-toggle-bar:nth-child(1) {
+  transform: translateY(5px) rotate(45deg);
+}
+
+.nav-toggle--active .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle--active .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+/*
+ * The original CSS already defines a full mobile nav overlay design for
+ * `.nav-primary` (fixed, full-height, slide/fade via opacity+visibility) —
+ * its open/closed state was driven by the theme's JS setting inline
+ * `opacity`/`visibility`/`pointer-events`, which SiteHeader.tsx now does
+ * directly. The one gap: `.kd-nav-menu-widget .nav-primary .menu-item`
+ * defaults to `display:none` (meant to be re-shown by that same missing
+ * JS), so it's restored here when our own `nav-primary--open` marker
+ * class is present.
+ */
+@media (max-width: 1024px) {
+  .nav-primary.nav-primary--open .menu-item {
+    display: flex !important;
+  }
+}
