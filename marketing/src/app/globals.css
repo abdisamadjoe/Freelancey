@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. They mirror the Freelancey app (frontend/src/app/css/default.css)
+ * so the website and the product read as one brand: one accent, a fixed set of
+ * text colors, and neutral surfaces.
+ */
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #5750f1;
+  --color-brand-600: #3c35d8;
+  --color-brand-700: #2f2aad;
+  --color-brand-800: #27238a;
+  --color-brand-900: #1f1d6b;
+
+  --color-ink: #18181b;
+  --color-ink-secondary: #52525b;
+  --color-ink-muted: #71717a;
+
+  --color-surface: #ffffff;
+  --color-surface-subtle: #fafafa;
+  --color-surface-muted: #f4f4f5;
+  --color-line: #e4e4e7;
+
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.05);
+  --shadow-float: 0 12px 16px -4px rgb(16 24 40 / 0.08), 0 4px 6px -2px rgb(16 24 40 / 0.03);
+  --shadow-device: 0 32px 64px -16px rgb(24 24 27 / 0.28), 0 8px 16px -8px rgb(24 24 27 / 0.16);
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* FAQ disclosure marker and rotation */
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
+}
+details[open] .faq-icon {
+  transform: rotate(45deg);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Hero background: the brand violet drifting between its darker and lighter shades. */
+.hero-gradient {
+  background-color: var(--color-brand-700);
+  background-image: linear-gradient(
+    120deg,
+    var(--color-brand-900),
+    var(--color-brand-700),
+    var(--color-brand-500),
+    var(--color-brand-700),
+    var(--color-brand-900)
+  );
+  background-size: 300% 300%;
+  animation: hero-drift 18s ease-in-out infinite;
+}
+
+@keyframes hero-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient {
+    animation: none;
+  }
+}
