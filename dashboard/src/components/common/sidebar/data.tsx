@@ -3,6 +3,7 @@ import {
   CalendarIcon,
   ChatIcon,
   HomeIcon,
+  InvoiceIcon,
   PieChartIcon,
   TaskIcon,
   UserGroupIcon,
@@ -34,16 +35,18 @@ export const STAFF_NAV: NavSection[] = [
     items: [
       { title: "Overview", url: "/dashboard", icon: <HomeIcon />, items: [] },
       { title: "Leads", url: "/dashboard/leads", icon: <UserIcon />, items: [] },
-      { title: "Clients", url: "/dashboard/clients", icon: <UserGroupIcon />, items: [] },
       { title: "Projects", url: "/dashboard/projects", icon: <TaskIcon />, items: [] },
-      { title: "Invoices", url: "/dashboard/invoices", icon: <TaskIcon />, items: [] },
       { title: "Calendar", url: "/dashboard/calendar", icon: <CalendarIcon />, items: [] },
+      { title: "Clients", url: "/dashboard/clients", icon: <UserGroupIcon />, items: [] },
       { title: "Support", url: "/dashboard/support", icon: <ChatIcon />, items: [] },
     ],
   },
   {
     label: "REPORTS",
-    items: [{ title: "Time report", url: "/dashboard/reports/time", icon: <PieChartIcon />, items: [] }],
+    items: [
+      { title: "Invoices", url: "/dashboard/invoices", icon: <InvoiceIcon />, items: [] },
+      { title: "Reports", url: "/dashboard/reports", icon: <PieChartIcon />, items: [] },
+    ],
   },
   {
     label: "SYSTEM",
@@ -52,10 +55,8 @@ export const STAFF_NAV: NavSection[] = [
         title: "Settings",
         icon: <Widget4Icon />,
         items: [
-          { title: "General", url: "/dashboard/settings/general" },
-          { title: "Profile", url: "/dashboard/settings/profile" },
-          { title: "Branding", url: "/dashboard/settings/branding" },
-          { title: "Labels & domain", url: "/dashboard/settings/system" },
+          { title: "Account", url: "/dashboard/settings/account" },
+          { title: "Workspace", url: "/dashboard/settings/workspace" },
           { title: "Billing", url: "/dashboard/settings/billing" },
           { title: "Payments", url: "/dashboard/settings/payments" },
         ],
