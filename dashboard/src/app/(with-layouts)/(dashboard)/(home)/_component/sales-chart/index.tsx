@@ -44,8 +44,8 @@ export default function SalesChart() {
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
               <defs>
                 <linearGradient id="background" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset={"5%"} stopColor="#3758F9" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="#3758F9" stopOpacity={0} />
+                  <stop offset={"5%"} stopColor="var(--neutral-brand-color)" stopOpacity={0.2} />
+                  <stop offset="95%" stopColor="var(--neutral-brand-color)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis
@@ -70,11 +70,11 @@ export default function SalesChart() {
                 type="monotone"
                 dataKey="sales"
                 name="Sales"
-                stroke="#5750F1"
+                stroke="var(--neutral-brand-color)"
                 strokeWidth={2}
                 fill="url(#background)"
                 dot={false}
-                activeDot={{ r: 4, fill: "#5750F1", stroke: "#fff", strokeWidth: 2 }}
+                activeDot={{ r: 4, fill: "var(--neutral-brand-color)", stroke: "#fff", strokeWidth: 2 }}
               />
               <Area
                 type="monotone"

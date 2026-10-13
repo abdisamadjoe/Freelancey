@@ -2,7 +2,6 @@
 
 import {
   ActionButton,
-  CheckInput,
   Empty,
   ErrorNote,
   fmtDateTime,
@@ -15,7 +14,9 @@ import {
   TextInput,
   useConfirm,
 } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
+import { type EditableEntry, TimeEntryForm } from "@/components/app/projects/time-entry-form";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { formatDuration, formatHours } from "@/lib/format-duration";
 import { useCallback, useEffect, useState } from "react";
@@ -33,159 +34,28 @@ interface Entry {
   task: { id: string; title: string } | null;
 }
 
-interface EditableEntry {
-  id: string;
-  startedAt: string;
-  endedAt: string | null;
-  description: string | null;
-  billable: boolean;
-}
-
-/** `<input type="datetime-local">` value for an ISO timestamp. */
-function toLocalInput(iso: string | null): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function ManualEntryModal({
+function EditEntryModal({
   projectId,
   entry,
   onClose,
   onSaved,
 }: {
   projectId: string;
-  entry?: EditableEntry;
+  entry: EditableEntry;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [start, setStart] = useState(toLocalInput(entry?.startedAt ?? null));
-  const [end, setEnd] = useState(toLocalInput(entry?.endedAt ?? null));
-  const [description, setDescription] = useState(entry?.description ?? "");
-  const [billable, setBillable] = useState(entry?.billable ?? true);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  async function save() {
-    setError("");
-    const startedAt = new Date(start);
-    const endedAt = new Date(end);
-    if (Number.isNaN(startedAt.getTime()) || Number.isNaN(endedAt.getTime())) {
-      setError("Enter a start and end time.");
-      return;
-    }
-    if (endedAt <= startedAt) {
-      setError("The end time must be after the start time.");
-      return;
-    }
-    setBusy(true);
-    try {
-      if (entry) {
-        await apiFetch(`/time-entries/${entry.id}`, {
-          method: "PATCH",
-          body: JSON.stringify({
-            startedAt: startedAt.toISOString(),
-            endedAt: endedAt.toISOString(),
-            description: description || null,
-            billable,
-          }),
-        });
-      } else {
-        await apiFetch("/time-entries", {
-          method: "POST",
-          body: JSON.stringify({
-            projectId,
-            startedAt: startedAt.toISOString(),
-            endedAt: endedAt.toISOString(),
-            description: description || undefined,
-            billable,
-          }),
-        });
-      }
-      onSaved();
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save the entry");
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
-    <Modal
-      open
-      onClose={onClose}
-      title={entry ? "Edit time entry" : "Add time entry"}
-      footer={
-        <>
-          <Button appearance="outline" variant="primary" onPress={onClose}>
-            Cancel
-          </Button>
-          <ActionButton variant="primary" loading={busy} onPress={save}>
-            {entry ? "Save" : "Add entry"}
-          </ActionButton>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        {error && <p className="text-sm text-error-500">{error}</p>}
-        <TextInput label="Start" type="datetime-local" value={start} onChange={setStart} required />
-        <TextInput label="End" type="datetime-local" value={end} onChange={setEnd} required />
-        <TextInput label="Description" value={description} onChange={setDescription} />
-        <CheckInput checked={billable} onChange={setBillable} label="Billable" />
-      </div>
-    </Modal>
-  );
-}
-
-function GenerateFromTimeModal({ projectId, onClose, onCreated }: { projectId: string; onClose: () => void; onCreated: () => void }) {
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
-  const [includeNonBillable, setIncludeNonBillable] = useState(false);
-  const [mergeEntries, setMergeEntries] = useState(false);
-  const [busy, setBusy] = useState(false);
-
-  async function run() {
-    setBusy(true);
-    try {
-      const body: Record<string, unknown> = { projectId, includeNonBillable, mergeEntries };
-      if (from) body.from = new Date(from).toISOString();
-      if (to) body.to = new Date(`${to}T23:59:59`).toISOString();
-      await apiFetch<{ invoiceId: string }>("/time-entries/generate-invoice", { method: "POST", body: JSON.stringify(body) });
-      toast.success("Draft invoice created from time entries");
-      onCreated();
-      onClose();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the invoice");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  return (
-    <Modal
-      open
-      onClose={onClose}
-      title="Invoice time entries"
-      description="Creates a draft invoice from billable time that has not been invoiced yet."
-      footer={
-        <>
-          <Button appearance="outline" variant="primary" onPress={onClose}>
-            Cancel
-          </Button>
-          <ActionButton variant="primary" loading={busy} onPress={run}>
-            Create draft invoice
-          </ActionButton>
-        </>
-      }
-    >
-      <div className="space-y-4">
-        <TextInput label="From" type="date" value={from} onChange={setFrom} />
-        <TextInput label="To" type="date" value={to} onChange={setTo} />
-        <CheckInput checked={includeNonBillable} onChange={setIncludeNonBillable} label="Include non-billable entries" />
-        <CheckInput checked={mergeEntries} onChange={setMergeEntries} label="Merge entries into one line per person" />
-      </div>
+    <Modal open onClose={onClose} title="Edit time entry">
+      <TimeEntryForm
+        projectId={projectId}
+        entry={entry}
+        onCancel={onClose}
+        onSaved={() => {
+          onSaved();
+          onClose();
+        }}
+      />
     </Modal>
   );
 }
@@ -195,8 +65,7 @@ export function TimeTab({ projectId, isArchived }: { projectId: string; isArchiv
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<unknown>(null);
-  const [modal, setModal] = useState<{ mode: "closed" } | { mode: "new" } | { mode: "edit"; entry: EditableEntry }>({ mode: "closed" });
-  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [editing, setEditing] = useState<EditableEntry | null>(null);
   const [now, setNow] = useState(() => Date.now());
   const [draftDescription, setDraftDescription] = useState("");
   const [timerBusy, setTimerBusy] = useState(false);
@@ -313,12 +182,15 @@ export function TimeTab({ projectId, isArchived }: { projectId: string; isArchiv
         action={
           !isArchived && (
             <>
-              <Button size="sm" appearance="outline" variant="primary" onPress={() => setInvoiceOpen(true)}>
+              <Link
+                href={`/dashboard/projects/${projectId}/time/invoice`}
+                className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
+              >
                 Invoice time
-              </Button>
-              <Button size="sm" variant="primary" onPress={() => setModal({ mode: "new" })}>
+              </Link>
+              <Link href={`/dashboard/projects/${projectId}/time/new`} className={buttonStyles({ size: "sm" })}>
                 Add entry
-              </Button>
+              </Link>
             </>
           )
         }
@@ -390,10 +262,7 @@ export function TimeTab({ projectId, isArchived }: { projectId: string; isArchiv
                         size="xs"
                         variant="ghost"
                         onPress={() =>
-                          setModal({
-                            mode: "edit",
-                            entry: { id: e.id, startedAt: e.startedAt, endedAt: e.endedAt, description: e.description, billable: e.billable },
-                          })
+                          setEditing({ id: e.id, startedAt: e.startedAt, endedAt: e.endedAt, description: e.description, billable: e.billable })
                         }
                       >
                         Edit
@@ -410,15 +279,7 @@ export function TimeTab({ projectId, isArchived }: { projectId: string; isArchiv
         </div>
       </Panel>
 
-      {modal.mode !== "closed" && (
-        <ManualEntryModal
-          projectId={projectId}
-          entry={modal.mode === "edit" ? modal.entry : undefined}
-          onClose={() => setModal({ mode: "closed" })}
-          onSaved={load}
-        />
-      )}
-      {invoiceOpen && <GenerateFromTimeModal projectId={projectId} onClose={() => setInvoiceOpen(false)} onCreated={load} />}
+      {editing && <EditEntryModal projectId={projectId} entry={editing} onClose={() => setEditing(null)} onSaved={load} />}
       {dialog}
     </>
   );

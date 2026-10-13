@@ -31,7 +31,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
 
 function StepOrg({ orgName, onNext }: { orgName: string; onNext: () => void }) {
   const [name, setName] = useState(orgName);
-  const [branding, setBranding] = useState<Branding>({ primaryColor: "#665df5", accentColor: "#ff6b5c" });
+  const [branding, setBranding] = useState<Branding>({ primaryColor: "#064e3b", accentColor: "#10b981" });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");

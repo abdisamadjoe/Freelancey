@@ -1,13 +1,10 @@
 "use client";
 
 import {
-  ActionButton,
   CheckInput,
   Empty,
-  FormGrid,
   LabelChip,
   Loading,
-  Modal,
   MultiSelectInput,
   Notice,
   Page,
@@ -18,20 +15,17 @@ import {
   SearchBox,
   SelectInput,
   StatusPill,
-  TextAreaInput,
-  TextInput,
   Toolbar,
   fmtDate,
 } from "@/components/app/kit";
 import { Badge } from "@/components/tailgrids/core/badge";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
 import { Card } from "@/components/tailgrids/core/card";
 import { useDebounce } from "@/hooks/use-debounce";
 import { apiFetch } from "@/lib/api";
 import { useAppConfig } from "@/lib/app-config";
 import { downloadCsv } from "@/lib/download";
 import { useApi } from "@/lib/query";
-import { track } from "@/lib/track";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -58,10 +52,6 @@ interface ProjectStatus {
 
 export default function ProjectsPage() {
   const config = useAppConfig();
-  const [showCreate, setShowCreate] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
   const [planLimits, setPlanLimits] = useState<{ maxProjects: number; projectsUsed: number } | null>(null);
 
   const [page, setPage] = useState(1);
@@ -97,55 +87,10 @@ export default function ProjectsPage() {
     });
   }, [config?.billingEnabled]);
 
-  const [creating, setCreating] = useState(false);
-  const [clientChoices, setClientChoices] = useState<{ id: string; name: string; company: string | null }[]>([]);
-  const [newClientId, setNewClientId] = useState("");
-  const [newStart, setNewStart] = useState("");
-  const [newEnd, setNewEnd] = useState("");
-
-  useEffect(() => {
-    if (!showCreate) return;
-    apiFetch<Paginated<{ id: string; name: string; company: string | null }>>("/client-records?stage=active&limit=100")
-      .then((res) => setClientChoices(res.data))
-      .catch(() => setClientChoices([]));
-  }, [showCreate]);
-
   const atProjectLimit = planLimits !== null && planLimits.maxProjects !== -1 && planLimits.projectsUsed >= planLimits.maxProjects;
   const oneProjectLeft =
     planLimits !== null && planLimits.maxProjects !== -1 && !atProjectLimit && planLimits.maxProjects - planLimits.projectsUsed === 1;
 
-  async function handleCreate() {
-    if (creating || !name.trim()) return;
-    setCreating(true);
-    setError("");
-    try {
-      await apiFetch<Project>("/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          description,
-          clientId: newClientId || undefined,
-          startDate: newStart || undefined,
-          endDate: newEnd || undefined,
-        }),
-      });
-      track("project_created");
-      setName("");
-      setDescription("");
-      setNewClientId("");
-      setNewStart("");
-      setNewEnd("");
-      setShowCreate(false);
-      projects.refetch();
-      setPlanLimits((prev) => (prev ? { ...prev, projectsUsed: prev.projectsUsed + 1 } : prev));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create project");
-    } finally {
-      setCreating(false);
-    }
-  }
-
-  const createModalOpen = showCreate && !atProjectLimit;
   const hasActiveFilters = Boolean(debouncedSearch) || Boolean(statusFilter) || labelFilter.length > 0;
   const rows = projects.data?.data ?? [];
 
@@ -164,26 +109,15 @@ export default function ProjectsPage() {
             <Button appearance="outline" variant="primary" size="sm" onPress={() => downloadCsv("/projects/export")}>
               Export
             </Button>
-            <Button size="sm" variant="primary" onPress={() => setShowCreate(!showCreate)}>
+            <Link href="/dashboard/projects/new" className={buttonStyles({ size: "sm" })}>
               New Project
-            </Button>
+            </Link>
           </>
         }
       />
 
       <PageBody>
-        {error && !createModalOpen && <Notice status="error">{error}</Notice>}
         {projects.error && <Notice status="error">{projects.error.message}</Notice>}
-
-        {showCreate && atProjectLimit && (
-          <Notice status="warning">
-            You&apos;ve reached your limit of {planLimits?.maxProjects} free projects. Upgrade to Pro for unlimited project creation and
-            advanced client portal tools.{" "}
-            <Link href="/dashboard/settings/billing" className="font-medium underline">
-              Upgrade
-            </Link>
-          </Notice>
-        )}
 
         <Toolbar>
           <SearchBox value={search} onChange={setSearch} placeholder="Search project titles..." className="sm:w-64" />
@@ -259,56 +193,6 @@ export default function ProjectsPage() {
           </>
         )}
       </PageBody>
-
-      <Modal
-        open={createModalOpen}
-        onClose={() => setShowCreate(false)}
-        title="New Project"
-        description="Create a project workspace to start tracking tasks and contracts."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setShowCreate(false)}>
-              Cancel
-            </Button>
-            <ActionButton variant="primary" loading={creating} isDisabled={!name.trim()} onPress={handleCreate}>
-              {creating ? "Creating..." : "Create Workspace"}
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          {error && <Notice status="error">{error}</Notice>}
-          {oneProjectLeft && (
-            <Notice status="warning">
-              Last free project workspace. Upgrade to Pro for unlimited.{" "}
-              <Link href="/dashboard/settings/billing" className="font-medium underline">
-                Upgrade
-              </Link>
-            </Notice>
-          )}
-          <TextInput
-            label="Project title"
-            required
-            value={name}
-            onChange={setName}
-            placeholder="Project title (e.g., Website Redesign & Brand Assets)"
-          />
-          <SelectInput
-            label="Client"
-            value={newClientId}
-            onChange={setNewClientId}
-            options={[
-              { value: "", label: "No client yet" },
-              ...clientChoices.map((c) => ({ value: c.id, label: c.company ? `${c.name} (${c.company})` : c.name })),
-            ]}
-          />
-          <FormGrid>
-            <TextInput label="Start date" type="date" value={newStart} onChange={setNewStart} />
-            <TextInput label="Deadline" type="date" value={newEnd} onChange={setNewEnd} />
-          </FormGrid>
-          <TextAreaInput label="Description" rows={3} value={description} onChange={setDescription} placeholder="Project scope and description (optional)" />
-        </div>
-      </Modal>
     </Page>
   );
 }

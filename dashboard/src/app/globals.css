@@ -20,6 +20,15 @@
   --color-primary-950: var(--primary-950);
 
   --color-primary-text: var(--primary-text);
+
+  /* Accent (Mint) + brand neutrals */
+  --color-accent-20: var(--accent-20);
+  --color-accent-40: var(--accent-40);
+  --color-accent-60: var(--accent-60);
+  --color-accent-80: var(--accent-80);
+  --color-accent-500: var(--accent-500);
+  --color-light: var(--light);
+  --color-ink: var(--ink);
   --color-neutral-brand-color: var(--neutral-brand-color);
 
   /* Text Color */

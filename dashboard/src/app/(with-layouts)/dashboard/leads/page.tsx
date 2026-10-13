@@ -1,15 +1,11 @@
 "use client";
 
-import { ImportLeadsModal } from "@/components/app/leads/import-leads-modal";
 import { LeadBoard } from "@/components/app/leads/lead-board";
 import {
-  ActionButton,
   CheckInput,
   type Column,
   DataTable,
   fmtDate,
-  FormGrid,
-  Modal,
   Notice,
   Page,
   PageBody,
@@ -21,11 +17,9 @@ import {
   SelectInput,
   StatusBadge,
   SwitchInput,
-  TextAreaInput,
-  TextInput,
   Toolbar,
 } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
 import { useDebounce } from "@/hooks/use-debounce";
 import { apiFetch } from "@/lib/api";
 import {
@@ -39,7 +33,6 @@ import {
   stageBadge,
 } from "@/lib/leads";
 import { useApi } from "@/lib/query";
-import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -49,22 +42,7 @@ interface FormSettings {
   slug: string | null;
 }
 
-const EMPTY_FORM = {
-  name: "",
-  email: "",
-  phone: "",
-  whatsapp: "",
-  website: "",
-  company: "",
-  source: "",
-  interestedIn: "",
-  budget: "",
-  followUp: "",
-  notes: "",
-};
-
 export default function LeadsPage() {
-  const qc = useQueryClient();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -74,12 +52,6 @@ export default function LeadsPage() {
   const [dueOnly, setDueOnly] = useState(false);
 
   const [view, setView] = useState<"list" | "board">("list");
-  const [boardKey, setBoardKey] = useState(0);
-  const [showImport, setShowImport] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [formError, setFormError] = useState("");
-  const [creating, setCreating] = useState(false);
 
   const params = new URLSearchParams({ page: String(page), limit: "20" });
   if (debouncedSearch) params.set("search", debouncedSearch);
@@ -94,52 +66,6 @@ export default function LeadsPage() {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearch, stage, leadStatus, sourceFilter, dueOnly]);
-
-  const setField = (key: keyof typeof EMPTY_FORM) => (v: string) => setForm((f) => ({ ...f, [key]: v }));
-
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    setFormError("");
-    if (!form.email.trim() && !form.phone.trim() && !form.whatsapp.trim()) {
-      setFormError("Add at least one of email, phone or WhatsApp.");
-      return;
-    }
-    const budget = form.budget.trim() ? Math.round(parseFloat(form.budget) * 100) : undefined;
-    if (budget !== undefined && (Number.isNaN(budget) || budget < 0)) {
-      setFormError("Budget must be a positive number.");
-      return;
-    }
-    setCreating(true);
-    try {
-      await apiFetch("/client-records", {
-        method: "POST",
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email.trim() || undefined,
-          phone: form.phone.trim() || undefined,
-          whatsapp: form.whatsapp.trim() || undefined,
-          company: form.company.trim() || undefined,
-          website: form.website.trim() || undefined,
-          source: form.source || "manual",
-          interestedIn: form.interestedIn.trim() || undefined,
-          estimatedBudgetCents: budget,
-          nextFollowUpAt: form.followUp ? new Date(form.followUp).toISOString() : undefined,
-          notes: form.notes.trim() || undefined,
-        }),
-      });
-      toast.success("Lead added");
-      setBoardKey((k) => k + 1);
-      setShowCreate(false);
-      setForm(EMPTY_FORM);
-      setStage("lead");
-      setPage(1);
-      await qc.invalidateQueries({ queryKey: ["api"] });
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Failed to add lead");
-    } finally {
-      setCreating(false);
-    }
-  }
 
   async function toggleForm(enabled: boolean) {
     try {
@@ -203,12 +129,15 @@ export default function LeadsPage() {
             <Button size="sm" appearance="outline" variant="primary" onPress={() => setView(view === "list" ? "board" : "list")}>
               {view === "list" ? "Board" : "List"}
             </Button>
-            <Button size="sm" appearance="outline" variant="primary" onPress={() => setShowImport(true)}>
+            <Link
+              href="/dashboard/leads/import"
+              className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
+            >
               Import
-            </Button>
-            <Button size="sm" variant="primary" onPress={() => setShowCreate(true)}>
+            </Link>
+            <Link href="/dashboard/leads/new" className={buttonStyles({ size: "sm" })}>
               Add lead
-            </Button>
+            </Link>
           </>
         }
       />
@@ -248,7 +177,7 @@ export default function LeadsPage() {
         )}
 
         {view === "board" ? (
-          <LeadBoard key={boardKey} />
+          <LeadBoard />
         ) : (
           <>
             <Toolbar>
@@ -297,54 +226,6 @@ export default function LeadsPage() {
           </>
         )}
       </PageBody>
-
-      <ImportLeadsModal
-        open={showImport}
-        onClose={() => setShowImport(false)}
-        onImported={() => {
-          qc.invalidateQueries({ queryKey: ["api"] });
-          setBoardKey((k) => k + 1);
-        }}
-      />
-
-      <Modal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        title="Add lead"
-        description="Name and one way to reach them is enough. Everything else is optional."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setShowCreate(false)}>
-              Cancel
-            </Button>
-            <ActionButton variant="primary" appearance="fill" loading={creating} isDisabled={!form.name.trim()} onPress={() => handleCreate({ preventDefault() {} } as React.FormEvent)}>
-              {creating ? "Adding..." : "Add lead"}
-            </ActionButton>
-          </>
-        }
-      >
-        <form onSubmit={handleCreate} className="space-y-4">
-          {formError && <Notice status="error">{formError}</Notice>}
-          <TextInput label="Name" required value={form.name} onChange={setField("name")} />
-          <FormGrid>
-            <TextInput label="Email" type="email" value={form.email} onChange={setField("email")} />
-            <TextInput label="Phone" value={form.phone} onChange={setField("phone")} />
-            <TextInput label="WhatsApp" value={form.whatsapp} onChange={setField("whatsapp")} />
-            <TextInput label="Company" value={form.company} onChange={setField("company")} />
-            <TextInput label="Website" value={form.website} onChange={setField("website")} />
-            <SelectInput
-              label="Source"
-              value={form.source}
-              onChange={setField("source")}
-              options={[{ value: "", label: "Manual (default)" }, ...LEAD_SOURCES]}
-            />
-            <TextInput label="Interested in" value={form.interestedIn} onChange={setField("interestedIn")} />
-            <TextInput label="Estimated budget" type="number" min="0" step="0.01" value={form.budget} onChange={setField("budget")} />
-            <TextInput label="Follow up on" type="date" value={form.followUp} onChange={setField("followUp")} />
-          </FormGrid>
-          <TextAreaInput label="Notes" rows={3} value={form.notes} onChange={setField("notes")} />
-        </form>
-      </Modal>
     </Page>
   );
 }

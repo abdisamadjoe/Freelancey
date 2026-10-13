@@ -1,18 +1,27 @@
 :root {
-  --primary-50: var(--primary-50);
-  --primary-100: #dae2ff;
-  --primary-200: #becdff;
-  --primary-300: #91aeff;
-  --primary-400: #5e84fc;
-  --primary-500: #3758f9;
-  --primary-600: #2237ee;
-  --primary-700: #1a25db;
-  --primary-800: #1c20b1;
-  --primary-900: #1c228c;
-  --primary-950: #161755;
+  --primary-50: #eef3f1;
+  --primary-100: #cddcd8;
+  --primary-200: #9bb8b1;
+  --primary-300: #6a9589;
+  --primary-400: #387162;
+  --primary-500: #064e3b;
+  --primary-600: #05402f;
+  --primary-700: #043326;
+  --primary-800: #03271d;
+  --primary-900: #021c15;
+  --primary-950: #01110d;
 
-  --primary-text: white;
-  --neutral-brand-color: #465fff;
+  --primary-text: #ecfdf5;
+
+  /* Accent: Mint. The one moving part: dots, badges, toggles, progress. Never text on light. */
+  --accent-20: #cff1e6;
+  --accent-40: #9fe3cd;
+  --accent-60: #70d5b3;
+  --accent-80: #40c79a;
+  --accent-500: #10b981;
+  --light: #ecfdf5;
+  --ink: #111827;
+  --neutral-brand-color: #064e3b;
 
   /* Text Color */
   --text-50: #374151;
@@ -27,7 +36,7 @@
   --info-500: #0ea5e9;
 
   /* Title */
-  --title-50: #1f2937;
+  --title-50: #111827;
 
   /* White */
   --white-100: #ffffff;
@@ -51,9 +60,9 @@
   /* Gray */
   --foreground-soft-50: #111827;
   --foreground-soft-100: #111827;
-  --foreground-soft-200: #1f2937;
+  --foreground-soft-200: #111827;
   --foreground-soft-300: #030712;
-  --foreground-soft-400: #1f2937;
+  --foreground-soft-400: #111827;
   --foreground-soft-500: #374151;
 
   /* Background Colors */
@@ -73,17 +82,17 @@
   /* ======== Button Color =========*/
 
   /* Primary */
-  --button-primary-background: #5750f1;
-  --button-primary-hover-background: #3c35d8;
-  --button-primary-text: #ffffff;
-  --button-primary-focus-ring: rgba(87, 80, 241, 0.2);
+  --button-primary-background: #064e3b;
+  --button-primary-hover-background: #05402f;
+  --button-primary-text: #ecfdf5;
+  --button-primary-focus-ring: rgba(6, 78, 59, 0.2);
 
   /* Outline */
   --button-outline-background: #ffffff;
   --button-outline-hover-background: #f3f4f6;
   --button-outline-border: #d1d5db;
   --button-outline-focus-ring: rgba(152, 162, 179, 0.14);
-  --button-outline-text: #1f2937;
+  --button-outline-text: #111827;
   --button-outline-hover-text: #111827;
   --button-outline-disabled-background: #ffffff;
   --button-outline-disabled-text: #9ca3af;
@@ -133,8 +142,8 @@
 
   /* Button Group Primary */
   --button-group-primary-background: #ffffff;
-  --button-group-primary-hover-background: #5750f1;
-  --button-group-primary-text: #5750f1;
+  --button-group-primary-hover-background: #064e3b;
+  --button-group-primary-text: #064e3b;
   --button-group-primary-hover-text: #ffffff;
 
   /* Button Group Secondary */
@@ -149,9 +158,9 @@
   --badge-neutral-icon-color: #6b7280;
 
   /* Badge Primary */
-  --badge-primary-background: #eff3ff;
-  --badge-primary-text: #3758f9;
-  --badge-primary-icon-color: #3758f9;
+  --badge-primary-background: #f3f4f6;
+  --badge-primary-text: #064e3b;
+  --badge-primary-icon-color: #064e3b;
 
   /* Badge Error */
   --badge-error-background: #fef2f2;
@@ -217,19 +226,20 @@
   /* ======== Sidebar =========*/
 
   /* Nav Item */
+  --sidebar-background: #ffffff;
   --sidebar-nav-default-background: #ffffff;
   --sidebar-nav-hover-background: #f9fafb;
   --sidebar-nav-secondary-hover-background: #f3f4f6;
   --sidebar-nav-hover-text: #374151;
-  --sidebar-nav-active-text: #3758f9;
-  --sidebar-nav-active-background: #eff3ff;
-  --sidebar-nav-focused-background: #eff3ff;
+  --sidebar-nav-active-text: #064e3b;
+  --sidebar-nav-active-background: #f3f4f6;
+  --sidebar-nav-focused-background: #f3f4f6;
   --sidebar-nav-default-text: #374151;
   --sidebar-nav-icon: #6b7280;
 
   /* Sidebar Badge */
-  --sidebar-badge-background: #3758f9;
-  --sidebar-badge-text: #ffffff;
+  --sidebar-badge-background: #064e3b;
+  --sidebar-badge-text: #ecfdf5;
 
   /* Sidebar Footer */
   --sidebar-footer-background: #f9fafb;
@@ -292,9 +302,9 @@
   --alert-default-icon-background: #6b7280;
   --alert-default-border: #e5e7eb;
   --alert-default-close-icon: #4b5563;
-  --alert-default-title: #1f2937;
+  --alert-default-title: #111827;
   --alert-default-description: #374151;
-  --alert-default-button-background: #52525b;
+  --alert-default-button-background: #4b5563;
   --alert-default-button-hover-background: #374151;
   --alert-default-button-text: #374151;
 
@@ -303,23 +313,23 @@
   --input-label-text: #374151;
   --input-disabled-text: #d1d5db;
   --input-disabled-background: #fafafa;
-  --input-disabled-border: #e4e4e7;
+  --input-disabled-border: #e5e7eb;
   --input-placeholder-text: #9ca3af;
-  --input-primary-focus-border: #5750f1;
+  --input-primary-focus-border: #064e3b;
   --input-error-focus-border: #ef4444;
   --input-success-focus-border: #22c55e;
   --input-error: #ef4444;
   --input-success: #22c55e;
 
   /* ======== Tab Color =========*/
-  --tab-background: #f4f4f5;
+  --tab-background: #f3f4f6;
   --tab-active-background: #ffffff;
-  --tab-secondary-active-background: #eff3ff;
+  --tab-secondary-active-background: #f3f4f6;
 
   /* ======== Checkbox Color =========*/
   --checkbox-background: #ffffff;
-  --checkbox-checked-border: #5750f1;
-  --checkbox-checked-background: #5750f1;
+  --checkbox-checked-border: #064e3b;
+  --checkbox-checked-background: #064e3b;
   --checkbox-checked-icon-color: #ffffff;
 
   /* ======== Scrollbar Color =========*/
@@ -327,18 +337,18 @@
 
   /* ======== Datepicker Color =========*/
   --datepicker-background: #ffffff;
-  --datepicker-selected-background: #3758f9;
+  --datepicker-selected-background: #064e3b;
   --datepicker-selected-hover-background: #f9fafb;
 
   /* ======== Dropdowns Color =========*/
   --dropdown-background: #ffffff;
-  --dropdown-hover-background: #f4f4f5;
+  --dropdown-hover-background: #f3f4f6;
   --dropdown-secondary-background: #ffffff;
   --dropdown-divider: #f3f4f6;
 
   /* ======== Calendar Color =========*/
-  --calendar-primary-badge: #3758f9;
-  --calendar-primary-background: #eff3ff;
+  --calendar-primary-badge: #10b981;
+  --calendar-primary-background: #f3f4f6;
   --calendar-success-badge: #22c55e;
   --calendar-success-background: #f0fdf4;
   --calendar-warning-badge: #f97316;
@@ -353,23 +363,23 @@
 
   /* ======== Pricing Table Color =========*/
   --pricing-active-switcher-background: #ffffff;
-  --pricing-active-card-background: #1f2937;
-  --pricing-button-background: #1f2937;
-  --pricing-icon-color: #3758f9;
-  --pricing-icon-background: #eff3ff;
+  --pricing-active-card-background: #111827;
+  --pricing-button-background: #111827;
+  --pricing-icon-color: #064e3b;
+  --pricing-icon-background: #f3f4f6;
 
   /* ======== FAQ's Color =========*/
   --faq-primary-active-background: #f9fafb;
-  --faq-secondary-active-background: #eff3ff;
-  --faq-secondary-active-border: #dae2ff;
-  --faq-secondary-active-title: #1f2937;
+  --faq-secondary-active-background: #f3f4f6;
+  --faq-secondary-active-border: #cddcd8;
+  --faq-secondary-active-title: #111827;
   --faq-secondary-active-text: #374151;
 
   /* ======== Chat List Color =========*/
   --chat-list-background-primary: #374151;
   --chat-list-background-primary-alt: #f3f4f6;
-  --chat-list-background-secondary: #3758f9;
-  --chat-list-background-secondary-alt: #dae2ff;
+  --chat-list-background-secondary: #064e3b;
+  --chat-list-background-secondary-alt: #cddcd8;
 
   /* ======== Tooltip Color =========*/
   --tooltip-text: #374151;
@@ -398,8 +408,8 @@
   --modal-button-error-background: #dc2626;
 
   /* ======== Section Title Color =========*/
-  --section-title-badge: #3758f9;
-  --section-title-badge-background: #3758f90d;
+  --section-title-badge: #064e3b;
+  --section-title-badge-background: #064e3b0d;
 
   /* ======== Mobile Nav Menu Button Color =========*/
   --mobile-nav-icon: #374151;
@@ -428,10 +438,10 @@
   --hero-gradient-shade-2: #ffffff;
 
   /* ======== Toggle Color =========*/
-  --toggle-default-background: #e4e4e7;
+  --toggle-default-background: #e5e7eb;
   --toggle-disabled-foreground: #ffffff;
   --toggle-disabled-background: #f3f4f6;
-  --toggle-active-background: #5750f1;
+  --toggle-active-background: #10b981;
 
   /* ======== Map Color =========*/
   --map-fill: #d1d5db;
@@ -449,7 +459,7 @@
   --ai-sidebar-hover-secondary-shade-2: #e5e7eb00;
   --ai-sidebar-hover-primary-background: #f3f4f6;
   --ai-sidebar-hover-secondary-background: #e5e7eb;
-  --ai-title-gradient-shade-1: #1f2937;
+  --ai-title-gradient-shade-1: #111827;
   --ai-title-gradient-shade-2: #9ca3af;
   --ai-hero-blend-1: #f3f4f6;
   --ai-hero-blend-2: #f3f4f600;
@@ -468,37 +478,37 @@
 
   /* ======================= Next Admin Dashboard  ======================= */
   /* backgrounds */
-  --background-gray-secondary_alt_2: #f4f4f5;
-  --background-gray-secondary_alt: #f4f4f5;
+  --background-gray-secondary_alt_2: #f7faf9;
+  --background-gray-secondary_alt: #f3f4f6;
   --background-gray-primary: #fafafa;
-  --background-gray-secondary: #f4f4f5;
-  --background-gray-tertiary: #e4e4e7;
+  --background-gray-secondary: #f3f4f6;
+  --background-gray-tertiary: #e5e7eb;
   --input-background: #ffffff;
   --card-surface-area: #fcfcfd;
   --card-background: #ffffff;
   --sidebar-navigation-nav-item-nav-hover-background: rgba(0, 0, 0, 0.05);
   --background-white-secondary: #ffffff;
   --button-primary-outline-background: #ffffff;
-  --button-primary-outline-hover-background: #f4f4f5;
+  --button-primary-outline-hover-background: #f3f4f6;
   --dropdowns-background: #ffffff;
   --background-white-primary: #fff;
   --tooltip-background: #ffffff;
   --button-error-outline-background: #fef2f2;
-  --badge-gray-background: #f4f4f5;
-  --badge-gray-icon: #71717a;
+  --badge-gray-background: #f3f4f6;
+  --badge-gray-icon: #6b7280;
   --background-gray-quaternary: #d4d4d8;
 
   /* general color */
-  --brand-100: #e0e7ff;
-  --brand-200: #c7d2fe;
-  --brand-300: #a5b4fc;
-  --brand-400: #818cf8;
-  --brand-500: #5750f1;
-  --brand-600: #3c35d8;
+  --brand-100: #cddcd8;
+  --brand-200: #9bb8b1;
+  --brand-300: #6a9589;
+  --brand-400: #387162;
+  --brand-500: #064e3b;
+  --brand-600: #05402f;
   --base-white: #ffffff;
   --green-600: #16a34a;
   --red-600: #dc2626;
-  --gray-100: #f4f4f5;
+  --gray-100: #f3f4f6;
   --purple-300: #d8b4fe;
   --blue-200: #bfdbfe;
   --blue-300: #93c5fd;
@@ -507,29 +517,29 @@
   --pink-200: #fbcfe8;
 
   /* text */
-  --text-tertiary: #71717a;
-  --input-placeholder-text-color: #a1a1aa;
-  --text-secondary: #52525b;
-  --text-primary: #18181b;
-  --button-primary-outline-text: #27272a;
-  --logo-text: #18181b;
-  --tooltip-text-color: #52525b;
+  --text-tertiary: #6b7280;
+  --input-placeholder-text-color: #9ca3af;
+  --text-secondary: #4b5563;
+  --text-primary: #111827;
+  --button-primary-outline-text: #111827;
+  --logo-text: #064e3b;
+  --tooltip-text-color: #4b5563;
   --button-error-outline-text: #b91c1c;
-  --input-label-text-color: #52525b;
-  --text-disable: #a1a1aa;
+  --input-label-text-color: #4b5563;
+  --text-disable: #9ca3af;
 
   /* icons */
-  --icon-tertiary: #71717a;
-  --icon-secondary: #52525b;
-  --icon-primary: #27272a;
+  --icon-tertiary: #6b7280;
+  --icon-secondary: #4b5563;
+  --icon-primary: #111827;
 
   /* borders */
   --input-border: #d4d4d8;
-  --card-border: #e8e8e8;
-  --card-surface-border: #e5e5e5;
-  --border-secondary-alt: #e4e4e7;
-  --border-primary: #f4f4f5;
-  --border-secondary: #e4e4e7;
+  --card-border: #e5e7eb;
+  --card-surface-border: #e5e7eb;
+  --border-secondary-alt: #e5e7eb;
+  --border-primary: #f3f4f6;
+  --border-secondary: #e5e7eb;
   --button-primary-outline-stroke: #d4d4d8;
   --button-error-outline-stroke: #ef4444;
 

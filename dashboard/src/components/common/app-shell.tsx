@@ -44,9 +44,9 @@ export function AppShell({ children, orgName, userName, userEmail, logoSrc, hide
               transition:
                 "width 300ms cubic-bezier(0.4,0,0.2,1), min-width 300ms cubic-bezier(0.4,0,0.2,1)",
             }}
-            className="hidden shrink-0 overflow-hidden xl:block"
+            className="hidden shrink-0 overflow-hidden bg-(--sidebar-background) xl:block"
           >
-            <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} brand={brand} />
+            <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
           </aside>
 
           {/*  Mobile sidebar (< xl) — Sheet sliding from the left  */}
@@ -54,7 +54,7 @@ export function AppShell({ children, orgName, userName, userEmail, logoSrc, hide
             <SheetContent
               side="left"
               showCloseButton={false}
-              className="w-67.5! max-w-67.5! border-r border-card-border bg-card-surface-area p-0"
+              className="w-67.5! max-w-67.5! border-r border-card-border bg-(--sidebar-background) p-0"
             >
               <SheetTitle className="sr-only">Sidebar</SheetTitle>
               <Sidebar
@@ -66,7 +66,6 @@ export function AppShell({ children, orgName, userName, userEmail, logoSrc, hide
                   setIsMobileSheetOpen(false);
                 }}
                 isMobileSheet
-                brand={brand}
               />
             </SheetContent>
           </SheetOverlay>

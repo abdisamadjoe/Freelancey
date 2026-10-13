@@ -54,8 +54,8 @@ export function DocumentReminderEmail({
             style={{
               display: "inline-block",
               padding: "12px 24px",
-              backgroundColor: "#006b68",
-              color: "#ffffff",
+              backgroundColor: "#064e3b",
+              color: "#ecfdf5",
               borderRadius: "6px",
               textDecoration: "none",
               fontSize: "16px",

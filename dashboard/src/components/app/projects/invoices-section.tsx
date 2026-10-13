@@ -7,7 +7,6 @@ import {
   fmtDate,
   FormGrid,
   Loading,
-  Modal,
   money,
   PagerRow,
   Panel,
@@ -19,20 +18,14 @@ import {
   TextInput,
   useConfirm,
 } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
+import { type LineItem, LineItemsEditor } from "@/components/app/projects/line-items-editor";
+import Link from "next/link";
 import { apiFetch, apiFetchBlob } from "@/lib/api";
 import { formatBytes } from "@/lib/utils";
 import { downloadFile } from "@/lib/download";
-import { track } from "@/lib/track";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-
-interface LineItem {
-  id?: string;
-  description: string;
-  quantity: number;
-  unitPrice: number;
-}
 
 interface InvoiceListItem {
   id: string;
@@ -51,50 +44,6 @@ interface InvoiceListItem {
   stripePaymentIntentId?: string | null;
 }
 
-const BLANK_ITEM: LineItem = { description: "", quantity: 1, unitPrice: 0 };
-
-function LineItemsEditor({ items, onChange }: { items: LineItem[]; onChange: (next: LineItem[]) => void }) {
-  const update = (i: number, patch: Partial<LineItem>) => onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
-  const total = items.reduce((s, it) => s + it.quantity * it.unitPrice, 0);
-  return (
-    <div className="space-y-3">
-      {items.map((item, index) => (
-        <div key={index} className="grid grid-cols-12 items-end gap-2">
-          <div className="col-span-12 sm:col-span-6">
-            <TextInput label={index === 0 ? "Description" : undefined} value={item.description} onChange={(v) => update(index, { description: v })} />
-          </div>
-          <div className="col-span-4 sm:col-span-2">
-            <TextInput label={index === 0 ? "Qty" : undefined} type="number" min={1} value={item.quantity} onChange={(v) => update(index, { quantity: Math.max(1, parseInt(v || "1", 10)) })} />
-          </div>
-          <div className="col-span-5 sm:col-span-3">
-            <TextInput
-              label={index === 0 ? "Unit price" : undefined}
-              type="number"
-              min={0}
-              step="0.01"
-              value={item.unitPrice ? item.unitPrice / 100 : ""}
-              onChange={(v) => update(index, { unitPrice: Math.round(parseFloat(v || "0") * 100) })}
-            />
-          </div>
-          <div className="col-span-3 sm:col-span-1">
-            {items.length > 1 && (
-              <Button size="sm" variant="danger" appearance="ghost" onPress={() => onChange(items.filter((_, i) => i !== index))}>
-                Remove
-              </Button>
-            )}
-          </div>
-        </div>
-      ))}
-      <div className="flex items-center justify-between">
-        <Button size="sm" appearance="outline" variant="primary" onPress={() => onChange([...items, { ...BLANK_ITEM }])}>
-          Add line
-        </Button>
-        <p className="font-numeric text-lg font-semibold text-text-primary tabular-nums">{money(total)}</p>
-      </div>
-    </div>
-  );
-}
-
 export function InvoicesSection({ projectId, isArchived }: { projectId: string; isArchived: boolean }) {
   const { confirm, dialog } = useConfirm();
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
@@ -104,19 +53,6 @@ export function InvoicesSection({ projectId, isArchived }: { projectId: string; 
   const [statusFilter, setStatusFilter] = useState("");
   const [outstanding, setOutstanding] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [newItems, setNewItems] = useState<LineItem[]>([{ ...BLANK_ITEM }]);
-  const [newDueDate, setNewDueDate] = useState("");
-  const [newNotes, setNewNotes] = useState("");
-  const [creating, setCreating] = useState<"" | "draft" | "send">("");
-
-  const [showUpload, setShowUpload] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadAmount, setUploadAmount] = useState("");
-  const [uploadDueDate, setUploadDueDate] = useState("");
-  const [uploadNotes, setUploadNotes] = useState("");
-  const [uploading, setUploading] = useState<"" | "draft" | "send">("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editItems, setEditItems] = useState<LineItem[]>([]);
@@ -155,72 +91,6 @@ export function InvoicesSection({ projectId, isArchived }: { projectId: string; 
     },
     [viewing],
   );
-
-  async function markSent(id: string, errorMessage: string): Promise<boolean> {
-    try {
-      await apiFetch(`/invoices/${id}`, { method: "PUT", body: JSON.stringify({ status: "sent" }) });
-      return true;
-    } catch {
-      toast.error(errorMessage);
-      return false;
-    }
-  }
-
-  async function createInvoice(send: boolean) {
-    setCreating(send ? "send" : "draft");
-    try {
-      const invoice = await apiFetch<{ id: string }>("/invoices", {
-        method: "POST",
-        body: JSON.stringify({
-          projectId,
-          dueDate: newDueDate || undefined,
-          notes: newNotes || undefined,
-          lineItems: newItems.filter((li) => li.description.trim()),
-        }),
-      });
-      let sent = false;
-      if (send) sent = await markSent(invoice.id, "Invoice was saved as a draft but could not be sent. You can send it from the invoice list.");
-      track("invoice_created");
-      setShowCreate(false);
-      setNewItems([{ ...BLANK_ITEM }]);
-      setNewDueDate("");
-      setNewNotes("");
-      toast.success(sent ? "Invoice sent" : "Invoice saved as draft");
-      load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create invoice");
-    } finally {
-      setCreating("");
-    }
-  }
-
-  async function uploadInvoice(send: boolean) {
-    if (!uploadFile) return;
-    setUploading(send ? "send" : "draft");
-    try {
-      const formData = new FormData();
-      formData.append("file", uploadFile);
-      formData.append("projectId", projectId);
-      formData.append("amount", String(Math.round(parseFloat(uploadAmount || "0") * 100)));
-      if (uploadDueDate) formData.append("dueDate", uploadDueDate);
-      if (uploadNotes) formData.append("notes", uploadNotes);
-      const invoice = await apiFetch<{ id: string }>("/invoices/upload", { method: "POST", body: formData });
-      let sent = false;
-      if (send) sent = await markSent(invoice.id, "Invoice was saved as a draft but could not be sent. You can send it from the invoice list.");
-      track("invoice_uploaded");
-      setShowUpload(false);
-      setUploadFile(null);
-      setUploadAmount("");
-      setUploadDueDate("");
-      setUploadNotes("");
-      toast.success(sent ? "Invoice sent" : "Invoice saved as draft");
-      load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload invoice");
-    } finally {
-      setUploading("");
-    }
-  }
 
   async function changeStatus(id: string, status: string) {
     try {
@@ -319,12 +189,15 @@ export function InvoicesSection({ projectId, isArchived }: { projectId: string; 
             </div>
             {!isArchived && (
               <>
-                <Button size="sm" appearance="outline" variant="primary" onPress={() => setShowUpload(true)}>
+                <Link
+                  href={`/dashboard/projects/${projectId}/invoices/upload`}
+                  className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
+                >
                   Upload PDF
-                </Button>
-                <Button size="sm" variant="primary" onPress={() => setShowCreate(true)}>
+                </Link>
+                <Link href={`/dashboard/projects/${projectId}/invoices/new`} className={buttonStyles({ size: "sm" })}>
                   New invoice
-                </Button>
+                </Link>
               </>
             )}
           </>
@@ -460,65 +333,6 @@ export function InvoicesSection({ projectId, isArchived }: { projectId: string; 
           <PagerRow page={page} totalPages={totalPages} onPageChange={setPage} />
         </div>
       </Panel>
-
-      <Modal
-        open={showCreate}
-        onClose={() => setShowCreate(false)}
-        wide
-        title="New invoice"
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setShowCreate(false)}>
-              Cancel
-            </Button>
-            <ActionButton appearance="outline" variant="primary" loading={creating === "draft"} isDisabled={!newItems.some((i) => i.description.trim())} onPress={() => createInvoice(false)}>
-              Save draft
-            </ActionButton>
-            <ActionButton variant="primary" loading={creating === "send"} isDisabled={!newItems.some((i) => i.description.trim())} onPress={() => createInvoice(true)}>
-              Save & send
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <LineItemsEditor items={newItems} onChange={setNewItems} />
-          <TextInput label="Due date" type="date" value={newDueDate} onChange={setNewDueDate} />
-          <TextAreaInput label="Notes" rows={2} value={newNotes} onChange={setNewNotes} />
-        </div>
-      </Modal>
-
-      <Modal
-        open={showUpload}
-        onClose={() => setShowUpload(false)}
-        title="Upload invoice"
-        description="Attach an invoice you made elsewhere (PDF, JPG, PNG or WebP)."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setShowUpload(false)}>
-              Cancel
-            </Button>
-            <ActionButton appearance="outline" variant="primary" loading={uploading === "draft"} isDisabled={!uploadFile} onPress={() => uploadInvoice(false)}>
-              Save draft
-            </ActionButton>
-            <ActionButton variant="primary" loading={uploading === "send"} isDisabled={!uploadFile} onPress={() => uploadInvoice(true)}>
-              Save & send
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <input
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png,.webp"
-            aria-label="Invoice file"
-            onChange={(e) => setUploadFile(e.target.files?.[0] ?? null)}
-            className="block w-full text-sm text-text-secondary"
-          />
-          <TextInput label="Amount" type="number" min={0} step="0.01" value={uploadAmount} onChange={setUploadAmount} />
-          <TextInput label="Due date" type="date" value={uploadDueDate} onChange={setUploadDueDate} />
-          <TextAreaInput label="Notes" rows={2} value={uploadNotes} onChange={setUploadNotes} />
-        </div>
-      </Modal>
 
       {viewing && (
         <PdfModal

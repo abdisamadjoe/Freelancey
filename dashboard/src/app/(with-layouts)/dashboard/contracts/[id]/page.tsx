@@ -1,9 +1,8 @@
 "use client";
 
-import { ContractBuilderModal } from "@/components/app/contracts/contract-builder-modal";
 import { ContractPreview } from "@/components/app/contracts/contract-preview";
 import { ActionButton, CheckInput, ErrorNote, fmtDateTime, Loading, Notice, Page, PageBody, PageHeader, Panel, StatusPill } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
 import { apiFetch } from "@/lib/api";
 import { loadContractPdf, saveContractPdf } from "@/lib/contract-pdf";
 import { CONTRACT_STATUS_LABEL } from "@/lib/contracts";
@@ -32,7 +31,6 @@ export default function ContractPage() {
   const { id } = useParams<{ id: string }>();
   const [contract, setContract] = useState<ContractDetail | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
-  const [editing, setEditing] = useState(false);
   const [sending, setSending] = useState(false);
   const [emailIt, setEmailIt] = useState(true);
   const [link, setLink] = useState("");
@@ -120,9 +118,12 @@ export default function ContractPage() {
               PDF
             </Button>
             {!signed && contract.status !== "void" && (
-              <Button size="sm" appearance="outline" variant="primary" onPress={() => setEditing(true)}>
+              <Link
+                href={`/dashboard/contracts/${contract.id}/edit`}
+                className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
+              >
                 Edit
-              </Button>
+              </Link>
             )}
           </>
         }
@@ -174,22 +175,6 @@ export default function ContractPage() {
 
         <ContractPreview content={contract.content} status={contract.status.toUpperCase()} version={contract.version} />
       </PageBody>
-
-      {editing && (
-        <ContractBuilderModal
-          isOpen
-          initialContract={{
-            id: contract.id,
-            title: contract.title,
-            template: contract.template,
-            status: contract.status,
-            content: contract.content,
-            version: contract.version,
-          }}
-          onClose={() => setEditing(false)}
-          onSuccess={load}
-        />
-      )}
     </Page>
   );
 }

@@ -75,7 +75,7 @@ export function DecisionClosedEmail({
                   lineHeight: "20px",
                   margin: "4px 0",
                   fontWeight: option.isWinner ? "bold" : "normal",
-                  color: option.isWinner ? "#006b68" : "#374151",
+                  color: option.isWinner ? "#064e3b" : "#374151",
                 }}
               >
                 {option.isWinner ? "\u2713 " : "  "}
@@ -100,8 +100,8 @@ export function DecisionClosedEmail({
             style={{
               display: "inline-block",
               padding: "12px 24px",
-              backgroundColor: "#006b68",
-              color: "#ffffff",
+              backgroundColor: "#064e3b",
+              color: "#ecfdf5",
               borderRadius: "6px",
               textDecoration: "none",
               fontSize: "16px",

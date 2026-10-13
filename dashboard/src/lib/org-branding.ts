@@ -25,7 +25,7 @@ export function getLogoSrc(branding: OrgBranding | null): string | null {
 /** Legacy Freelancey default stored in the DB: treated as "not customised". */
 const LEGACY_DEFAULT_PRIMARY = "#006b68";
 /** Colours the product ships with; a workspace on these values has no custom brand. */
-const BUILT_IN_PRIMARIES = new Set([LEGACY_DEFAULT_PRIMARY, "#665df5", "#5750f1"]);
+const BUILT_IN_PRIMARIES = new Set([LEGACY_DEFAULT_PRIMARY, "#665df5", "#5750f1", "#064e3b"]);
 
 /** The workspace's own brand colour, or null when it still uses the product default. */
 export function customPrimary(primaryColor?: string | null): string | null {

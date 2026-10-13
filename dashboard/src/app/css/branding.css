@@ -15,7 +15,7 @@
   --badge-primary-text: var(--primary);
   --badge-primary-icon-color: var(--primary);
   --sidebar-nav-active-text: var(--primary);
-  --sidebar-nav-active-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  --sidebar-nav-active-background: color-mix(in srgb, var(--primary) 5%, #ffffff);
   --sidebar-badge-background: var(--primary);
   --input-primary-focus-border: var(--primary);
   --checkbox-checked-border: var(--primary);

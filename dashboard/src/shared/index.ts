@@ -12,12 +12,12 @@ export const DEFAULT_STATUSES = [
   { name: "Not Started", slug: "not_started", order: 0, color: "#6b7280" },
   { name: "In Progress", slug: "in_progress", order: 1, color: "#3b82f6" },
   { name: "In Review", slug: "in_review", order: 2, color: "#f59e0b" },
-  { name: "Completed", slug: "completed", order: 3, color: "#665df5" },
+  { name: "Completed", slug: "completed", order: 3, color: "#10b981" },
 ];
 
 export const DEFAULT_BRANDING = {
-  primaryColor: "#665df5",
-  accentColor: "#ff6b5c",
+  primaryColor: "#064e3b",
+  accentColor: "#10b981",
 };
 
 export const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50MB

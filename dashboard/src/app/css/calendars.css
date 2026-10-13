@@ -98,7 +98,7 @@
 
 /* Palette classes for calendar event backgrounds (used by calendar-1.tsx) */
 .fc-bg-primary {
-  background-color: #eff3ff !important; /* user color */
+  background-color: var(--calendar-primary-background) !important; /* user color */
   color: #1f2937 !important;
 }
 
@@ -157,7 +157,7 @@
 }
 
 .event-fc-color.fc-bg-primary .fc-daygrid-event-dot {
-  background-color: #3758f9 !important;
+  background-color: var(--calendar-primary-badge) !important;
 }
 
 .event-fc-color.fc-bg-warning .fc-daygrid-event-dot {

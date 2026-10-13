@@ -4,11 +4,9 @@ import { SignatureFieldPlacer } from "@/components/app/documents/signature-field
 import { SigningViewer } from "@/components/app/documents/signing-viewer";
 import {
   ActionButton,
-  CheckInput,
   Empty,
   fmtDate,
   fmtDateTime,
-  FormGrid,
   Modal,
   PagerRow,
   Panel,
@@ -17,10 +15,11 @@ import {
   TextInput,
   useConfirm,
 } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { apiFetch, apiFetchBlob } from "@/lib/api";
 import { downloadFile } from "@/lib/download";
-import { track } from "@/lib/track";
 import { formatBytes } from "@/lib/utils";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -95,7 +94,7 @@ interface SigningLink {
   user?: { name: string; email: string };
 }
 
-const DOC_TYPES = [
+export const DOC_TYPES = [
   { value: "contract", label: "Contract" },
   { value: "quote", label: "Quote" },
   { value: "proposal", label: "Proposal" },
@@ -123,29 +122,16 @@ export function FilesSection({
 
   // file upload + link
   const [uploading, setUploading] = useState(false);
-  const [linkOpen, setLinkOpen] = useState(false);
-  const [linkUrl, setLinkUrl] = useState("");
-  const [linkTitle, setLinkTitle] = useState("");
-  const [linkDescription, setLinkDescription] = useState("");
   const [editFile, setEditFile] = useState<FileRecord | null>(null);
   const [editFilename, setEditFilename] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editUrl, setEditUrl] = useState("");
 
   // document upload
-  const [docOpen, setDocOpen] = useState(false);
-  const [docTitle, setDocTitle] = useState("");
-  const [docType, setDocType] = useState("contract");
-  const [docFile, setDocFile] = useState<File | null>(null);
-  const [requiresSignature, setRequiresSignature] = useState(false);
-  const [requiresApproval, setRequiresApproval] = useState(false);
-  const [expiresInDays, setExpiresInDays] = useState("");
-  const [reminderEnabled, setReminderEnabled] = useState(false);
-  const [reminderIntervalDays, setReminderIntervalDays] = useState("3");
-  const [docBusy, setDocBusy] = useState<"" | "draft" | "send">("");
 
   // document dialogs
-  const [placerFor, setPlacerFor] = useState<string | null>(null);
+  // `?place=<documentId>` arrives from the New document page when a signature still has to be placed.
+  const [placerFor, setPlacerFor] = useState<string | null>(useSearchParams().get("place"));
   const [signFor, setSignFor] = useState<DocumentRecord | null>(null);
   const [voidFor, setVoidFor] = useState<string | null>(null);
   const [voidReason, setVoidReason] = useState("");
@@ -218,63 +204,6 @@ export function FilesSection({
     }
   }
 
-  async function addLink() {
-    try {
-      await apiFetch("/files/link", {
-        method: "POST",
-        body: JSON.stringify({ projectId, url: linkUrl.trim(), title: linkTitle.trim(), description: linkDescription.trim() || undefined }),
-      });
-      setLinkOpen(false);
-      setLinkUrl("");
-      setLinkTitle("");
-      setLinkDescription("");
-      onFileChange();
-      toast.success("Link added");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to add link");
-    }
-  }
-
-  async function createDocument(send: boolean) {
-    if (!docFile) return;
-    setDocBusy(send ? "send" : "draft");
-    try {
-      const fd = new FormData();
-      fd.append("file", docFile);
-      fd.append("projectId", projectId);
-      fd.append("type", docType);
-      fd.append("title", docTitle);
-      if (requiresSignature) fd.append("requiresSignature", "true");
-      if (requiresApproval) fd.append("requiresApproval", "true");
-      if (reminderEnabled) {
-        fd.append("reminderEnabled", "true");
-        fd.append("reminderIntervalDays", reminderIntervalDays);
-      }
-      const doc = await apiFetch<DocumentRecord>("/documents", { method: "POST", body: fd });
-      track("document_uploaded", { type: docType });
-      if (send && !(doc.requiresSignature && !(doc.signatureFields?.length))) {
-        await apiFetch(`/documents/${doc.id}/send`, {
-          method: "POST",
-          body: JSON.stringify(expiresInDays ? { expiresInDays: parseInt(expiresInDays, 10) } : {}),
-        });
-      }
-      setDocOpen(false);
-      setDocTitle("");
-      setDocFile(null);
-      setRequiresSignature(false);
-      setRequiresApproval(false);
-      setExpiresInDays("");
-      setReminderEnabled(false);
-      toast.success(send ? "Document sent" : "Document saved as draft");
-      loadDocuments();
-      if (doc.requiresSignature) setPlacerFor(doc.id);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload document");
-    } finally {
-      setDocBusy("");
-    }
-  }
-
   async function docAction(label: string, run: () => Promise<unknown>, ok: string) {
     try {
       await run();
@@ -319,7 +248,6 @@ export function FilesSection({
     }
   }
 
-  const isPdf = docFile?.type === "application/pdf";
 
   return (
     <>
@@ -345,9 +273,12 @@ export function FilesSection({
                   {uploading ? "Uploading..." : "Upload file"}
                 </span>
               </label>
-              <Button size="sm" appearance="outline" variant="primary" onPress={() => setLinkOpen(true)}>
+              <Link
+                href={`/dashboard/projects/${projectId}/files/new-link`}
+                className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
+              >
                 Add link
-              </Button>
+              </Link>
             </>
           )
         }
@@ -413,9 +344,9 @@ export function FilesSection({
         description="Contracts, quotes and agreements the client can accept, decline or sign."
         action={
           !isArchived && (
-            <Button size="sm" variant="primary" onPress={() => setDocOpen(true)}>
+            <Link href={`/dashboard/projects/${projectId}/files/new-document`} className={buttonStyles({ size: "sm" })}>
               New document
-            </Button>
+            </Link>
           )
         }
       >
@@ -528,29 +459,6 @@ export function FilesSection({
         </div>
       </Panel>
 
-      {/* Add link */}
-      <Modal
-        open={linkOpen}
-        onClose={() => setLinkOpen(false)}
-        title="Add link"
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setLinkOpen(false)}>
-              Cancel
-            </Button>
-            <ActionButton variant="primary" isDisabled={!linkUrl.trim() || !linkTitle.trim()} onPress={addLink}>
-              Add link
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <TextInput label="Title" required value={linkTitle} onChange={setLinkTitle} />
-          <TextInput label="URL" type="url" required value={linkUrl} onChange={setLinkUrl} placeholder="https://" />
-          <TextInput label="Description" value={linkDescription} onChange={setLinkDescription} />
-        </div>
-      </Modal>
-
       {/* Edit file */}
       <Modal
         open={!!editFile}
@@ -571,74 +479,6 @@ export function FilesSection({
           <TextInput label="Name" value={editFilename} onChange={setEditFilename} />
           <TextInput label="Description" value={editDescription} onChange={setEditDescription} />
           {editFile?.type === "LINK" && <TextInput label="URL" type="url" value={editUrl} onChange={setEditUrl} />}
-        </div>
-      </Modal>
-
-      {/* New document */}
-      <Modal
-        open={docOpen}
-        onClose={() => setDocOpen(false)}
-        title="New document"
-        description="Upload a PDF or image for the client to review."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setDocOpen(false)}>
-              Cancel
-            </Button>
-            <ActionButton appearance="outline" variant="primary" loading={docBusy === "draft"} isDisabled={!docFile || !docTitle.trim()} onPress={() => createDocument(false)}>
-              Save draft
-            </ActionButton>
-            <ActionButton variant="primary" loading={docBusy === "send"} isDisabled={!docFile || !docTitle.trim()} onPress={() => createDocument(true)}>
-              Save & send
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <input
-            type="file"
-            aria-label="Document file"
-            onChange={(e) => {
-              const f = e.target.files?.[0] ?? null;
-              setDocFile(f);
-              if (f && !docTitle.trim()) setDocTitle(f.name.replace(/\.[^/.]+$/, ""));
-              if (f && f.type !== "application/pdf") setRequiresSignature(false);
-            }}
-            className="block w-full text-sm text-text-secondary"
-          />
-          <FormGrid>
-            <TextInput label="Title" required value={docTitle} onChange={setDocTitle} />
-            <SelectInput label="Type" value={docType} onChange={setDocType} options={DOC_TYPES} />
-          </FormGrid>
-          <div className="space-y-2">
-            <CheckInput checked={requiresSignature} onChange={setRequiresSignature} disabled={!isPdf} label="Requires a signature (PDF only)" />
-            <CheckInput checked={requiresApproval} onChange={setRequiresApproval} label="Requires approval (accept / decline)" />
-          </div>
-          <FormGrid>
-            <SelectInput
-              label="Expires after"
-              value={expiresInDays}
-              onChange={setExpiresInDays}
-              options={[
-                { value: "", label: "Never" },
-                { value: "7", label: "7 days" },
-                { value: "14", label: "14 days" },
-                { value: "30", label: "30 days" },
-                { value: "60", label: "60 days" },
-                { value: "90", label: "90 days" },
-              ]}
-            />
-            <div className="space-y-2">
-              <CheckInput checked={reminderEnabled} onChange={setReminderEnabled} label="Send reminders" />
-              {reminderEnabled && (
-                <SelectInput
-                  value={reminderIntervalDays}
-                  onChange={setReminderIntervalDays}
-                  options={["1", "2", "3", "5", "7"].map((d) => ({ value: d, label: `every ${d} day${d === "1" ? "" : "s"}` }))}
-                />
-              )}
-            </div>
-          </FormGrid>
         </div>
       </Modal>
 

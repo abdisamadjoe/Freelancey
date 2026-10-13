@@ -1,10 +1,8 @@
 'use client';
 
-import { buttonStyles } from '@/components/tailgrids/core/button';
 import { CollapsibleGroup } from '@/components/tailgrids/core/collapsible';
 import { cn } from '@/utils/cn';
-import { Logo, LogoWithText, LogoWithTextDark } from '@/utils/icon';
-import { useTheme } from 'next-themes';
+import { Logo, LogoWithText } from '@/utils/icon';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useMemo, useState } from 'react';
@@ -14,27 +12,18 @@ import { CloseIcon, SidebarExpandedIcon, ThreeDots } from './icon';
 import NavItem from './nav-item';
 import { findActiveGroupKey } from './utils';
 
-export interface SidebarBrand {
-    orgName: string;
-    logoSrc: string | null;
-    hideLogo?: boolean;
-}
-
 export default function Sidebar({
     isSidebarOpen,
     toggleSidebar,
     isMobileSheet = false,
     onItemClick,
-    brand,
 }: {
     isSidebarOpen: boolean;
     toggleSidebar: () => void;
     isMobileSheet?: boolean;
     onItemClick?: () => void;
-    brand: SidebarBrand;
 }) {
     const pathname = usePathname();
-    const { theme } = useTheme();
     const { navData, homeHref } = useNav();
 
     // Compute which group should be open based on the current route
@@ -60,30 +49,10 @@ export default function Sidebar({
             >
                 <Link
                     href={homeHref}
-                    aria-label={`${brand.orgName || 'Freelancey'} home`}
+                    aria-label='Freelancey home'
                 >
-                    {brand.logoSrc && !brand.hideLogo ? (
-                        /* A workspace's own logo replaces the template mark. */
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                            src={brand.logoSrc}
-                            alt={brand.orgName || 'Logo'}
-                            className={cn(
-                                'object-contain',
-                                isSidebarOpen ? 'h-8 w-auto' : 'size-8',
-                            )}
-                        />
-                    ) : isSidebarOpen ? (
-                        <>
-                            {theme === 'dark' ? (
-                                <LogoWithTextDark />
-                            ) : (
-                                <LogoWithText />
-                            )}
-                        </>
-                    ) : (
-                        <Logo />
-                    )}
+                    {/* Always the Freelancey mark; a workspace's own logo is never used here. */}
+                    {isSidebarOpen ? <LogoWithText /> : <Logo />}
                 </Link>
 
                 <button
@@ -151,30 +120,6 @@ export default function Sidebar({
                     ))}
                 </CollapsibleGroup>
             </nav>
-
-            {/* Footer — only visible when expanded */}
-            {isSidebarOpen && (
-                <div className='px-4 py-4'>
-                    <div className='rounded-2xl bg-background-gray-primary px-4 py-5 text-center'>
-                        <p className='mb-2 leading-6 font-semibold text-text-primary'>
-                            Upgrade to Pro
-                        </p>
-                        <small className='text-sm leading-5 tracking-[-0.15px] text-text-tertiary'>
-                            Unlock higher project limits and more storage
-                        </small>
-                        <Link
-                            href='/dashboard/settings/billing'
-                            onClick={onItemClick}
-                            className={buttonStyles({
-                                size: 'lg',
-                                className: 'mt-4 h-10 w-full bg-brand-500',
-                            })}
-                        >
-                            Upgrade to Pro
-                        </Link>
-                    </div>
-                </div>
-            )}
         </div>
     );
 }

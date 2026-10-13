@@ -33,7 +33,7 @@ export function BrandingPanel() {
   useEffect(() => {
     apiFetch<Branding>("/branding")
       .then(setBranding)
-      .catch(() => setBranding({ primaryColor: "#665df5", accentColor: "#ff6b5c" }));
+      .catch(() => setBranding({ primaryColor: "#064e3b", accentColor: "#10b981" }));
   }, []);
 
   if (!branding) return <Loading />;

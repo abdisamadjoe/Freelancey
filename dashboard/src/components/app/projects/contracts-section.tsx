@@ -1,11 +1,10 @@
 "use client";
 
-import { ContractBuilderModal } from "@/components/app/contracts/contract-builder-modal";
-import { ContractPreview } from "@/components/app/contracts/contract-preview";
 import { PdfModal } from "@/components/app/pdf-modal";
 import { ActionButton, Empty, ErrorNote, fmtDate, Loading, Modal, Panel, StatusPill, useConfirm } from "@/components/app/kit";
 import { Badge } from "@/components/tailgrids/core/badge";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { type ContractPdf, loadContractPdf, saveContractPdf } from "@/lib/contract-pdf";
 import { CONTRACT_STATUS_LABEL } from "@/lib/contracts";
@@ -37,9 +36,6 @@ export function ContractsSection({ projectId, isArchived }: { projectId: string;
   const [contracts, setContracts] = useState<ContractRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<unknown>(null);
-  const [builderOpen, setBuilderOpen] = useState(false);
-  const [editing, setEditing] = useState<ContractRecord | null>(null);
-  const [previewing, setPreviewing] = useState<ContractRecord | null>(null);
   const [versionsFor, setVersionsFor] = useState<ContractRecord | null>(null);
   const [viewing, setViewing] = useState<{ contract: ContractRecord; pdf: ContractPdf } | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -112,16 +108,9 @@ export function ContractsSection({ projectId, isArchived }: { projectId: string;
         description="Create, edit, review, and send legal agreements for this project."
         action={
           !isArchived && (
-            <Button
-              size="sm"
-              variant="primary"
-              onPress={() => {
-                setEditing(null);
-                setBuilderOpen(true);
-              }}
-            >
+            <Link href={`/dashboard/projects/${projectId}/contracts/new`} className={buttonStyles({ size: "sm" })}>
               Create Contract
-            </Button>
+            </Link>
           )
         }
       >
@@ -149,9 +138,6 @@ export function ContractsSection({ projectId, isArchived }: { projectId: string;
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       <StatusPill status={status} label={CONTRACT_STATUS_LABEL[status] ?? status} />
-                      <Button size="xs" appearance="outline" variant="primary" onPress={() => setPreviewing(c)}>
-                        Preview
-                      </Button>
                       <ActionButton
                         size="xs"
                         appearance="outline"
@@ -165,17 +151,12 @@ export function ContractsSection({ projectId, isArchived }: { projectId: string;
                         PDF
                       </ActionButton>
                       {status === "draft" && !isArchived && (
-                        <Button
-                          size="xs"
-                          appearance="outline"
-                          variant="primary"
-                          onPress={() => {
-                            setEditing(c);
-                            setBuilderOpen(true);
-                          }}
+                        <Link
+                          href={`/dashboard/contracts/${c.id}/edit`}
+                          className={buttonStyles({ size: "xs", appearance: "outline", variant: "primary" })}
                         >
                           Edit
-                        </Button>
+                        </Link>
                       )}
                       {status === "draft" && !isArchived && (
                         <ActionButton
@@ -247,25 +228,6 @@ export function ContractsSection({ projectId, isArchived }: { projectId: string;
           )}
         </div>
       </Panel>
-
-      {builderOpen && (
-        <ContractBuilderModal
-          projectId={projectId}
-          initialContract={editing}
-          isOpen
-          onClose={() => {
-            setBuilderOpen(false);
-            setEditing(null);
-          }}
-          onSuccess={load}
-        />
-      )}
-
-      {previewing && (
-        <Modal open wide onClose={() => setPreviewing(null)} title={previewing.title}>
-          <ContractPreview content={previewing.content} status={previewing.status} version={previewing.version} />
-        </Modal>
-      )}
 
       {viewing && (
         <PdfModal

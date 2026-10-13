@@ -18,7 +18,7 @@ import {
 } from "@/components/app/kit";
 import { buttonStyles } from "@/components/tailgrids/core/button";
 import { Badge } from "@/components/tailgrids/core/badge";
-import { BoxIcon, EyeIcon, MoneyBagIcon, UserGroupIcon } from "@/app/(with-layouts)/(dashboard)/(home)/_component/overview-stats/icons";
+import { CollectedStatIcon, InProgressStatIcon, ProjectsStatIcon, ReceivablesStatIcon } from "@/components/app/stat-icons";
 import { useApi } from "@/lib/query";
 import { useSession } from "@/lib/session";
 import Link from "next/link";
@@ -68,12 +68,7 @@ interface Summary {
   openTickets: number;
 }
 
-const ICON_STYLES = {
-  orange: "bg-[rgba(249,115,22,0.10)] text-[#F97316]",
-  blue: "bg-[rgba(59,130,246,0.10)] text-[#3B82F6]",
-  purple: "bg-[rgba(168,85,247,0.10)] text-[#A855F7]",
-  green: "bg-[rgba(34,197,94,0.10)] text-[#22C55E]",
-} as const;
+const STAT_ICON_CLASS = "bg-primary-50 text-primary-500";
 
 export default function DashboardPage() {
   const { user } = useSession();
@@ -104,7 +99,7 @@ export default function DashboardPage() {
         title={`Welcome back, ${firstName}`}
         description="Your current portfolio summary and activity."
         actions={
-          <Link href="/dashboard/projects" className={buttonStyles({ size: "md" })}>
+          <Link href="/dashboard/projects/new" className={buttonStyles({ size: "md" })}>
             New Project
           </Link>
         }
@@ -117,19 +112,19 @@ export default function DashboardPage() {
           <StatGridSkeleton />
         ) : stats.data ? (
           <StatGrid>
-            <StatCard label="Total Projects" value={stats.data.total} iconClass={ICON_STYLES.orange} icon={<BoxIcon />} />
-            <StatCard label="In Progress" value={stats.data.inProgress} iconClass={ICON_STYLES.blue} icon={<EyeIcon />} />
+            <StatCard label="Total Projects" value={stats.data.total} iconClass={STAT_ICON_CLASS} icon={<ProjectsStatIcon />} />
+            <StatCard label="In Progress" value={stats.data.inProgress} iconClass={STAT_ICON_CLASS} icon={<InProgressStatIcon />} />
             <StatCard
               label="Outstanding Receivables"
               value={invoices.data ? money(invoices.data.outstandingAmount) : "$0.00"}
-              iconClass={ICON_STYLES.purple}
-              icon={<UserGroupIcon />}
+              iconClass={STAT_ICON_CLASS}
+              icon={<ReceivablesStatIcon />}
             />
             <StatCard
               label="Total Collected"
               value={invoices.data ? money(invoices.data.paidAmount) : "$0.00"}
-              iconClass={ICON_STYLES.green}
-              icon={<MoneyBagIcon />}
+              iconClass={STAT_ICON_CLASS}
+              icon={<CollectedStatIcon />}
             />
           </StatGrid>
         ) : null}

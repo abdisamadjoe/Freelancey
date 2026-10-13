@@ -20,7 +20,7 @@ import {
   TextInput,
   fmtDateTime,
 } from "@/components/app/kit";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
 import { apiFetch } from "@/lib/api";
 import type { ContractSummary } from "@/lib/contracts";
 import { getNextStep } from "@/lib/next-step";
@@ -36,7 +36,6 @@ import {
   stageBadge,
   toDateInput,
 } from "@/lib/leads";
-import type { ContractContent } from "@/shared";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -52,9 +51,6 @@ const blankToNull = (v: string) => (v.trim() ? v.trim() : null);
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [projectOpen, setProjectOpen] = useState(false);
-  const [projectForm, setProjectForm] = useState({ name: "", startDate: "", endDate: "", budget: "", projectType: "", contractId: "" });
-  const [creatingProject, setCreatingProject] = useState(false);
   const [record, setRecord] = useState<ClientDetail | null>(null);
   const [activity, setActivity] = useState<ClientActivity[]>([]);
   const [loadError, setLoadError] = useState<unknown>(null);
@@ -198,58 +194,6 @@ export default function LeadDetailPage() {
     }
   }
 
-  async function createProject(e: React.FormEvent) {
-    e.preventDefault();
-    setCreatingProject(true);
-    try {
-      const project = await apiFetch<{ id: string }>("/projects", {
-        method: "POST",
-        body: JSON.stringify({
-          name: projectForm.name,
-          clientId: id,
-          startDate: projectForm.startDate || undefined,
-          endDate: projectForm.endDate || undefined,
-          budgetCents: projectForm.budget.trim() ? Math.round(parseFloat(projectForm.budget) * 100) : undefined,
-          projectType: projectForm.projectType.trim() || undefined,
-          contractId: projectForm.contractId || undefined,
-        }),
-      });
-      toast.success("Project created");
-      router.push(`/dashboard/projects/${project.id}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the project");
-    } finally {
-      setCreatingProject(false);
-    }
-  }
-
-  /** Opens the project dialog pre-filled from the signed contract, so nothing is typed twice. */
-  async function openProjectDialog() {
-    if (!record) return;
-    const base = { name: `${record.company || record.name} project`, startDate: "", endDate: "", budget: "", projectType: "", contractId: "" };
-    setProjectForm(base);
-    setProjectOpen(true);
-    const signed = contracts.find((c) => c.status === "signed" && !c.projectId);
-    if (!signed) return;
-    try {
-      const [contract, proposal] = await Promise.all([
-        apiFetch<{ content: ContractContent }>(`/contracts/${signed.id}`),
-        signed.proposalId ? apiFetch<{ title: string }>(`/proposals/${signed.proposalId}`).catch(() => null) : Promise.resolve(null),
-      ]);
-      const total = contract.content.payment?.totalAmountCents;
-      setProjectForm({
-        name: proposal?.title ?? base.name,
-        startDate: contract.content.agreement?.startDate?.slice(0, 10) ?? "",
-        endDate: contract.content.agreement?.endDate?.slice(0, 10) ?? "",
-        budget: total ? String(total / 100) : "",
-        projectType: "Website",
-        contractId: signed.id,
-      });
-    } catch {
-      // The dialog still works with the defaults.
-    }
-  }
-
   async function markLost(e: React.FormEvent) {
     e.preventDefault();
     if (await patch({ stage: "lost", lostReason }, "Marked as lost")) {
@@ -349,9 +293,9 @@ export default function LeadDetailPage() {
               </>
             )}
             {(record.stage === "active" || record.stage === "past") && (
-              <Button size="sm" variant="primary" onPress={openProjectDialog}>
+              <Link href={`/dashboard/leads/${id}/create-project`} className={buttonStyles({ size: "sm" })}>
                 Create project
-              </Button>
+              </Link>
             )}
             {(record.stage === "lost" || record.stage === "past") && (
               <Button size="sm" appearance="outline" variant="primary" onPress={() => patch({ stage: "lead" }, "Reopened as a lead")}>
@@ -497,38 +441,6 @@ export default function LeadDetailPage() {
           projects={record.projects.filter((p) => !p.archivedAt).map((p) => ({ id: p.id, name: p.name }))}
         />
       </PageBody>
-
-      <Modal
-        open={projectOpen}
-        onClose={() => setProjectOpen(false)}
-        title="Create project"
-        description="Their portal login, if they have one, gets access to it automatically."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" onPress={() => setProjectOpen(false)}>
-              Cancel
-            </Button>
-            <ActionButton
-              variant="primary"
-              loading={creatingProject}
-              isDisabled={!projectForm.name.trim()}
-              onPress={() => createProject({ preventDefault() {} } as React.FormEvent)}
-            >
-              Create project
-            </ActionButton>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <TextInput label="Project name" required value={projectForm.name} onChange={(v) => setProjectForm((p) => ({ ...p, name: v }))} />
-          <FormGrid>
-            <TextInput label="Start date" type="date" value={projectForm.startDate} onChange={(v) => setProjectForm((p) => ({ ...p, startDate: v }))} />
-            <TextInput label="Deadline" type="date" value={projectForm.endDate} onChange={(v) => setProjectForm((p) => ({ ...p, endDate: v }))} />
-            <TextInput label="Budget" type="number" min="0" step="0.01" value={projectForm.budget} onChange={(v) => setProjectForm((p) => ({ ...p, budget: v }))} />
-            <TextInput label="Project type" placeholder="e.g. Website" value={projectForm.projectType} onChange={(v) => setProjectForm((p) => ({ ...p, projectType: v }))} />
-          </FormGrid>
-        </div>
-      </Modal>
 
       <Modal
         open={lostOpen}

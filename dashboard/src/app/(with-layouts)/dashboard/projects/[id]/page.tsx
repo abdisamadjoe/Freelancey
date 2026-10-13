@@ -1,14 +1,10 @@
 "use client";
 
 import {
-  ActionButton,
   AppTabs,
-  CheckInput,
   ErrorNote,
-  FormGrid,
   LabelChip,
   Loading,
-  Modal,
   MultiSelectInput,
   Notice,
   Page,
@@ -31,7 +27,8 @@ import { TasksSection } from "@/components/app/projects/tasks-section";
 import { TimeTab } from "@/components/app/projects/time-tab";
 import { UpdatesSection } from "@/components/app/projects/updates-section";
 import { WorkflowSection } from "@/components/app/projects/workflow-section";
-import { Button } from "@/components/tailgrids/core/button";
+import { Button, buttonStyles } from "@/components/tailgrids/core/button";
+import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { startPreview } from "@/lib/preview-mode";
 import { useSession } from "@/lib/session";
@@ -105,11 +102,6 @@ function Content() {
   const [error, setError] = useState<unknown>(null);
   const [clientHasEmail, setClientHasEmail] = useState(false);
 
-  const [duplicateOpen, setDuplicateOpen] = useState(false);
-  const [duplicateName, setDuplicateName] = useState("");
-  const [duplicateIncludeTasks, setDuplicateIncludeTasks] = useState(true);
-  const [duplicateIncludeClients, setDuplicateIncludeClients] = useState(false);
-  const [duplicating, setDuplicating] = useState(false);
 
   const tabParam = searchParams.get("tab");
   const initialTab = tabParam && TAB_IDS.includes(tabParam) ? tabParam : searchParams.get("task") ? "tasks" : "updates";
@@ -224,28 +216,6 @@ function Content() {
       toast.success("Project unarchived");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to unarchive project");
-    }
-  };
-
-  const handleDuplicate = async () => {
-    const name = duplicateName.trim();
-    if (!name) {
-      toast.error("Name is required");
-      return;
-    }
-    setDuplicating(true);
-    try {
-      const created = await apiFetch<{ id: string }>(`/projects/${id}/duplicate`, {
-        method: "POST",
-        body: JSON.stringify({ name, includeTasks: duplicateIncludeTasks, includeClients: duplicateIncludeClients }),
-      });
-      toast.success("Project duplicated");
-      setDuplicateOpen(false);
-      router.push(`/dashboard/projects/${created.id}`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to duplicate project");
-    } finally {
-      setDuplicating(false);
     }
   };
 
@@ -468,19 +438,12 @@ function Content() {
           <>
             <StatusPill status={project.status} label={currentStatus?.name} />
             {canPreview && (
-              <Button
-                appearance="outline"
-                variant="primary"
-                size="sm"
-                onPress={() => {
-                  setDuplicateName(`${project.name} (copy)`);
-                  setDuplicateIncludeTasks(true);
-                  setDuplicateIncludeClients(false);
-                  setDuplicateOpen(true);
-                }}
+              <Link
+                href={`/dashboard/projects/${id}/duplicate`}
+                className={buttonStyles({ size: "sm", appearance: "outline", variant: "primary" })}
               >
                 Duplicate
-              </Button>
+              </Link>
             )}
             {isArchived ? (
               <Button appearance="outline" variant="primary" size="sm" onPress={handleUnarchive}>
@@ -552,28 +515,6 @@ function Content() {
         </div>
       </PageBody>
 
-      <Modal
-        open={duplicateOpen}
-        onClose={() => setDuplicateOpen(false)}
-        title="Duplicate Project"
-        description="Files, updates, invoices, and notes are not copied."
-        footer={
-          <>
-            <Button appearance="outline" variant="primary" isDisabled={duplicating} onPress={() => setDuplicateOpen(false)}>
-              Cancel
-            </Button>
-            <ActionButton variant="primary" loading={duplicating} isDisabled={!duplicateName.trim()} onPress={handleDuplicate}>
-              {duplicating ? "Duplicating…" : "Duplicate"}
-            </ActionButton>
-          </>
-        }
-      >
-        <FormGrid cols={1}>
-          <TextInput label="Name" value={duplicateName} onChange={setDuplicateName} />
-          <CheckInput checked={duplicateIncludeTasks} onChange={setDuplicateIncludeTasks} label="Include tasks" />
-          <CheckInput checked={duplicateIncludeClients} onChange={setDuplicateIncludeClients} label="Include client assignments" />
-        </FormGrid>
-      </Modal>
       {dialog}
     </Page>
   );
