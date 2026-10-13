@@ -60,7 +60,10 @@ export function UpdatesSection({
   onFileChange,
   currentUserId = null,
   currentRole = null,
+  timelinePath,
 }: {
+  /** Overrides the timeline endpoint (the portal reads `/updates/timeline/mine/:id`). */
+  timelinePath?: string;
   projectId: string;
   isArchived: boolean;
   onFileChange?: () => void;
@@ -82,7 +85,7 @@ export function UpdatesSection({
 
   const load = useCallback(() => {
     setLoading(true);
-    apiFetch<{ data: TimelineEntry[]; meta: { totalPages: number } }>(`/updates/timeline/${projectId}?page=${page}&limit=10`)
+    apiFetch<{ data: TimelineEntry[]; meta: { totalPages: number } }>(`${timelinePath ?? `/updates/timeline/${projectId}`}?page=${page}&limit=10`)
       .then((res) => {
         setTimeline(res.data);
         setTotalPages(res.meta.totalPages);

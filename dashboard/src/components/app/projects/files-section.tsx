@@ -785,7 +785,7 @@ export function FilesSection({
             ) : (
               <ul className="divide-y divide-card-border">
                 {links.map((l) => {
-                  const url = `${window.location.origin}/contract/sign/${l.token}`;
+                  const url = `${window.location.origin}/portal/sign/${l.token}`;
                   return (
                     <li key={l.id} className="space-y-1 py-2">
                       <p className="text-xs text-text-tertiary">
