@@ -1,6 +1,6 @@
 "use client";
 
-import { Empty, ErrorNote, fmtDate, Loading, Notice, Page, PageBody, PageHeader, Panel, SelectInput, StatusBadge } from "@/components/app/kit";
+import { Empty, ErrorNote, fmtDate, Loading, Page, PageBody, PageHeader, Panel, SelectInput, StatusBadge } from "@/components/app/kit";
 import { Button } from "@/components/tailgrids/core/button";
 import { Checkbox } from "@/components/tailgrids/core/checkbox";
 import { apiFetch } from "@/lib/api";
@@ -240,7 +240,6 @@ export default function CalendarPage() {
             ))}
           </div>
         )}
-        <Notice status="info">Times use your browser&apos;s timezone.</Notice>
       </PageBody>
     </Page>
   );
