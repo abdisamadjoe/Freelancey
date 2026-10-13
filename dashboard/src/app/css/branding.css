@@ -1,0 +1,37 @@
+/*
+ * White-label branding. A workspace's brand colour is set as `--primary` on a wrapper that also
+ * carries `data-branded`. Inside it, the brand-derived tokens follow that colour; everywhere else
+ * the template's own values apply untouched.
+ */
+[data-branded] {
+  --primary-500: var(--primary);
+  --neutral-brand-color: var(--primary);
+  --button-primary-background: var(--primary);
+  --button-primary-hover-background: color-mix(in srgb, var(--primary), #000 15%);
+  --button-primary-focus-ring: color-mix(in srgb, var(--primary) 20%, transparent);
+  --button-group-primary-hover-background: var(--primary);
+  --button-group-primary-text: var(--primary);
+  --badge-primary-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  --badge-primary-text: var(--primary);
+  --badge-primary-icon-color: var(--primary);
+  --sidebar-nav-active-text: var(--primary);
+  --sidebar-nav-active-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  --sidebar-badge-background: var(--primary);
+  --input-primary-focus-border: var(--primary);
+  --checkbox-checked-border: var(--primary);
+  --checkbox-checked-background: var(--primary);
+  --toggle-active-background: var(--primary);
+  --datepicker-selected-background: var(--primary);
+  --calendar-primary-badge: var(--primary);
+  --calendar-primary-background: color-mix(in srgb, var(--primary) 10%, #ffffff);
+  --brand-500: var(--primary);
+  --brand-600: color-mix(in srgb, var(--primary), #000 15%);
+}
+
+[data-theme="dark"] [data-branded] {
+  --neutral-brand-color: color-mix(in srgb, var(--primary) 62%, #ffffff);
+  --button-primary-hover-background: color-mix(in srgb, var(--primary), #ffffff 12%);
+  --badge-primary-background: color-mix(in srgb, var(--primary) 22%, #151518);
+  --sidebar-nav-active-background: color-mix(in srgb, var(--primary) 20%, #101013);
+  --calendar-primary-background: color-mix(in srgb, var(--primary) 20%, #151518);
+}
