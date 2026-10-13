@@ -18,7 +18,7 @@ export default async function SetupLayout({ children }: { children: ReactNode })
       data-branded={primary ? "" : undefined}
       style={primary ? ({ "--primary": primary } as CSSProperties) : undefined}
     >
-      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-8 sm:px-6 lg:py-12">{children}</main>
+      <main className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-6 lg:py-12">{children}</main>
     </div>
   );
 }

@@ -533,7 +533,7 @@ function SetupWizardContent() {
   const key = steps[step]?.key;
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
+    <div className="mx-auto w-full max-w-4xl space-y-6">
       {banner && (
         <Notice status={banner === "success" ? "success" : "warning"}>
           {banner === "success"
@@ -549,7 +549,7 @@ function SetupWizardContent() {
           <p className="text-xs font-semibold text-text-secondary">
             Step {step + 1} of {steps.length}
           </p>
-          <Progress progress={((step + 1) / steps.length) * 100} />
+          <Progress className="max-w-none" progress={((step + 1) / steps.length) * 100} />
           <ol className="flex items-center">
             {steps.map((s, index) => (
               <li key={s.key} className="flex flex-1 items-center last:flex-none">
