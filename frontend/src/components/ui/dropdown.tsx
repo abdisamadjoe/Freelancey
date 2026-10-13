@@ -62,7 +62,7 @@ export function DropdownMenu({
           role="menu"
           onClick={() => setOpen(false)}
           className={cn(
-            "absolute top-[calc(100%+6px)] z-40 min-w-44 overflow-hidden rounded-xl border border-card-border bg-dropdowns-background p-1.5 shadow-md",
+            "absolute top-[calc(100%+6px)] z-40 min-w-40 overflow-clip rounded-xl border border-card-border bg-background-white-secondary shadow-md outline-hidden",
             align === "end" ? "right-0" : "left-0",
             contentClassName,
           )}
@@ -96,10 +96,11 @@ export function DropdownMenuItem({
       disabled={disabled}
       onClick={onSelect}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-left text-sm font-medium transition-colors outline-none",
+        // The template's menu item (tailgrids/core/dropdown.tsx).
+        "group flex w-full cursor-default items-center gap-3 rounded-md px-1.5 py-1 text-left text-sm outline-hidden",
         destructive
           ? "text-button-error-outline-text hover:bg-button-error-outline-background"
-          : "text-text-secondary hover:bg-background-gray-secondary_alt hover:text-text-primary",
+          : "text-text-50 hover:bg-background-gray-secondary_alt focus:bg-background-gray-secondary_alt focus:text-title-50",
         disabled && "pointer-events-none text-text-disable",
         className,
       )}
@@ -112,12 +113,12 @@ export function DropdownMenuItem({
 
 export function DropdownMenuLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <p className={cn("px-2.5 py-1.5 text-xs font-medium text-text-tertiary", className)}>
+    <p className={cn("px-3 py-2 text-sm text-text-100", className)}>
       {children}
     </p>
   );
 }
 
 export function DropdownMenuSeparator({ className }: { className?: string }) {
-  return <div className={cn("my-1.5 h-px bg-border-secondary-alt", className)} role="separator" />;
+  return <div className={cn("h-px border-none bg-border-secondary-alt", className)} role="separator" />;
 }

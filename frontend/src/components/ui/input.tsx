@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ChevronDown } from "lucide-react";
+import { AltArrowDownIcon } from "@/utils/icon";
 import type { ComponentProps, ReactNode } from "react";
 import { forwardRef } from "react";
 
@@ -11,15 +11,15 @@ import { forwardRef } from "react";
  * native form elements so existing form logic keeps working unchanged.
  */
 const controlStyles = cn(
-  "w-full rounded-lg border border-card-border bg-input-background px-3.5 py-2.5 text-sm text-text-primary",
-  "outline-none transition placeholder:text-input-placeholder-text",
-  "hover:border-input-border",
+  // The template's input (tailgrids/core/input.tsx) with the sizing its form pages apply: px-3 py-2.5 text-sm.
+  "w-full max-w-full rounded-lg border border-card-border bg-input-background px-3 py-2.5 text-sm text-title-50",
+  "outline-none duration-300 placeholder:text-input-placeholder-text",
   "focus:border-input-primary-focus-border focus:ring-4 focus:ring-input-primary-focus-border/20",
-  "disabled:cursor-not-allowed disabled:border-input-disabled-border disabled:bg-input-disabled-background disabled:text-input-disabled-text disabled:placeholder:text-input-disabled-text",
+  "disabled:cursor-not-allowed disabled:border-base-100 disabled:text-input-disabled-text disabled:placeholder:text-input-disabled-text",
 );
 
 const errorStyles = cn(
-  "border-input-error-focus-border focus:border-input-error-focus-border focus:ring-input-error-focus-border/20",
+  "border-input-error-focus-border focus:border-input-error-focus-border focus:ring-input-error-focus-border/20 ring-input-error-focus-border/20",
 );
 
 export interface InputProps extends ComponentProps<"input"> {
@@ -56,7 +56,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function 
       aria-invalid={invalid ?? ariaInvalid}
       className={cn(
         controlStyles,
-        "resize-y py-3",
+        "resize-y",
         (invalid ?? ariaInvalid) && errorStyles,
         className,
       )}
@@ -80,7 +80,8 @@ export const NativeSelect = forwardRef<HTMLSelectElement, SelectProps>(function 
         aria-invalid={invalid}
         className={cn(
           controlStyles,
-          "cursor-pointer appearance-none pr-10",
+          // The template's select trigger: input background, secondary border, soft shadow.
+          "cursor-pointer appearance-none border-border-secondary pr-10 shadow-xs",
           invalid && errorStyles,
           className,
         )}
@@ -88,8 +89,8 @@ export const NativeSelect = forwardRef<HTMLSelectElement, SelectProps>(function 
       >
         {children}
       </select>
-      <ChevronDown
-        className="pointer-events-none absolute top-1/2 right-3.5 size-4 -translate-y-1/2 text-icon-tertiary"
+      <AltArrowDownIcon
+        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-text-100"
         aria-hidden
       />
     </div>
@@ -98,7 +99,7 @@ export const NativeSelect = forwardRef<HTMLSelectElement, SelectProps>(function 
 
 export function Label({ className, children, ...props }: ComponentProps<"label">) {
   return (
-    <label className={cn("block text-sm font-medium text-input-label-text-color", className)} {...props}>
+    <label className={cn("flex items-center gap-0.5 text-sm font-medium text-input-label-text-color", className)} {...props}>
       {children}
     </label>
   );
@@ -106,7 +107,7 @@ export function Label({ className, children, ...props }: ComponentProps<"label">
 
 export function FieldDescription({ className, children, ...props }: ComponentProps<"p">) {
   return (
-    <p className={cn("text-xs leading-5 text-text-tertiary", className)} {...props}>
+    <p className={cn("text-sm font-normal text-text-50", className)} {...props}>
       {children}
     </p>
   );
@@ -115,7 +116,7 @@ export function FieldDescription({ className, children, ...props }: ComponentPro
 export function FieldError({ className, children, ...props }: ComponentProps<"p">) {
   if (!children) return null;
   return (
-    <p role="alert" className={cn("text-xs leading-5 text-input-error", className)} {...props}>
+    <p role="alert" className={cn("text-sm font-normal text-input-error", className)} {...props}>
       {children}
     </p>
   );

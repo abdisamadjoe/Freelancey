@@ -346,7 +346,7 @@ export function SigningViewer({
                             <div
                               key={field.id}
                               className={cn(
-                                "absolute flex items-center justify-center rounded border-2 transition-colors",
+                                "absolute flex items-center justify-center rounded-sm border-2 transition-colors",
                                 isSigned
                                   ? "border-badge-success-icon-color bg-badge-success-background"
                                   : locked

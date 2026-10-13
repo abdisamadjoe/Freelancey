@@ -196,7 +196,7 @@ describe("public lead form", () => {
     expect((await post(payload())).status).toBe(404);
     expect((await api("GET", `/leads/public/${slugA}`)).status).toBe(404);
     expect((await api("GET", `/leads/public/does-not-exist-${stamp}`)).status).toBe(404);
-    expect(await h.prisma.client.count({ where: { organizationId: orgA, source: "website form" } })).toBe(0);
+    expect(await h.prisma.client.count({ where: { organizationId: orgA, source: "website_inquiry" } })).toBe(0);
   });
 
   it("only owners and admins can switch it on", async () => {
@@ -220,7 +220,7 @@ describe("public lead form", () => {
     expect(res.json).toEqual({ ok: true });
 
     const lead = await h.prisma.client.findFirst({ where: { email: mail } });
-    expect(lead).toMatchObject({ organizationId: orgA, stage: "lead", leadStatus: "new", source: "website form" });
+    expect(lead).toMatchObject({ organizationId: orgA, stage: "lead", leadStatus: "new", source: "website_inquiry" });
     const followUp = lead!.nextFollowUpAt!.getTime() - Date.now();
     expect(followUp).toBeGreaterThan(23 * 3600_000);
     expect(followUp).toBeLessThan(25 * 3600_000);

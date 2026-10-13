@@ -12,3 +12,6 @@ export { DocumentRespondedEmail } from "./templates/document-responded";
 export { DocumentReminderEmail } from "./templates/document-reminder";
 export { DocumentSigningTurnEmail } from "./templates/document-signing-turn";
 export { InvoicePaidEmail } from "./templates/invoice-paid";
+export { ProposalSentEmail } from "./templates/proposal-sent";
+export { ContractSentEmail } from "./templates/contract-sent";
+export { FormRequestEmail } from "./templates/form-request";

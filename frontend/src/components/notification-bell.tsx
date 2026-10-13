@@ -45,11 +45,55 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   );
 }
 
+/** Shared unread count (one polling interval for every bell on screen). */
+export function useNotificationCount() {
+  const ctx = useContext(NotificationContext);
+  const [localCount, setLocalCount] = useState(0);
+  return {
+    unreadCount: ctx?.unreadCount ?? localCount,
+    setUnreadCount: ctx?.setUnreadCount ?? setLocalCount,
+  };
+}
+
+/** Web-push opt-in: whether this browser is subscribed, and how to subscribe. */
+export function usePushSubscription() {
+  const [pushSubscribed, setPushSubscribed] = useState(false);
+  const supported = typeof window !== "undefined" && "PushManager" in window;
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    navigator.serviceWorker.ready
+      .then((reg) => reg.pushManager.getSubscription())
+      .then((sub) => setPushSubscribed(!!sub))
+      .catch(() => {});
+  }, []);
+
+  const enable = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return;
+      const { publicKey } = await apiFetch<{ publicKey: string }>("/push/vapid-key");
+      const reg = await navigator.serviceWorker.ready;
+      const subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey).buffer as ArrayBuffer,
+      });
+      const sub = subscription.toJSON();
+      await apiFetch("/push/subscribe", { method: "POST", body: JSON.stringify({ endpoint: sub.endpoint, keys: sub.keys }) });
+      setPushSubscribed(true);
+    } catch {
+      // The user declined, or the browser refused.
+    }
+  };
+
+  return { supported, pushSubscribed, enable };
+}
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
 
-interface Notification {
+export interface Notification {
   id: string;
   type: string;
   title: string;
@@ -64,7 +108,7 @@ interface PaginatedResponse {
   meta: { total: number; page: number; limit: number; totalPages: number };
 }
 
-function timeAgo(dateStr: string): string {
+export function timeAgo(dateStr: string): string {
   const seconds = Math.floor(
     (Date.now() - new Date(dateStr).getTime()) / 1000,
   );

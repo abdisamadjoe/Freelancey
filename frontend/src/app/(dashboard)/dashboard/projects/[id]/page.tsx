@@ -19,6 +19,11 @@ import { UpdatesSection } from "./components/updates-section";
 import { FilesSection } from "./components/files-section";
 import { InvoicesSection } from "./components/invoices-section";
 import { NotesSection } from "./components/notes-section";
+import { WorkflowSection } from "./components/workflow-section";
+import { MeetingsSection } from "./components/meetings-section";
+import { ExpensesSection } from "./components/expenses-section";
+import { DeliverablesSection } from "./components/deliverables-section";
+import { HandoverSection } from "./components/handover-section";
 import { ContractsSection } from "@/components/contracts/contracts-section";
 import { TimeTab } from "./time-tab";
 import {
@@ -63,6 +68,7 @@ interface Project {
   endDate?: string | null;
   archivedAt?: string | null;
   hourlyRateCents?: number | null;
+  clientId?: string | null;
   clients?: { userId: string }[];
   files: FileRecord[];
   labels?: { label: LabelRecord }[];
@@ -92,12 +98,17 @@ interface PaginatedResponse<T> {
 
 const tabs = [
   { id: "updates", label: "Updates" },
+  { id: "workflow", label: "Workflow" },
   { id: "tasks", label: "Tasks" },
+  { id: "deliverables", label: "Deliverables" },
   { id: "files", label: "Files" },
   { id: "time", label: "Time" },
+  { id: "meetings", label: "Meetings" },
+  { id: "expenses", label: "Expenses" },
   { id: "contracts", label: "Contracts" },
   { id: "invoices", label: "Invoices" },
   { id: "notes", label: "Notes" },
+  { id: "handover", label: "Handover" },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -190,8 +201,16 @@ export default function ProjectDetailPage() {
   const [duplicateIncludeTasks, setDuplicateIncludeTasks] = useState(true);
   const [duplicateIncludeClients, setDuplicateIncludeClients] = useState(false);
   const [duplicating, setDuplicating] = useState(false);
+  const [clientHasEmail, setClientHasEmail] = useState(false);
   const isArchived = !!project?.archivedAt;
   const isOwner = currentRole === "owner";
+
+  useEffect(() => {
+    if (!project?.clientId) return;
+    apiFetch<{ email: string | null }>(`/client-records/${project.clientId}`)
+      .then((c) => setClientHasEmail(Boolean(c.email)))
+      .catch(() => setClientHasEmail(false));
+  }, [project?.clientId]);
 
   const loadProject = useCallback(() => {
     apiFetch<Project>(`/projects/${id}`)
@@ -567,7 +586,7 @@ export default function ProjectDetailPage() {
             aria-current={isActive ? "page" : undefined}
             onClick={() => setActiveTab(tab.id)}
             className={cn(
-              "shrink-0 rounded-none text-sm font-medium whitespace-nowrap transition-colors outline-none",
+              "shrink-0 rounded-none text-sm font-medium whitespace-nowrap transition-colors outline-hidden",
               "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring",
               isActive
                 ? "-mb-px border-b-2 border-primary-500 px-4 py-3 text-neutral-brand-color"
@@ -583,6 +602,17 @@ export default function ProjectDetailPage() {
 
   const tabContent = (
     <>
+      {activeTab === "workflow" && (
+        <WorkflowSection projectId={id} clientId={project.clientId ?? null} isArchived={isArchived} />
+      )}
+      {activeTab === "deliverables" && (
+        <DeliverablesSection projectId={id} clientEmail={clientHasEmail} isArchived={isArchived} />
+      )}
+      {activeTab === "handover" && (
+        <HandoverSection projectId={id} clientEmail={clientHasEmail} isArchived={isArchived} onProjectChange={loadProject} />
+      )}
+      {activeTab === "meetings" && <MeetingsSection projectId={id} isArchived={isArchived} />}
+      {activeTab === "expenses" && <ExpensesSection projectId={id} isArchived={isArchived} />}
       {activeTab === "tasks" && (
         <TasksSection projectId={id} isArchived={isArchived} />
       )}

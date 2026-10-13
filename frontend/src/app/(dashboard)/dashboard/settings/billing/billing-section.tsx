@@ -163,7 +163,7 @@ function PlanCard({
     <Card
       className={cn(
         "relative flex flex-col gap-4",
-        isRecommended && "border-brand-500 shadow-sm",
+        isRecommended && "border-brand-500 shadow-xs",
         isCurrentPlan && !isRecommended && "border-brand-500",
         !isRecommended && !isCurrentPlan && "opacity-95",
       )}

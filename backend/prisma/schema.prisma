@@ -95,6 +95,8 @@ model Project {
   archivedAt     DateTime?
 
   hourlyRateCents Int?
+  budgetCents     Int?
+  projectType     String?
 
   // The relationship record (lead/active client). Independent of portal logins.
   clientId String?
@@ -111,6 +113,11 @@ model Project {
   activities  ActivityLog[]
   labels      ProjectLabel[]
   timeEntries TimeEntry[]
+  milestones  Milestone[]
+  meetings    Meeting[]
+  expenses    Expense[]
+  deliverables Deliverable[]
+  handover     Handover?
 
   @@index([organizationId])
   @@index([clientId])
@@ -199,6 +206,7 @@ model Task {
   requestedById  String?
   assigneeId     String?
   order          Int       @default(0)
+  milestoneId    String?
   type           String    @default("checkbox") // "checkbox" | "decision"
   question       String?
   closedAt       DateTime?
@@ -208,6 +216,7 @@ model Task {
   updatedAt      DateTime  @updatedAt
 
   project     Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  milestone   Milestone?       @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
   options     DecisionOption[]
   votes       DecisionVote[]
   comments    Comment[]
@@ -219,6 +228,7 @@ model Task {
   @@index([projectId, status])
   @@index([requestedById])
   @@index([assigneeId])
+  @@index([milestoneId])
   @@map("task")
 }
 
@@ -686,6 +696,8 @@ model Client {
   nextFollowUpAt       DateTime?
   lostReason           String?
   notes                String?
+  supportTokenHash     String?   @unique // sha256 of the stable support link token
+  discovery            Json?     // while a lead: { needs, reason, budget, timeline, requirements, notes }
   ownerId              String?
   archivedAt           DateTime?
   createdAt            DateTime  @default(now())
@@ -698,6 +710,10 @@ model Client {
   activities   ActivityLog[]
   onboarding   OnboardingItem[]
   formResponses FormResponse[]
+  proposals    Proposal[]
+  contracts    Contract[]
+  formLinks    FormLink[]
+  tickets      SupportTicket[]
 
   @@index([organizationId, stage])
   @@index([organizationId, nextFollowUpAt])
@@ -834,9 +850,11 @@ model TimeEntry {
 
 model Contract {
   id             String            @id @default(cuid())
-  projectId      String
+  projectId      String?
   organizationId String
-  clientId       String?
+  clientId       String?           // portal user the contract is shown to (project contracts)
+  clientRecordId String?           // the lead/client record it was written for (proposal contracts)
+  proposalId     String?
   title          String
   template       String            @default("custom")
   status         String            @default("draft") // draft, generated, sent, viewed, signed, void
@@ -846,16 +864,25 @@ model Contract {
   pdfFileName    String?
   pdfSize        Int?
   generatedAt    DateTime?
+  tokenHash      String?           @unique // sha256 of the secure signing link token
+  sentAt         DateTime?
+  viewedAt       DateTime?
+  signedAt       DateTime?
+  signedByName   String?
+  signedIp       String?
+  signedUserAgent String?
   createdById    String?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
 
-  project  Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  versions ContractVersion[]
+  project      Project?          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientRecord Client?           @relation(fields: [clientRecordId], references: [id], onDelete: Cascade)
+  versions     ContractVersion[]
 
   @@index([projectId])
   @@index([organizationId])
   @@index([clientId])
+  @@index([clientRecordId])
   @@map("contract")
 }
 
@@ -944,4 +971,262 @@ model FormResponse {
   @@index([clientId])
   @@index([organizationId])
   @@map("form_response")
+}
+
+
+model Proposal {
+  id               String    @id @default(cuid())
+  organizationId   String
+  clientId         String
+  title            String
+  scope            String?
+  deliverables     String?
+  timeline         String?
+  paymentTerms     String?
+  revisionLimit    Int?
+  validUntil       DateTime?
+  currency         String    @default("USD")
+  status           String    @default("draft") // draft, sent, viewed, accepted, rejected, expired
+  tokenHash        String?   @unique          // sha256 of the secure link token; the raw token is never stored
+  sentAt           DateTime?
+  viewedAt         DateTime?
+  respondedAt      DateTime?
+  acceptedByName   String?
+  rejectionReason  String?
+  createdById      String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  client Client             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items  ProposalLineItem[]
+
+  @@index([organizationId, status])
+  @@index([clientId])
+  @@map("proposal")
+}
+
+model ProposalLineItem {
+  id             String  @id @default(cuid())
+  proposalId     String
+  description    String
+  quantity       Int     @default(1)
+  unitPriceCents Int
+  optional       Boolean @default(false)
+  selected       Boolean @default(true) // optional items start unselected; the client picks them when accepting
+  order          Int     @default(0)
+
+  proposal Proposal @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+
+  @@index([proposalId])
+  @@map("proposal_line_item")
+}
+
+
+/// A secure, accountless link asking a client to fill in a form (business onboarding or a project brief).
+model FormLink {
+  id             String    @id @default(cuid())
+  organizationId String
+  clientId       String
+  projectId      String?
+  kind           String    // "onboarding" | "project_brief"
+  tokenHash      String    @unique // sha256 of the link token; the raw token is never stored
+  status         String    @default("pending") // "pending" | "completed"
+  answers        Json?
+  expiresAt      DateTime
+  completedAt    DateTime?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, kind])
+  @@index([organizationId])
+  @@map("form_link")
+}
+
+
+model Milestone {
+  id             String    @id @default(cuid())
+  projectId      String
+  organizationId String
+  title          String
+  description    String?
+  dueDate        DateTime?
+  status         String    @default("pending") // pending, in_progress, done
+  order          Int       @default(0)
+  completedAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@map("milestone")
+}
+
+model Meeting {
+  id             String   @id @default(cuid())
+  projectId      String
+  organizationId String
+  title          String
+  scheduledAt    DateTime
+  durationMin    Int?
+  location       String?  // a place or a call link
+  notes          String?
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, scheduledAt])
+  @@index([organizationId])
+  @@map("meeting")
+}
+
+model Expense {
+  id             String   @id @default(cuid())
+  projectId      String
+  organizationId String
+  description    String
+  amountCents    Int
+  currency       String   @default("USD")
+  incurredOn     DateTime
+  category       String?
+  billable       Boolean  @default(false)
+  createdById    String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, incurredOn])
+  @@index([organizationId])
+  @@map("expense")
+}
+
+
+model Deliverable {
+  id             String    @id @default(cuid())
+  projectId      String
+  organizationId String
+  milestoneId    String?
+  title          String
+  description    String?
+  links          Json      @default("[]") // [{ label, url }]: Figma, staging site, shared folder...
+  version        Int       @default(1)
+  status         String    @default("draft") // draft, in_review, changes_requested, approved
+  tokenHash      String?   @unique // sha256 of the secure review link token
+  sentAt         DateTime?
+  approvedAt     DateTime?
+  approvedByName String?
+  createdById    String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project        Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  changeRequests ChangeRequest[]
+
+  @@index([projectId])
+  @@index([organizationId])
+  @@map("deliverable")
+}
+
+model ChangeRequest {
+  id             String    @id @default(cuid())
+  deliverableId  String
+  organizationId String
+  version        Int       // the deliverable version the client was looking at
+  message        String
+  status         String    @default("open") // open, resolved
+  taskId         String?
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+
+  deliverable Deliverable @relation(fields: [deliverableId], references: [id], onDelete: Cascade)
+
+  @@index([deliverableId])
+  @@index([organizationId])
+  @@map("change_request")
+}
+
+
+model Handover {
+  id             String    @id @default(cuid())
+  projectId      String    @unique
+  organizationId String
+  status         String    @default("in_progress") // in_progress, completed
+  tokenHash      String?   @unique // sha256 of the secure link the client reads it through
+  startedAt      DateTime  @default(now())
+  completedAt    DateTime?
+  completedById  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  items   HandoverItem[]
+
+  @@index([organizationId])
+  @@map("handover")
+}
+
+model HandoverItem {
+  id         String    @id @default(cuid())
+  handoverId String
+  kind       String    // files, documentation, access, training, deployment, custom
+  title      String
+  details    String?   // instructions for the client; never put passwords here
+  linkUrl    String?
+  done       Boolean   @default(false)
+  doneAt     DateTime?
+  order      Int       @default(0)
+
+  handover Handover @relation(fields: [handoverId], references: [id], onDelete: Cascade)
+
+  @@index([handoverId])
+  @@map("handover_item")
+}
+
+
+model SupportTicket {
+  id               String    @id @default(cuid())
+  organizationId   String
+  clientId         String
+  projectId        String?
+  subject          String
+  message          String
+  status           String    @default("open") // open, in_progress, resolved
+  priority         String    @default("normal") // low, normal, high
+  source           String    @default("public") // public, staff
+  submittedByName  String?
+  submittedByEmail String?
+  resolvedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  client  Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  replies SupportReply[]
+
+  @@index([organizationId, status])
+  @@index([clientId])
+  @@index([projectId])
+  @@map("support_ticket")
+}
+
+model SupportReply {
+  id             String   @id @default(cuid())
+  ticketId       String
+  organizationId String
+  authorKind     String   // staff, client
+  authorName     String?
+  message        String
+  createdAt      DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@map("support_reply")
 }

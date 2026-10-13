@@ -103,7 +103,7 @@ export function ClientAssignment({
                                 e.stopPropagation();
                                 onPreview!(c.userId, c.user.name, c.user.email);
                               }}
-                              className="inline-flex items-center justify-center rounded p-1 text-icon-tertiary transition-colors hover:bg-card-background hover:text-neutral-brand-color"
+                              className="inline-flex items-center justify-center rounded-sm p-1 text-icon-tertiary transition-colors hover:bg-card-background hover:text-neutral-brand-color"
                               aria-label={`View portal as ${c.user.name}`}
                             >
                               <Eye size={14} />
@@ -118,7 +118,7 @@ export function ClientAssignment({
                                 e.stopPropagation();
                                 onRemove(c.userId);
                               }}
-                              className="inline-flex items-center justify-center rounded p-1 text-icon-tertiary transition-colors hover:bg-card-background hover:text-button-error-outline-text"
+                              className="inline-flex items-center justify-center rounded-sm p-1 text-icon-tertiary transition-colors hover:bg-card-background hover:text-button-error-outline-text"
                               aria-label={`Remove ${c.user.name} from project`}
                             >
                               <X size={14} />
@@ -138,7 +138,7 @@ export function ClientAssignment({
                   onChange={(e) => setSearch(e.target.value)}
                   onFocus={() => setOpen(true)}
                   placeholder={assignedClients.length === 0 ? "Search clients..." : ""}
-                  className="min-w-[100px] flex-1 bg-transparent text-xs text-text-primary outline-none placeholder:text-input-placeholder-text"
+                  className="min-w-[100px] flex-1 bg-transparent text-xs text-text-primary outline-hidden placeholder:text-input-placeholder-text"
                 />
               )}
             </div>
@@ -169,7 +169,7 @@ export function ClientAssignment({
                             inputRef.current?.focus();
                           }
                         }}
-                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none"
+                        className="flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-hidden"
                       >
                         <Checkbox
                           checked={selected}

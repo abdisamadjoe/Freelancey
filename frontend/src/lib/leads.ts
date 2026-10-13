@@ -19,8 +19,18 @@ export interface ClientRecord {
   nextFollowUpAt: string | null;
   lostReason: string | null;
   notes: string | null;
+  discovery: LeadDiscovery | null;
   archivedAt: string | null;
   createdAt: string;
+}
+
+export interface LeadDiscovery {
+  needs?: string;
+  reason?: string;
+  budget?: string;
+  timeline?: string;
+  requirements?: string;
+  notes?: string;
 }
 
 export interface ClientActivity {
@@ -35,6 +45,7 @@ export interface ClientActivity {
 export const LEAD_STATUS_OPTIONS = [
   { value: "new", label: "New" },
   { value: "contacted", label: "Contacted" },
+  { value: "discovery", label: "Discovery" },
   { value: "qualified", label: "Qualified" },
   { value: "proposal_sent", label: "Proposal sent" },
 ] as const;
@@ -47,7 +58,20 @@ export const STAGE_OPTIONS = [
   { value: "", label: "Everything" },
 ] as const;
 
-export const LEAD_SOURCES = ["Website form", "Referral", "WhatsApp", "Instagram", "LinkedIn", "Cold outreach", "Other"];
+export const LEAD_SOURCES = [
+  { value: "manual", label: "Manual" },
+  { value: "google_maps", label: "Google Maps" },
+  { value: "website_inquiry", label: "Website inquiry" },
+  { value: "referral", label: "Referral" },
+  { value: "import", label: "Import" },
+  { value: "other", label: "Other" },
+] as const;
+
+/** Older records hold free-text sources; show those as typed. */
+export function sourceLabel(source: string | null): string {
+  if (!source) return "-";
+  return LEAD_SOURCES.find((s) => s.value === source)?.label ?? source;
+}
 
 export const ACTIVITY_KIND_OPTIONS = [
   { value: "note", label: "Note" },
@@ -60,6 +84,7 @@ export const ACTIVITY_KIND_OPTIONS = [
 const LEAD_STATUS_COLORS: Record<string, BadgeColor> = {
   new: "blue",
   contacted: "sky",
+  discovery: "cyan",
   qualified: "violet",
   proposal_sent: "orange",
 };

@@ -19,7 +19,7 @@
 ![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?logo=cloudflare&logoColor=white&style=flat)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white&style=flat)
 ![Railway](https://img.shields.io/badge/Railway-131415?logo=railway&logoColor=white&style=flat)
-![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 <br/>
 
@@ -51,6 +51,21 @@ ONBOARDING → PROJECT_CREATION → MILESTONES_&_TASKS → INVOICING_&_DELIVERY 
 - **Invoicing & Payments**: Create and send invoices with draft and sent workflows powered by server-side billing management.
 - **White-Label Branding**: Branded login pages, custom color schemes, custom domains, and organizational logos.
 - **Multi-Tenant Security**: Strict server-side role-based access control (RBAC) separating agency owners, team members, and client users.
+
+### From lead to handover
+
+Freelancey follows a freelancer from "I found this business" to "the project is finished and I'm maintaining it". The full specification is in [`plan.md`](plan.md) (Appendix A).
+
+```
+Lead → Contacted → Discovery → Qualified → Proposal → Contract → Signed → Client
+     → Onboarding form → Project → Project brief → Milestones & tasks
+     → Deliverable review → Completed → Handover → Support
+```
+
+- **Leads** come from any source: added by hand, the public contact form, referrals, or a CSV import (up to 200 rows at a time). All of them land in the same lead list, with a board view by status.
+- **Proposals and contracts** are written inside Freelancey. Details carry forward (lead → proposal → contract → project), so nothing is typed twice. Signing a contract turns the lead into an active client and keeps the whole history.
+- **Forms only collect information from the client**: onboarding, project brief and support requests. Everything else is a workflow the freelancer runs.
+- **Clients need no account** for any of this. Proposals, contracts, forms, deliverable reviews, handovers and support pages are reached through private links (`/proposal/…`, `/contract/…`, `/onboarding/…`, `/brief/…`, `/review/…`, `/handover/…`, `/support/…`). Only a hash of each link's token is stored, links can be replaced at any time, and those pages are never indexed, cached or shared through a Referer header.
 
 ---
 
@@ -181,6 +196,7 @@ The web application serving agency dashboards and client portal views.
 
 ## Security principles
 
+- **Private Links**: Client-facing links carry a random 256-bit token, store only its hash, are scoped to a single record, are rate limited, and answer "not found" for anything unknown.
 - **Server-Enforced Access Control**: All authorization rules and tenant boundaries are evaluated server-side.
 - **Isolated Multi-Tenancy**: Organization data is compartmentalized; client users are strictly scoped to their explicit projects.
 - **Secure Presigned Uploads**: Files are stored in private S3/R2 storage buckets using short-lived presigned URLs.
@@ -206,52 +222,8 @@ Contributions to Freelancey are welcome!
 
 ---
 
-## Fork Notice
-
-Freelancey is a heavily modified fork of [Atrium](https://github.com/Vibra-Labs/Atrium).
-
-The project has been substantially redesigned and extended with
-new functionality, architecture, UI/UX, workflows, and features.
-
-### Original Project
-
-- Original project: Atrium
-- Original author: [@edgarjc](https://github.com/edgarjc)
-- Original repository: https://github.com/Vibra-Labs/Atrium
-
-### Licensing
-
-This repository contains code derived from Atrium,
-which is licensed under the Elastic License 2.0.
-
-The original license and applicable copyright notices are retained.
-
-Modified portions are identified as required by the applicable
-license terms.
-
-See [LICENSE](LICENSE) for the complete license terms.
-
-### Modifications
-
-This fork includes substantial modifications, including:
-
-- Complete UI/UX redesign
-- New project management workflows
-- New client management functionality
-- New freelancer-oriented features
-- Contracts and e-signature workflows
-- Invoicing with PDF export
-- White-label branding for the client portal
-
-### Attribution
-
-This project is not affiliated with, sponsored by, or endorsed by
-the original project or its author.
-
----
-
 ## Author & License
 
 Created and maintained by **[@abdisamadjoe](https://github.com/abdisamadjoe)**.
 
-Freelancey is source-available software licensed under the [Elastic License 2.0](LICENSE).
+Freelancey is open-source software licensed under the [MIT License](LICENSE).

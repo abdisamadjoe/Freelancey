@@ -16,28 +16,6 @@ function initials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-/** Muted, template-friendly palette derived deterministically from the name. */
-const AVATAR_COLORS = [
-  "#5750f1",
-  "#3758f9",
-  "#0ea5e9",
-  "#0e7490",
-  "#16a34a",
-  "#ca8a04",
-  "#dc2626",
-  "#8b5cf6",
-  "#ec4899",
-  "#f97316",
-];
-
-function colorFromName(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i += 1) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
-}
-
 export function Avatar({ name, image, size = 24, className = "" }: AvatarProps) {
   const style: React.CSSProperties = {
     width: size,
@@ -52,16 +30,17 @@ export function Avatar({ name, image, size = 24, className = "" }: AvatarProps) 
         src={image}
         alt={name}
         style={style}
-        className={cn("shrink-0 rounded-full border-[0.5px] border-card-border object-cover", className)}
+        className={cn("flex aspect-square shrink-0 items-center rounded-full object-cover", className)}
       />
     );
   }
 
   return (
     <span
-      style={{ ...style, backgroundColor: colorFromName(name) }}
+      style={style}
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full font-medium text-white select-none",
+        // The template's avatar fallback (tailgrids/core/avatar.tsx).
+        "inline-flex shrink-0 items-center justify-center rounded-full bg-primary-100 font-semibold text-primary-500 uppercase select-none",
         className,
       )}
       title={name}
@@ -90,14 +69,14 @@ export function AvatarGroup({
       {shown.map((person, index) => (
         <span
           key={`${person.name}-${index}`}
-          className={cn("rounded-full ring-2 ring-card-background", index > 0 && "-ml-2")}
+          className={cn("rounded-full ring-[1.5px] ring-background-50", index > 0 && "-ml-3")}
         >
           <Avatar name={person.name} image={person.image} size={size} />
         </span>
       ))}
       {rest > 0 ? (
         <span
-          className="-ml-2 inline-flex items-center justify-center rounded-full bg-background-gray-secondary text-xs font-medium text-text-secondary ring-2 ring-card-background"
+          className="-ml-3 inline-flex items-center justify-center rounded-full bg-primary-100 text-xs text-primary-500 ring-[1.5px] ring-background-50"
           style={{ width: size, height: size }}
         >
           +{rest}

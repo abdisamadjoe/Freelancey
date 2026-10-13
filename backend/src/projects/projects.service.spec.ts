@@ -26,6 +26,10 @@ const mockPrisma = {
     delete: vi.fn((args: PrismaArgs) => Promise.resolve({ id: args.where?.id })),
     deleteMany: vi.fn(() => Promise.resolve({ count: 1 })),
   },
+  contract: {
+    findFirst: vi.fn(() => Promise.resolve(null)),
+    update: vi.fn(() => Promise.resolve({})),
+  },
   projectClient: {
     deleteMany: vi.fn(() => Promise.resolve({ count: 0 })),
     createMany: vi.fn(() => Promise.resolve({ count: 0 })),
@@ -139,6 +143,35 @@ describe("ProjectsService", () => {
       expect(data.clients).toEqual({
         create: [{ userId: "user-1" }, { userId: "user-2" }, { userId: "user-3" }],
       });
+    });
+
+    it("attaches a signed contract of this client to the new project", async () => {
+      mockPrisma.client.findFirst.mockResolvedValue({ id: "client-1", contacts: [] });
+      mockPrisma.contract.findFirst.mockResolvedValueOnce({ id: "k1" });
+      await service.create({ name: "Site", clientId: "client-1", contractId: "k1" } as never, "org-1");
+      expect(mockPrisma.contract.findFirst).toHaveBeenCalledWith({
+        where: { id: "k1", organizationId: "org-1", clientRecordId: "client-1", projectId: null },
+        select: { id: true },
+      });
+      expect(mockPrisma.contract.update).toHaveBeenCalledWith({ where: { id: "k1" }, data: { projectId: "new-id" } });
+      const data = (mockPrisma.project.create.mock.calls.at(-1)![0] as { data: Record<string, unknown> }).data;
+      expect(data).not.toHaveProperty("contractId");
+    });
+
+    it("rejects a contract that is not this client's and creates nothing", async () => {
+      mockPrisma.client.findFirst.mockResolvedValue({ id: "client-1", contacts: [] });
+      mockPrisma.contract.findFirst.mockResolvedValueOnce(null);
+      const before = mockPrisma.project.create.mock.calls.length;
+      await expect(
+        service.create({ name: "Site", clientId: "client-1", contractId: "foreign" } as never, "org-1"),
+      ).rejects.toThrow("That contract is not available for this client");
+      expect(mockPrisma.project.create.mock.calls.length).toBe(before);
+    });
+
+    it("rejects a contract without a client", async () => {
+      await expect(service.create({ name: "Site", contractId: "k1" } as never, "org-1")).rejects.toThrow(
+        "A contract can only be attached",
+      );
     });
 
     it("rejects a client record from another workspace and creates nothing", async () => {

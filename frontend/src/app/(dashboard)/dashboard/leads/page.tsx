@@ -2,11 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { Copy, Plus, UserPlus } from "lucide-react";
+import { Copy, KanbanSquare, List, Plus, Upload, UserPlus } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useDebounce } from "@/hooks/use-debounce";
 import { Pagination } from "@/components/pagination";
 import { useToast } from "@/components/toast";
+import { LeadBoard } from "@/components/lead-board";
+import { ImportLeadsModal } from "@/components/import-leads-modal";
 import {
   Alert,
   Badge,
@@ -37,6 +39,7 @@ import {
   type ClientRecord,
   LEAD_SOURCES,
   LEAD_STATUS_OPTIONS,
+  sourceLabel,
   STAGE_OPTIONS,
   contactLine,
   isFollowUpDue,
@@ -58,6 +61,7 @@ const EMPTY_FORM = {
   email: "",
   phone: "",
   whatsapp: "",
+  website: "",
   company: "",
   source: "",
   interestedIn: "",
@@ -77,8 +81,12 @@ export default function LeadsPage() {
   const debouncedSearch = useDebounce(search, 300);
   const [stage, setStage] = useState("lead");
   const [leadStatus, setLeadStatus] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("");
   const [dueOnly, setDueOnly] = useState(false);
 
+  const [view, setView] = useState<"list" | "board">("list");
+  const [boardKey, setBoardKey] = useState(0);
+  const [showImport, setShowImport] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [formError, setFormError] = useState("");
@@ -94,6 +102,7 @@ export default function LeadsPage() {
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (stage) params.set("stage", stage);
       if (stage === "lead" && leadStatus) params.set("leadStatus", leadStatus);
+      if (sourceFilter) params.set("source", sourceFilter);
       if (dueOnly) params.set("followUpDue", "true");
       const res = await apiFetch<Paginated<ClientRecord>>(`/client-records?${params}`);
       setRows(res.data);
@@ -103,7 +112,7 @@ export default function LeadsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedSearch, stage, leadStatus, dueOnly]);
+  }, [page, debouncedSearch, stage, leadStatus, sourceFilter, dueOnly]);
 
   useEffect(() => {
     load();
@@ -111,7 +120,7 @@ export default function LeadsPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, stage, leadStatus, dueOnly]);
+  }, [debouncedSearch, stage, leadStatus, sourceFilter, dueOnly]);
 
   useEffect(() => {
     apiFetch<FormSettings>("/client-records/lead-form")
@@ -144,7 +153,8 @@ export default function LeadsPage() {
           phone: form.phone.trim() || undefined,
           whatsapp: form.whatsapp.trim() || undefined,
           company: form.company.trim() || undefined,
-          source: form.source || undefined,
+          website: form.website.trim() || undefined,
+          source: form.source || "manual",
           interestedIn: form.interestedIn.trim() || undefined,
           estimatedBudgetCents: budget,
           nextFollowUpAt: form.followUp ? new Date(form.followUp).toISOString() : undefined,
@@ -152,6 +162,7 @@ export default function LeadsPage() {
         }),
       });
       success("Lead added");
+      setBoardKey((k) => k + 1);
       setShowCreate(false);
       setForm(EMPTY_FORM);
       setStage("lead");
@@ -184,10 +195,20 @@ export default function LeadsPage() {
         title="Leads"
         description="Everyone who might become a client, and when to follow up."
         actions={
-          <Button size="sm" iconOnly={false} onClick={() => setShowCreate(true)}>
-            <Plus />
-            <span>Add lead</span>
-          </Button>
+          <>
+            <Button size="sm" appearance="outline" iconOnly={false} onClick={() => setView(view === "list" ? "board" : "list")}>
+              {view === "list" ? <KanbanSquare /> : <List />}
+              <span>{view === "list" ? "Board" : "List"}</span>
+            </Button>
+            <Button size="sm" appearance="outline" iconOnly={false} onClick={() => setShowImport(true)}>
+              <Upload />
+              <span>Import</span>
+            </Button>
+            <Button size="sm" iconOnly={false} onClick={() => setShowCreate(true)}>
+              <Plus />
+              <span>Add lead</span>
+            </Button>
+          </>
         }
       />
 
@@ -204,7 +225,7 @@ export default function LeadsPage() {
             </p>
             {formSettings.enabled && publicUrl && (
               <div className="mt-2 flex items-center gap-2">
-                <code className="truncate rounded bg-background-gray-secondary_alt px-2 py-1 text-xs text-text-secondary">
+                <code className="truncate rounded-sm bg-background-gray-secondary_alt px-2 py-1 text-xs text-text-secondary">
                   {publicUrl}
                 </code>
                 <Button
@@ -230,6 +251,9 @@ export default function LeadsPage() {
         </Card>
       )}
 
+      {view === "board" ? (
+        <LeadBoard key={boardKey} />
+      ) : (
       <Card className="overflow-hidden p-0">
         <DataToolbar
           trailing={
@@ -284,6 +308,21 @@ export default function LeadsPage() {
               </NativeSelect>
             </div>
           )}
+          <div className="w-full sm:w-44">
+            <NativeSelect
+              value={sourceFilter}
+              onChange={(e) => setSourceFilter(e.target.value)}
+              aria-label="Filter by source"
+              className="h-10 w-full py-0"
+            >
+              <option value="">All sources</option>
+              {LEAD_SOURCES.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </NativeSelect>
+          </div>
         </DataToolbar>
 
         {loading ? (
@@ -292,7 +331,7 @@ export default function LeadsPage() {
           <EmptyState
             variant="plain"
             icon={<UserPlus className="size-5" aria-hidden />}
-            title={debouncedSearch || dueOnly || leadStatus ? "No matching leads" : "No leads yet"}
+            title={debouncedSearch || dueOnly || leadStatus || sourceFilter ? "No matching leads" : "No leads yet"}
             description="Add a lead by hand, or share your contact form link to collect them automatically."
             action={
               <Button size="sm" iconOnly={false} onClick={() => setShowCreate(true)}>
@@ -331,7 +370,7 @@ export default function LeadsPage() {
                     <TableCell>
                       <Badge color={badge.color}>{badge.label}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm text-text-secondary">{r.source ?? "-"}</TableCell>
+                    <TableCell className="text-sm text-text-secondary">{sourceLabel(r.source)}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">
                       {r.nextFollowUpAt ? (
                         <span className={due ? "font-medium text-alert-danger-title" : "text-text-secondary"}>
@@ -349,8 +388,11 @@ export default function LeadsPage() {
           </TableRoot>
         )}
       </Card>
+      )}
 
-      {!loading && rows.length > 0 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+      {view === "list" && !loading && rows.length > 0 && <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />}
+
+      <ImportLeadsModal open={showImport} onClose={() => setShowImport(false)} onImported={() => { load(); setBoardKey((k) => k + 1); }} />
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} size="md">
         <form onSubmit={handleCreate}>
@@ -373,12 +415,15 @@ export default function LeadsPage() {
               <Field label="Company" htmlFor="lead-company">
                 <Input id="lead-company" value={form.company} onChange={set("company")} />
               </Field>
+              <Field label="Website" htmlFor="lead-website">
+                <Input id="lead-website" value={form.website} onChange={set("website")} />
+              </Field>
               <Field label="Source" htmlFor="lead-source">
                 <NativeSelect id="lead-source" value={form.source} onChange={set("source")}>
-                  <option value="">Not sure</option>
+                  <option value="">Manual (default)</option>
                   {LEAD_SOURCES.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </NativeSelect>

@@ -871,7 +871,7 @@ export function InvoicesSection({
                           type="button"
                           onClick={() => setExpandedId(isExpanded ? null : inv.id)}
                           aria-expanded={isExpanded}
-                          className="flex w-full items-start gap-3 rounded-md text-left outline-none focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
+                          className="flex w-full items-start gap-3 rounded-md text-left outline-hidden focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
                         >
                           {isExpanded ? (
                             <ChevronDown className="mt-0.5 size-4 shrink-0 text-icon-tertiary" aria-hidden />

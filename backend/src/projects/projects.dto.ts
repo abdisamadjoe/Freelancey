@@ -33,6 +33,21 @@ export class CreateProjectDto {
   @IsString()
   @IsOptional()
   clientId?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  budgetCents?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  projectType?: string;
+
+  /** A signed contract for this client. It is attached to the new project so the portal shows it. */
+  @IsOptional()
+  @IsString()
+  contractId?: string;
 }
 
 export class ClientProjectListQueryDto extends PaginationQueryDto {
@@ -105,4 +120,14 @@ export class UpdateProjectDto {
   @IsInt()
   @Min(0)
   hourlyRateCents?: number | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  budgetCents?: number | null;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  projectType?: string | null;
 }

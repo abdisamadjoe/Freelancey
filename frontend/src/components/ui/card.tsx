@@ -37,7 +37,7 @@ export function CardTitle({ children, className, ...props }: ComponentProps<"h3"
   return (
     <h3
       className={cn(
-        "text-base leading-6 font-semibold tracking-[-0.2px] text-text-primary",
+        "leading-6 font-semibold tracking-[-0.2px] text-text-primary",
         className,
       )}
       {...props}
@@ -50,7 +50,7 @@ export function CardTitle({ children, className, ...props }: ComponentProps<"h3"
 export function CardDescription({ children, className, ...props }: ComponentProps<"p">) {
   return (
     <p
-      className={cn("mt-0.5 text-sm leading-5 tracking-[-0.15px] text-text-tertiary", className)}
+      className={cn("mt-0.5 text-base leading-6 tracking-[-0.2px] text-text-secondary", className)}
       {...props}
     >
       {children}
@@ -60,7 +60,7 @@ export function CardDescription({ children, className, ...props }: ComponentProp
 
 export function CardAction({ children, className, ...props }: ComponentProps<"div">) {
   return (
-    <div className={cn("flex shrink-0 items-center gap-2", className)} {...props}>
+    <div className={cn("absolute top-5 right-5 text-text-50", className)} {...props}>
       {children}
     </div>
   );
@@ -68,7 +68,7 @@ export function CardAction({ children, className, ...props }: ComponentProps<"di
 
 export function CardContent({ children, className, ...props }: ComponentProps<"div">) {
   return (
-    <div className={cn("mt-4 text-text-primary", className)} {...props}>
+    <div className={cn("p-6 text-text-primary", className)} {...props}>
       {children}
     </div>
   );
@@ -76,10 +76,7 @@ export function CardContent({ children, className, ...props }: ComponentProps<"d
 
 export function CardFooter({ children, className, ...props }: ComponentProps<"div">) {
   return (
-    <div
-      className={cn("mt-4 flex items-center gap-3 border-t border-card-border pt-4", className)}
-      {...props}
-    >
+    <div className={cn("px-5 pb-5", className)} {...props}>
       {children}
     </div>
   );

@@ -7,7 +7,7 @@ export const THEME_STORAGE_KEY = "theme";
  * theme. A saved choice wins; otherwise the OS preference decides. Kept as a
  * plain string (no imports) because it is inlined into the HTML.
  */
-export const themeInitScript = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var r=document.documentElement;r.classList.toggle("dark",d);r.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var t=localStorage.getItem("${THEME_STORAGE_KEY}");var d=t?t==="dark":window.matchMedia("(prefers-color-scheme: dark)").matches;var r=document.documentElement;r.classList.toggle("dark",d);r.setAttribute("data-theme",d?"dark":"light");r.style.colorScheme=d?"dark":"light";}catch(e){}})();`;
 
 export function getStoredTheme(): Theme | null {
   try {
@@ -33,6 +33,8 @@ export function getActiveTheme(): Theme {
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
   root.classList.toggle("dark", theme === "dark");
+  // The design tokens (and the `dark:` variant) are keyed on data-theme, as in the dashboard template.
+  root.setAttribute("data-theme", theme);
   root.style.colorScheme = theme;
 }
 

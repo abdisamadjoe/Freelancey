@@ -43,7 +43,7 @@ export default async function ContactPage({ params }: { params: Promise<{ slug: 
     : undefined;
 
   return (
-    <main style={style} className="relative min-h-screen bg-background-gray-secondary_alt_2 px-4 py-10 sm:py-16">
+    <main style={style} data-branded={style ? "" : undefined} className="relative min-h-screen bg-background-gray-secondary_alt_2 px-4 py-10 sm:py-16">
       <ThemeToggle className="absolute top-4 right-4" />
       <div className="mx-auto w-full max-w-lg">
         <div className="mb-6 text-center">

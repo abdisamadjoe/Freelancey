@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { Close } from "@tailgrids/icons";
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -77,7 +77,8 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         className={cn(
-          "relative z-10 my-auto w-full rounded-xl border border-card-border bg-background-white-primary shadow-lg outline-none",
+          // The template's dialog panel (tailgrids/core/dialog.tsx): one p-6 frame, no inner dividers.
+          "relative z-10 my-auto w-full rounded-xl border border-border-primary bg-background-white-primary p-6 shadow-lg outline-none",
           sizeStyles[size],
           scrollable && "max-h-[calc(100vh-3rem)] overflow-y-auto",
           className,
@@ -88,9 +89,9 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-md text-icon-tertiary transition-colors hover:bg-background-gray-secondary_alt hover:text-text-primary focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none"
+            className="absolute top-4 right-4 z-10 flex size-7 items-center justify-center rounded-md text-text-100 opacity-70 transition-opacity outline-none hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none [&>svg]:size-5"
           >
-            <X className="size-4" />
+            <Close />
           </button>
         )}
         {children}
@@ -112,21 +113,10 @@ export function ModalHeader({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-start justify-between gap-3 border-b border-card-border px-6 py-5",
-        className,
-      )}
-    >
-      <div className="min-w-0">
-        {title ? (
-          <h2 className="text-lg leading-6 font-semibold tracking-[-0.2px] text-text-primary">
-            {title}
-          </h2>
-        ) : null}
-        {description ? (
-          <p className="mt-1 text-sm leading-5 text-text-tertiary">{description}</p>
-        ) : null}
+    <div className={cn("flex flex-wrap items-start justify-between gap-3 pr-8 text-left", className)}>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        {title ? <h2 className="text-lg leading-none font-semibold text-title-50">{title}</h2> : null}
+        {description ? <p className="text-sm text-text-100">{description}</p> : null}
       </div>
       {children}
     </div>
@@ -134,17 +124,12 @@ export function ModalHeader({
 }
 
 export function ModalBody({ children, className }: { children: ReactNode; className?: string }) {
-  return <div className={cn("px-6 py-5", className)}>{children}</div>;
+  return <div className={cn("py-4 text-sm text-text-100", className)}>{children}</div>;
 }
 
 export function ModalFooter({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        "flex flex-wrap items-center justify-end gap-2 border-t border-card-border bg-background-gray-primary px-6 py-4",
-        className,
-      )}
-    >
+    <div className={cn("flex flex-col-reverse gap-2 pt-4 sm:flex-row sm:justify-end", className)}>
       {children}
     </div>
   );

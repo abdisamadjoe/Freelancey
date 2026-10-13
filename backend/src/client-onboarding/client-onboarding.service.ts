@@ -55,7 +55,7 @@ export class ClientOnboardingService {
     return client;
   }
 
-  private async ensureTemplate(orgId: string) {
+  async ensureTemplate(orgId: string) {
     return this.prisma.formTemplate.upsert({
       where: { organizationId_key: { organizationId: orgId, key: DEFAULT_INTAKE_KEY } },
       create: {

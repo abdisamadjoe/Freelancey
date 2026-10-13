@@ -147,7 +147,7 @@ export function StepEmailConfig({ onNext, onBack }: StepEmailConfigProps) {
                 aria-pressed={provider === opt.value}
                 onClick={() => setProvider(opt.value)}
                 className={cn(
-                  "rounded-lg border p-4 text-left transition-colors outline-none focus-visible:ring-4 focus-visible:ring-button-primary-focus-ring",
+                  "rounded-lg border p-4 text-left transition-colors outline-hidden focus-visible:ring-4 focus-visible:ring-button-primary-focus-ring",
                   provider === opt.value
                     ? "border-input-primary-focus-border bg-background-gray-secondary_alt_2"
                     : "border-card-border bg-card-background hover:bg-background-gray-secondary_alt_2",

@@ -39,7 +39,7 @@ import {
 
 interface ContractRecord {
   id: string;
-  projectId: string;
+  projectId?: string | null;
   title: string;
   template: string;
   status: string;
@@ -48,7 +48,8 @@ interface ContractRecord {
 }
 
 interface ContractBuilderModalProps {
-  projectId: string;
+  /** Not needed when editing an existing contract (for example one written from a proposal). */
+  projectId?: string;
   initialContract?: ContractRecord | null;
   isOpen: boolean;
   onClose: () => void;
@@ -170,7 +171,7 @@ export function ContractBuilderModal({
       onClose={onClose}
       size="2xl"
       scrollable={false}
-      className="flex max-h-[calc(100vh-3rem)] flex-col"
+      className="flex max-h-[calc(100vh-3rem)] flex-col p-0"
     >
       {/* Modal Header */}
       <ModalHeader

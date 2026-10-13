@@ -44,5 +44,5 @@ export { StatusBadge, statusColor, statusLabel } from "./status-badge";
 export { TableBody, TableCell, TableHead, TableHeader, TableRoot, TableRow } from "./table";
 export { Tab, TabList, TabPanel, Tabs } from "./tabs";
 export { Avatar, AvatarGroup } from "./avatar";
-export { Alert, alertStyles } from "./alert";
+export { Alert } from "./alert";
 export type { AlertStatus } from "./alert";

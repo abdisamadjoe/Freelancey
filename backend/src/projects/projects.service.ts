@@ -129,7 +129,7 @@ export class ProjectsService {
   }
 
   async create(data: CreateProjectDto, organizationId: string) {
-    const { clientUserIds, startDate, endDate, clientId, ...rest } = data;
+    const { clientUserIds, startDate, endDate, clientId, contractId, ...rest } = data;
 
     if (clientUserIds?.length) {
       const validMembers = await this.prisma.member.count({
@@ -153,7 +153,17 @@ export class ProjectsService {
     }
     const assignedUserIds = [...new Set([...(clientUserIds ?? []), ...contactUserIds])];
 
-    return this.prisma.project.create({
+    // A contract can only be attached if it is this client's, in this workspace, and not yet on a project.
+    if (contractId) {
+      if (!clientId) throw new BadRequestException("A contract can only be attached to a project for a client");
+      const contract = await this.prisma.contract.findFirst({
+        where: { id: contractId, organizationId, clientRecordId: clientId, projectId: null },
+        select: { id: true },
+      });
+      if (!contract) throw new BadRequestException("That contract is not available for this client");
+    }
+
+    const created = await this.prisma.project.create({
       data: {
         ...rest,
         startDate: startDate ? new Date(startDate) : undefined,
@@ -170,6 +180,11 @@ export class ProjectsService {
       },
       include: { clients: { select: { userId: true } } },
     });
+
+    if (contractId) {
+      await this.prisma.contract.update({ where: { id: contractId }, data: { projectId: created.id } });
+    }
+    return created;
   }
 
   async update(id: string, data: UpdateProjectDto, organizationId: string) {

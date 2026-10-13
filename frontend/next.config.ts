@@ -26,7 +26,17 @@ const nextConfig: NextConfig = {
     ];
   },
   async headers() {
+    // Pages reached through a secret link: never indexed, cached or leaked through a Referer header.
+    const secretLinkHeaders = [
+      { key: "Referrer-Policy", value: "no-referrer" },
+      { key: "Cache-Control", value: "private, no-store" },
+      { key: "X-Robots-Tag", value: "noindex, nofollow" },
+    ];
     return [
+      ...["proposal", "contract", "onboarding", "brief", "review", "handover", "support"].map((segment) => ({
+        source: `/${segment}/:token*`,
+        headers: secretLinkHeaders,
+      })),
       {
         source: "/(.*)",
         headers: [

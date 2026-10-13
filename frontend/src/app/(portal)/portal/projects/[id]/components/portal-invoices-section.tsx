@@ -266,7 +266,7 @@ export function PortalInvoicesSection({
                           onClick={() => setExpandedId(isExpanded ? null : inv.id)}
                           aria-expanded={isExpanded}
                           aria-controls={expandedPanelId}
-                          className="flex items-center gap-2 text-sm font-medium text-text-primary outline-none transition-colors hover:text-neutral-brand-color focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
+                          className="flex items-center gap-2 text-sm font-medium text-text-primary outline-hidden transition-colors hover:text-neutral-brand-color focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
                         >
                           <ChevronRight
                             className={cn(

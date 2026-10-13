@@ -3,6 +3,7 @@
 ## Git rules
 
 ### Commits
+- Don't commit or push unless I say so.
 - Max 4 words per title.
 - No generic verbs ("Add", "Update", "Fix", "Implement"). Write titles casually, like a person talking.
   Examples: "Login is ready", "Login finally works", "Faster dashboard loads", "Killed that memory leak", "Dark mode everywhere"
@@ -10,6 +11,7 @@
 
 ### Branching
 - Never commit directly to `main`/`master`. Use a feature branch.
+- Don't create new branches unless I say so.
 
 ## Package manager
 - Use npm only. Never yarn or pnpm.
@@ -46,3 +48,9 @@ Run lint + tests before committing.
 
 ## Copy
 See COPY.md for marketing/landing page copy rules.
+
+## SEO
+See SEO.md for on-page SEO rules.
+
+## Design
+See DESIGN.md for typography and design system rules.

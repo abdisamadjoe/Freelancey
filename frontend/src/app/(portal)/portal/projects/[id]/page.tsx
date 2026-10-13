@@ -682,7 +682,7 @@ export default function PortalProjectDetailPage() {
                     aria-current={isActive ? "true" : undefined}
                     onClick={() => setActiveTab(tab.id)}
                     className={cn(
-                      "flex shrink-0 items-center gap-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-none focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring sm:px-4",
+                      "flex shrink-0 items-center gap-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors outline-hidden focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring sm:px-4",
                       isActive
                         ? "-mb-px border-b-2 border-primary-500 text-neutral-brand-color"
                         : "text-text-tertiary hover:text-text-primary",
@@ -946,7 +946,7 @@ export default function PortalProjectDetailPage() {
                             }
                           }}
                           data-testid={`task-row-${task.id}`}
-                          className="flex cursor-pointer flex-wrap items-center gap-2 rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3 transition-colors outline-none hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
+                          className="flex cursor-pointer flex-wrap items-center gap-2 rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3 transition-colors outline-hidden hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
                         >
                           <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-badge-primary-background text-neutral-brand-color">
                             <Vote className="size-3" aria-hidden />
@@ -993,7 +993,7 @@ export default function PortalProjectDetailPage() {
                           }
                         }}
                         data-testid={`task-row-${task.id}`}
-                        className="flex cursor-pointer flex-wrap items-center gap-2 rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3 transition-colors outline-none hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
+                        className="flex cursor-pointer flex-wrap items-center gap-2 rounded-xl border-[0.5px] border-card-border bg-card-background px-4 py-3 transition-colors outline-hidden hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
                       >
                         <StatusBadge status={task.status} className="shrink-0" />
                         <span
@@ -1104,7 +1104,7 @@ export default function PortalProjectDetailPage() {
                             handleCardClick();
                           }
                         }}
-                        className="flex cursor-pointer items-start justify-between gap-3 border-b border-border-primary px-5 py-3.5 transition-colors outline-none last:border-b-0 hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
+                        className="flex cursor-pointer items-start justify-between gap-3 border-b border-border-primary px-5 py-3.5 transition-colors outline-hidden last:border-b-0 hover:bg-background-gray-secondary_alt focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring"
                       >
                         <div className="flex min-w-0 items-start gap-2.5">
                           {isLink ? (

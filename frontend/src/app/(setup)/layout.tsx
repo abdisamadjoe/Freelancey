@@ -34,6 +34,7 @@ export default async function SetupLayout({
   return (
     <div
       className="min-h-screen bg-background-gray-secondary_alt_2"
+      data-branded={branding?.primaryColor ? "" : undefined}
       style={
         {
           "--primary": branding?.primaryColor || DEFAULT_BRANDING.primaryColor,

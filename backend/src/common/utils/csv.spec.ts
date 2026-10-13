@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toCsv } from "./csv";
+import { parseCsv, toCsv } from "./csv";
 import type { CsvColumn } from "./csv";
 
 interface TestRow {
@@ -66,5 +66,41 @@ describe("toCsv", () => {
     expect(lines[1]).toBe("'=SUM(A1:A9),1,'+1");
     expect(lines[2]).toBe("'-2+3,2,'@cmd");
     expect(lines[3]).toBe(`'\tevil,3,"'\rnope"`);
+  });
+});
+
+describe("parseCsv", () => {
+  it("splits simple rows and ignores blank lines", () => {
+    expect(parseCsv("a,b\n1,2\n\n3,4\n")).toEqual([["a", "b"], ["1", "2"], ["3", "4"]]);
+  });
+
+  it("handles CRLF, a BOM and a missing final newline", () => {
+    expect(parseCsv("\uFEFFa,b\r\n1,2")).toEqual([["a", "b"], ["1", "2"]]);
+  });
+
+  it("handles quoted commas, doubled quotes and line breaks inside quotes", () => {
+    expect(parseCsv('name,note\n"Acme, Inc","says ""hi"""\n"Two\nLines",x')).toEqual([
+      ["name", "note"],
+      ["Acme, Inc", 'says "hi"'],
+      ["Two\nLines", "x"],
+    ]);
+  });
+
+  it("keeps empty fields", () => {
+    expect(parseCsv("a,,c\n,,")).toEqual([["a", "", "c"]]);
+  });
+
+  it("round-trips what toCsv writes", () => {
+    const cols: CsvColumn<{ a: string; b: string }>[] = [
+      { header: "A", value: (r) => r.a },
+      { header: "B", value: (r) => r.b },
+    ];
+    const rows = [{ a: 'x, "y"', b: "line\nbreak" }, { a: "plain", b: "" }];
+    expect(parseCsv(toCsv(cols, rows))).toEqual([["A", "B"], ['x, "y"', "line\nbreak"], ["plain", ""]]);
+  });
+
+  it("returns nothing for empty input", () => {
+    expect(parseCsv("")).toEqual([]);
+    expect(parseCsv("\n\n")).toEqual([]);
   });
 });

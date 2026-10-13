@@ -287,12 +287,12 @@ export function StepOrgProfile({ orgName, onNext }: StepOrgProfileProps) {
             <span className="flex shrink-0 items-center gap-2">
               <span
                 aria-hidden
-                className="size-6 rounded border-[0.5px] border-card-border"
+                className="size-6 rounded-sm border-[0.5px] border-card-border"
                 style={{ backgroundColor: branding.primaryColor }}
               />
               <span
                 aria-hidden
-                className="size-6 rounded border-[0.5px] border-card-border"
+                className="size-6 rounded-sm border-[0.5px] border-card-border"
                 style={{ backgroundColor: branding.accentColor }}
               />
             </span>

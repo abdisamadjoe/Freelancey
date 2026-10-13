@@ -2,7 +2,7 @@ import { Body, Controller, Get, Param, Patch, Post, Put, Query, UseGuards } from
 import { AuthGuard, CurrentOrg, CurrentUser, PaginationQueryDto, Roles, RolesGuard } from "../common";
 import { ClientRecordsService } from "./client-records.service";
 import { PublicLeadsService } from "./public-leads.service";
-import { LeadFormSettingsDto } from "./client-records.dto";
+import { ImportLeadsDto, LeadDiscoveryDto, LeadFormSettingsDto } from "./client-records.dto";
 import {
   ClientRecordListQueryDto,
   CreateClientActivityDto,
@@ -29,6 +29,11 @@ export class ClientRecordsController {
   @Put("lead-form")
   setLeadForm(@Body() dto: LeadFormSettingsDto, @CurrentOrg("id") orgId: string) {
     return this.publicLeads.setFormEnabled(orgId, dto.enabled);
+  }
+
+  @Post("import")
+  importLeads(@Body() dto: ImportLeadsDto, @CurrentOrg("id") orgId: string, @CurrentUser("id") userId: string) {
+    return this.service.importLeads(dto.csv, orgId, userId);
   }
 
   @Get()
@@ -58,6 +63,16 @@ export class ClientRecordsController {
     @CurrentUser("id") userId: string,
   ) {
     return this.service.update(id, dto, orgId, userId);
+  }
+
+  @Put(":id/discovery")
+  saveDiscovery(
+    @Param("id") id: string,
+    @Body() dto: LeadDiscoveryDto,
+    @CurrentOrg("id") orgId: string,
+    @CurrentUser("id") userId: string,
+  ) {
+    return this.service.saveDiscovery(id, dto, orgId, userId);
   }
 
   @Post(":id/archive")

@@ -16,6 +16,7 @@ import {
   ACTIVITY_KINDS,
   CLIENT_PRIORITIES,
   CLIENT_STAGES,
+  LEAD_SOURCES,
   LEAD_STATUSES,
 } from "./client-records.constants";
 
@@ -35,7 +36,7 @@ export class CreateClientRecordDto {
 
   @IsOptional() @IsIn(CLIENT_STAGES) stage?: string;
   @IsOptional() @IsIn(LEAD_STATUSES) leadStatus?: string;
-  @IsOptional() @IsString() @MaxLength(100) source?: string;
+  @IsOptional() @IsIn(LEAD_SOURCES) source?: string;
   @IsOptional() @IsString() @MaxLength(200) interestedIn?: string;
 
   @IsOptional()
@@ -60,7 +61,7 @@ export class UpdateClientRecordDto {
 
   @IsOptional() @IsIn(CLIENT_STAGES) stage?: string;
   @IsOptional() @IsIn(LEAD_STATUSES) leadStatus?: string;
-  @IsOptional() @IsString() @MaxLength(100) source?: string | null;
+  @IsOptional() @IsIn(LEAD_SOURCES) source?: string | null;
   @IsOptional() @IsString() @MaxLength(200) interestedIn?: string | null;
 
   @IsOptional()
@@ -109,4 +110,22 @@ export class CreateClientActivityDto {
   @IsOptional()
   @IsDateString()
   occurredAt?: string;
+}
+
+/** What the freelancer learns while talking to the lead. Every field is optional free text. */
+export class LeadDiscoveryDto {
+  @IsOptional() @IsString() @MaxLength(3000) needs?: string;
+  @IsOptional() @IsString() @MaxLength(3000) reason?: string;
+  @IsOptional() @IsString() @MaxLength(500) budget?: string;
+  @IsOptional() @IsString() @MaxLength(500) timeline?: string;
+  @IsOptional() @IsString() @MaxLength(5000) requirements?: string;
+  @IsOptional() @IsString() @MaxLength(5000) notes?: string;
+}
+
+export class ImportLeadsDto {
+  /** The CSV file's text. Capped so it fits the API's default request size. */
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(90_000)
+  csv!: string;
 }

@@ -16,7 +16,7 @@ export const PRESET_COLORS = [
 /** Swatch metric shared by the preset colours and the custom picker. */
 const SWATCH = cn(
   "size-6 rounded-full border-[0.5px] border-card-border transition-transform",
-  "hover:scale-105 active:scale-95 outline-none",
+  "hover:scale-105 active:scale-95 outline-hidden",
   "focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-card-background",
 );
 

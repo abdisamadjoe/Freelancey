@@ -360,7 +360,7 @@ export default function ProjectsPage() {
             {projects.map((project) => (
               <Card
                 key={project.id}
-                className="group overflow-hidden p-0 transition-shadow hover:shadow-sm"
+                className="group overflow-hidden p-0 transition-shadow hover:shadow-xs"
               >
                 <Link
                   href={`/dashboard/projects/${project.id}`}

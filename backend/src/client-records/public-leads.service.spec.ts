@@ -73,7 +73,7 @@ describe("PublicLeadsService", () => {
       email: "kim@x.com",
       stage: "lead",
       leadStatus: "new",
-      source: "website form",
+      source: "website_inquiry",
     });
     const followUp = (data.nextFollowUpAt as Date).getTime();
     expect(followUp).toBeGreaterThanOrEqual(before + 23 * 3600_000);

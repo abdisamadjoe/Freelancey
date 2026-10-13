@@ -56,6 +56,7 @@ export default async function PortalLayout({
     <Suspense fallback={null}>
       <PreviewModeProvider>
         <div
+          data-branded={primaryColor !== DEFAULT_PRIMARY ? "" : undefined}
           style={
             {
               "--primary": primaryColor,

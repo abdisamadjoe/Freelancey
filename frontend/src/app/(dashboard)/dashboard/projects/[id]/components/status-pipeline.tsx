@@ -67,7 +67,7 @@ export function StatusPipeline({
                       aria-current={isCurrent ? "step" : undefined}
                       className={cn(
                         "flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm transition-colors",
-                        "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none",
+                        "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-hidden",
                         isCurrent
                           ? "bg-background-gray-secondary_alt font-medium text-text-primary"
                           : "text-text-tertiary hover:bg-background-gray-secondary_alt/60 hover:text-text-primary",

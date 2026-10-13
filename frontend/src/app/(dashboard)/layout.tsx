@@ -77,6 +77,8 @@ export default async function DashboardLayout({
 
   return (
     <div
+      // Only a customised brand colour overrides the template's own palette.
+      data-branded={primaryColor !== DEFAULT_PRIMARY ? "" : undefined}
       style={
         {
           // Single brand anchor: every brand-derived token follows it.

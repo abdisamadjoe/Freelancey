@@ -116,6 +116,13 @@ export class NotificationsService {
     );
   }
 
+  /** Generic heads-up to the workspace's owners/admins. Fire-and-forget. */
+  notifyAdmins(orgId: string, type: string, title: string, message: string, link: string): void {
+    this.sendToAdmins(orgId, type, title, message, link).catch((err) => {
+      this.logger.error({ err, orgId, type }, "Failed to send admin notification");
+    });
+  }
+
   /** A client accepted their portal invitation. Fire-and-forget. */
   notifyClientJoined(orgId: string, clientId: string, name: string): void {
     this.sendToAdmins(orgId, "client_joined", `${name} joined the portal`, "Their invitation was accepted.", `/dashboard/leads/${clientId}`).catch(

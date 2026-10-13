@@ -7,6 +7,14 @@ import { ArrowLeft, CheckCircle2, FolderPlus, RotateCcw, XCircle } from "lucide-
 import { apiFetch } from "@/lib/api";
 import { useToast } from "@/components/toast";
 import { OnboardingPanel } from "@/components/onboarding-panel";
+import { LeadProposals } from "@/components/lead-proposals";
+import { LeadContracts } from "@/components/lead-contracts";
+import { FormLinkCard } from "@/components/form-link-card";
+import { SupportLinkCard } from "@/components/support-link-card";
+import type { ContractSummary } from "@/lib/contracts";
+import type { ProposalSummary } from "@/lib/proposals";
+import { getNextStep } from "@/lib/next-step";
+import type { ContractContent } from "@/shared";
 import {
   Alert,
   Badge,
@@ -29,6 +37,7 @@ import {
   ACTIVITY_KIND_OPTIONS,
   type ClientActivity,
   type ClientRecord,
+  type LeadDiscovery,
   LEAD_SOURCES,
   LEAD_STATUS_OPTIONS,
   isFollowUpDue,
@@ -53,7 +62,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const { success, error: showError } = useToast();
   const [projectOpen, setProjectOpen] = useState(false);
-  const [projectForm, setProjectForm] = useState({ name: "", startDate: "", endDate: "" });
+  const [projectForm, setProjectForm] = useState({ name: "", startDate: "", endDate: "", budget: "", projectType: "", contractId: "" });
   const [creatingProject, setCreatingProject] = useState(false);
   const [record, setRecord] = useState<ClientDetail | null>(null);
   const [activity, setActivity] = useState<ClientActivity[]>([]);
@@ -69,11 +78,27 @@ export default function LeadDetailPage() {
   const [summary, setSummary] = useState("");
   const [logging, setLogging] = useState(false);
 
+  const [disc, setDisc] = useState<Required<LeadDiscovery>>({
+    needs: "", reason: "", budget: "", timeline: "", requirements: "", notes: "",
+  });
+  const [savingDisc, setSavingDisc] = useState(false);
+
+  const [contracts, setContracts] = useState<ContractSummary[]>([]);
+  const [proposals, setProposals] = useState<ProposalSummary[]>([]);
+  const [creatingContract, setCreatingContract] = useState(false);
   const [lostOpen, setLostOpen] = useState(false);
   const [lostReason, setLostReason] = useState("");
 
   const hydrate = useCallback((r: ClientDetail) => {
     setRecord(r);
+    setDisc({
+      needs: r.discovery?.needs ?? "",
+      reason: r.discovery?.reason ?? "",
+      budget: r.discovery?.budget ?? "",
+      timeline: r.discovery?.timeline ?? "",
+      requirements: r.discovery?.requirements ?? "",
+      notes: r.discovery?.notes ?? "",
+    });
     setF({
       name: r.name,
       company: r.company ?? "",
@@ -136,7 +161,7 @@ export default function LeadDetailPage() {
         phone: blankToNull(f.phone),
         whatsapp: blankToNull(f.whatsapp),
         website: blankToNull(f.website),
-        source: blankToNull(f.source),
+        ...(f.source !== (record?.source ?? "") ? { source: blankToNull(f.source) } : {}),
         interestedIn: blankToNull(f.interestedIn),
         estimatedBudgetCents: budget,
         nextFollowUpAt: f.followUp ? new Date(f.followUp).toISOString() : null,
@@ -145,6 +170,20 @@ export default function LeadDetailPage() {
       "Saved",
     );
     setSaving(false);
+  }
+
+  async function saveDiscovery(e: React.FormEvent) {
+    e.preventDefault();
+    setSavingDisc(true);
+    try {
+      await apiFetch(`/client-records/${id}/discovery`, { method: "PUT", body: JSON.stringify(disc) });
+      await loadActivity();
+      success("Discovery saved");
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not save discovery");
+    } finally {
+      setSavingDisc(false);
+    }
   }
 
   async function handleLog(e: React.FormEvent) {
@@ -176,6 +215,9 @@ export default function LeadDetailPage() {
           clientId: id,
           startDate: projectForm.startDate || undefined,
           endDate: projectForm.endDate || undefined,
+          budgetCents: projectForm.budget.trim() ? Math.round(parseFloat(projectForm.budget) * 100) : undefined,
+          projectType: projectForm.projectType.trim() || undefined,
+          contractId: projectForm.contractId || undefined,
         }),
       });
       success("Project created");
@@ -184,6 +226,33 @@ export default function LeadDetailPage() {
       showError(err instanceof Error ? err.message : "Could not create the project");
     } finally {
       setCreatingProject(false);
+    }
+  }
+
+  /** Opens the project dialog pre-filled from the signed contract, so nothing is typed twice. */
+  async function openProjectDialog() {
+    if (!record) return;
+    const base = { name: `${record.company || record.name} project`, startDate: "", endDate: "", budget: "", projectType: "", contractId: "" };
+    setProjectForm(base);
+    setProjectOpen(true);
+    const signed = contracts.find((c) => c.status === "signed" && !c.projectId);
+    if (!signed) return;
+    try {
+      const [contract, proposal] = await Promise.all([
+        apiFetch<{ content: ContractContent }>(`/contracts/${signed.id}`),
+        signed.proposalId ? apiFetch<{ title: string }>(`/proposals/${signed.proposalId}`).catch(() => null) : Promise.resolve(null),
+      ]);
+      const total = contract.content.payment?.totalAmountCents;
+      setProjectForm({
+        name: proposal?.title ?? base.name,
+        startDate: contract.content.agreement?.startDate?.slice(0, 10) ?? "",
+        endDate: contract.content.agreement?.endDate?.slice(0, 10) ?? "",
+        budget: total ? String(total / 100) : "",
+        projectType: "Website",
+        contractId: signed.id,
+      });
+    } catch {
+      // The dialog still works with the defaults.
     }
   }
 
@@ -206,6 +275,31 @@ export default function LeadDetailPage() {
     );
   }
   if (!record) return <p className="py-10 text-center text-sm text-text-tertiary">Loading...</p>;
+
+  const nextStep = getNextStep({
+    stage: record.stage,
+    leadStatus: record.leadStatus,
+    proposals,
+    contracts,
+    projectCount: record.projects.length,
+  });
+
+  async function runNextStep() {
+    const action = nextStep?.action;
+    if (!action) return;
+    if (action.kind === "open_contract") {
+      router.push(`/dashboard/contracts/${action.contractId}`);
+      return;
+    }
+    setCreatingContract(true);
+    try {
+      const contract = await apiFetch<{ id: string }>(`/contracts/from-proposal/${action.proposalId}`, { method: "POST", body: JSON.stringify({}) });
+      router.push(`/dashboard/contracts/${contract.id}`);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : "Could not create the contract");
+      setCreatingContract(false);
+    }
+  }
 
   const badge = stageBadge(record);
   const isLead = record.stage === "lead";
@@ -259,10 +353,7 @@ export default function LeadDetailPage() {
               <Button
                 size="sm"
                 iconOnly={false}
-                onClick={() => {
-                  setProjectForm({ name: `${record.company || record.name} project`, startDate: "", endDate: "" });
-                  setProjectOpen(true);
-                }}
+                onClick={openProjectDialog}
               >
                 <FolderPlus />
                 <span>Create project</span>
@@ -281,6 +372,19 @@ export default function LeadDetailPage() {
       {record.stage === "lost" && record.lostReason && (
         <Alert status="warning" title="Lost">
           {record.lostReason}
+        </Alert>
+      )}
+
+      {nextStep && (
+        <Alert status={nextStep.tone} title={nextStep.title}>
+          {nextStep.text}
+          {nextStep.action && (
+            <div className="mt-3">
+              <Button size="sm" iconOnly={false} loading={creatingContract} onClick={runNextStep}>
+                {nextStep.action.label}
+              </Button>
+            </div>
+          )}
         </Alert>
       )}
 
@@ -313,9 +417,13 @@ export default function LeadDetailPage() {
               <Field label="Source" htmlFor="d-source">
                 <NativeSelect id="d-source" value={f.source} onChange={set("source")}>
                   <option value="">Not sure</option>
-                  {[...new Set([...(f.source ? [f.source] : []), ...LEAD_SOURCES])].map((s) => (
-                    <option key={s} value={s}>
-                      {s}
+                  {/* Older records can hold a free-text source; keep it selectable so saving never rewrites it. */}
+                  {f.source && !LEAD_SOURCES.some((s) => s.value === f.source) && (
+                    <option value={f.source}>{f.source}</option>
+                  )}
+                  {LEAD_SOURCES.map((s) => (
+                    <option key={s.value} value={s.value}>
+                      {s.label}
                     </option>
                   ))}
                 </NativeSelect>
@@ -399,6 +507,62 @@ export default function LeadDetailPage() {
         </Card>
       </div>
 
+      {(isLead || record.discovery) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Discovery</CardTitle>
+          </CardHeader>
+          <form onSubmit={saveDiscovery} className="space-y-4 p-5 pt-0">
+            <p className="text-sm text-text-secondary">
+              What they need and why, budget, timeline and requirements. Type it in after a call or meeting.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="What do they need?" htmlFor="disc-needs">
+                <Textarea id="disc-needs" rows={3} maxLength={3000} value={disc.needs} onChange={(e) => setDisc((v) => ({ ...v, needs: e.target.value }))} />
+              </Field>
+              <Field label="Why do they need it?" htmlFor="disc-reason">
+                <Textarea id="disc-reason" rows={3} maxLength={3000} value={disc.reason} onChange={(e) => setDisc((v) => ({ ...v, reason: e.target.value }))} />
+              </Field>
+              <Field label="Budget" htmlFor="disc-budget">
+                <Input id="disc-budget" maxLength={500} value={disc.budget} onChange={(e) => setDisc((v) => ({ ...v, budget: e.target.value }))} />
+              </Field>
+              <Field label="Timeline" htmlFor="disc-timeline">
+                <Input id="disc-timeline" maxLength={500} value={disc.timeline} onChange={(e) => setDisc((v) => ({ ...v, timeline: e.target.value }))} />
+              </Field>
+            </div>
+            <Field label="Requirements" htmlFor="disc-req">
+              <Textarea id="disc-req" rows={4} maxLength={5000} value={disc.requirements} onChange={(e) => setDisc((v) => ({ ...v, requirements: e.target.value }))} />
+            </Field>
+            <Field label="Other notes" htmlFor="disc-notes">
+              <Textarea id="disc-notes" rows={3} maxLength={5000} value={disc.notes} onChange={(e) => setDisc((v) => ({ ...v, notes: e.target.value }))} />
+            </Field>
+            <Button type="submit" loading={savingDisc}>
+              {savingDisc ? "Saving..." : "Save discovery"}
+            </Button>
+          </form>
+        </Card>
+      )}
+
+      <LeadProposals
+        clientId={id}
+        canCreate={record.stage === "lead" || record.stage === "active"}
+        onLoaded={setProposals}
+        prefill={{
+          title: `${record.interestedIn || "Project"} proposal for ${record.company || record.name}`,
+          scope: [record.discovery?.needs, record.discovery?.requirements].filter(Boolean).join("\n\n") || undefined,
+          timeline: record.discovery?.timeline,
+        }}
+      />
+
+      <LeadContracts clientId={id} onLoaded={setContracts} />
+
+      {(record.stage === "active" || record.stage === "past") && (
+        <>
+          <FormLinkCard clientId={id} kind="onboarding" hasEmail={Boolean(record.email)} />
+          <SupportLinkCard clientId={id} />
+        </>
+      )}
+
       <OnboardingPanel
         clientId={id}
         stage={record.stage}
@@ -422,6 +586,12 @@ export default function LeadDetailPage() {
               </Field>
               <Field label="Deadline" htmlFor="np-end">
                 <Input id="np-end" type="date" value={projectForm.endDate} onChange={(e) => setProjectForm((v) => ({ ...v, endDate: e.target.value }))} />
+              </Field>
+              <Field label="Budget" htmlFor="np-budget">
+                <Input id="np-budget" type="number" min="0" step="0.01" value={projectForm.budget} onChange={(e) => setProjectForm((v) => ({ ...v, budget: e.target.value }))} />
+              </Field>
+              <Field label="Project type" htmlFor="np-type">
+                <Input id="np-type" value={projectForm.projectType} onChange={(e) => setProjectForm((v) => ({ ...v, projectType: e.target.value }))} maxLength={100} placeholder="e.g. Website" />
               </Field>
             </div>
           </ModalBody>

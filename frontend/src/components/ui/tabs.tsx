@@ -70,9 +70,10 @@ export function TabList({ children, className }: { children: ReactNode; classNam
     <div
       role="tablist"
       className={cn(
-        "flex max-w-full items-center gap-1 overflow-x-auto",
-        variant === "pill" && "rounded-lg bg-tab-background p-1",
-        variant === "line" && "gap-0 border-b border-card-border",
+        // The template's tab list: a tinted track for pills, a bottom rule for underlined tabs.
+        "flex max-w-full items-center overflow-x-auto overflow-y-hidden",
+        variant === "pill" && "gap-1 rounded-lg bg-background-gray-secondary p-1",
+        variant === "line" && "gap-2 border-b border-card-border",
         direction === "vertical" && "flex-col items-stretch",
         className,
       )}
@@ -108,16 +109,12 @@ export function Tab({
       data-active={isActive}
       onClick={() => ctx.setValue(value)}
       className={cn(
-        "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium whitespace-nowrap transition-colors outline-none",
-        "[&>svg]:size-4",
+        "flex shrink-0 items-center gap-2 px-3 text-sm font-medium whitespace-nowrap text-text-100 outline-hidden",
+        "[&>svg]:size-5 [&>svg]:text-current!",
         ctx.variant === "pill" &&
-          (isActive
-            ? "bg-tab-active-background text-text-primary shadow-xs"
-            : "text-text-tertiary hover:text-text-primary"),
+          cn("rounded-md py-2", isActive && "bg-tab-active-background text-title-50 shadow-xs"),
         ctx.variant === "line" &&
-          (isActive
-            ? "-mb-px border-b-2 border-primary-500 px-4 py-3 text-neutral-brand-color"
-            : "px-4 py-3 text-text-tertiary hover:text-text-primary"),
+          cn("py-3.5", isActive && "-mb-px border-b-2 border-primary-500 text-neutral-brand-color"),
         ctx.direction === "vertical" && "justify-start",
         className,
       )}

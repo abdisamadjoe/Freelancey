@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
+import { Close } from "@tailgrids/icons";
 import { useEffect, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 
@@ -44,7 +44,7 @@ export function Sheet({
 
   return createPortal(
     <div className="fixed inset-0 z-50">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} aria-hidden />
       <div
         role="dialog"
         aria-modal="true"
@@ -60,9 +60,9 @@ export function Sheet({
             type="button"
             onClick={onClose}
             aria-label="Close panel"
-            className="absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-md text-icon-tertiary transition-colors hover:bg-background-gray-secondary hover:text-text-primary"
+            className="absolute top-4 right-4 z-10 flex size-7 items-center justify-center rounded-md text-text-100 opacity-70 transition-opacity outline-none hover:opacity-100 focus-visible:ring-2 focus-visible:ring-primary-500 disabled:pointer-events-none [&>svg]:size-5"
           >
-            <X className="size-4" />
+            <Close />
           </button>
         ) : null}
         {children}

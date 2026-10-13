@@ -121,7 +121,7 @@ export function LabelPicker({
                 />
                 <span className="flex-1 truncate text-left">{label.name}</span>
                 <span
-                  className={`flex size-4 items-center justify-center rounded border text-[10px] ${
+                  className={`flex size-4 items-center justify-center rounded-sm border text-[10px] ${
                     assignedSet.has(label.id)
                       ? "border-brand-500 bg-brand-500 text-white-100"
                       : "border-card-border"

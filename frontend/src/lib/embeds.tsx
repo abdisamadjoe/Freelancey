@@ -144,7 +144,7 @@ interface PreviewControlsProps {
 function PreviewControls({ size, onToggleSize, onHide }: PreviewControlsProps) {
   const toggleLabel = size === "full" ? "Collapse preview" : "Expand preview";
   const controlClass =
-    "flex size-6 items-center justify-center rounded-md text-icon-tertiary transition-colors hover:bg-background-gray-secondary_alt hover:text-text-primary focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none";
+    "flex size-6 items-center justify-center rounded-md text-icon-tertiary transition-colors hover:bg-background-gray-secondary_alt hover:text-text-primary focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-hidden";
   return (
     <div className="flex items-center gap-1">
       <button

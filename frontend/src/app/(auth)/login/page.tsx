@@ -44,7 +44,7 @@ export default async function LoginPage() {
     : await getInstanceBranding();
 
   return (
-    <div style={brandedStyle(branding)}>
+    <div style={brandedStyle(branding)} data-branded={branding?.primaryColor ? "" : undefined}>
       <LoginForm
         orgName={branding?.orgName}
         logoSrc={branding?.logoSrc}

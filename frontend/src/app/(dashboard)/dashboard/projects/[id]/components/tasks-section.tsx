@@ -92,7 +92,7 @@ const FILTERS = [
 const ROW_CLASS = cn(
   "w-full rounded-lg border-[0.5px] border-card-border bg-card-background p-2.5 text-left transition-colors",
   "cursor-pointer hover:bg-background-gray-secondary_alt/60",
-  "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none",
+  "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-hidden",
 );
 
 export function TasksSection({
@@ -291,7 +291,7 @@ export function TasksSection({
                   }}
                   className={cn(
                     "rounded-md px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors",
-                    "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-none",
+                    "focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring focus-visible:outline-hidden",
                     isActive
                       ? "bg-tab-active-background text-text-primary shadow-xs"
                       : "text-text-tertiary hover:text-text-primary",

@@ -516,7 +516,7 @@ export default function PeoplePage() {
                 )}
               </CardHeader>
 
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-3 p-0 pt-4">
                 {atMemberLimit ? (
                   <Alert
                     status="warning"
@@ -726,7 +726,7 @@ export default function PeoplePage() {
                                   aria-label={`Role for ${member.user.name}`}
                                   className={cn(
                                     badgeStyles({ color: roleBadgeColor(member.role), size: "sm" }),
-                                    "cursor-pointer border-0 pr-6 text-xs outline-none focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring",
+                                    "cursor-pointer border-0 pr-6 text-xs outline-hidden focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring",
                                   )}
                                 >
                                   <option value="owner">owner</option>
@@ -790,7 +790,7 @@ export default function PeoplePage() {
               )}
             </CardHeader>
 
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-3 p-0 pt-4">
               {atClientLimit ? (
                 <Alert
                   status="warning"

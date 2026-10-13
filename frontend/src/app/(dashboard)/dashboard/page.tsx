@@ -5,6 +5,9 @@ import Link from "next/link";
 import { apiFetch } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { authClient } from "@/lib/auth/client";
+import { PipelineSummary } from "@/components/pipeline-summary";
+import { OverviewStatsGrid } from "@/components/common/overview-stats";
+import OverviewStatsSkeleton from "@/components/common/overview-stats/skeleton";
 import {
   Alert,
   Card,
@@ -13,8 +16,6 @@ import {
   CardTitle,
   EmptyState,
   PageHeader,
-  StatCard,
-  StatCardSkeleton,
   StatusBadge,
   TableBody,
   TableCell,
@@ -26,11 +27,8 @@ import {
 } from "@/components/ui";
 import {
   FolderKanban,
-  TrendingUp,
-  DollarSign,
   Plus,
   ArrowUpRight,
-  Receipt,
   UserPlus,
 } from "lucide-react";
 
@@ -115,61 +113,30 @@ export default function DashboardPage() {
       {error && <Alert status="error">{error}</Alert>}
 
       {/* Workspace metrics */}
-      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-        {stats === null ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
-        ) : (
-          <>
-            <StatCard
-              title="Total Projects"
-              value={stats.total}
-              icon={FolderKanban}
-              tone="brand"
-              footer={
-                <p className="text-xs leading-5 text-text-tertiary">Active in workspace</p>
-              }
-            />
-            <StatCard
-              title="In Progress"
-              value={stats.inProgress}
-              icon={TrendingUp}
-              tone="blue"
-              footer={
-                <p className="text-xs leading-5 text-text-tertiary">
-                  Active development &amp; tasks
-                </p>
-              }
-            />
-            <StatCard
-              title="Outstanding Receivables"
-              value={invoiceStats ? formatCurrency(invoiceStats.outstandingAmount) : "$0.00"}
-              icon={Receipt}
-              tone="red"
-              footer={
-                <p className="text-xs leading-5 text-text-tertiary">
-                  Unpaid balance for period
-                </p>
-              }
-            />
-            <StatCard
-              title="Total Collected"
-              value={invoiceStats ? formatCurrency(invoiceStats.paidAmount) : "$0.00"}
-              icon={DollarSign}
-              tone="violet"
-              footer={
-                <p className="text-xs leading-5 text-text-tertiary">
-                  Net paid revenue &amp; invoices
-                </p>
-              }
-            />
-          </>
-        )}
-      </div>
+      {stats === null ? (
+        <OverviewStatsSkeleton />
+      ) : (
+        <OverviewStatsGrid
+          stats={[
+            { id: "projects", title: "Total Projects", value: stats.total, style: "orange" },
+            { id: "in-progress", title: "In Progress", value: stats.inProgress, style: "blue" },
+            {
+              id: "receivables",
+              title: "Outstanding Receivables",
+              value: invoiceStats ? formatCurrency(invoiceStats.outstandingAmount) : "$0.00",
+              style: "purple",
+            },
+            {
+              id: "collected",
+              title: "Total Collected",
+              value: invoiceStats ? formatCurrency(invoiceStats.paidAmount) : "$0.00",
+              style: "green",
+            },
+          ]}
+        />
+      )}
+
+      <PipelineSummary />
 
       {/* Follow-ups due */}
       {dueLeads && dueLeads.total > 0 && (

@@ -33,6 +33,13 @@ import { OrganizationsModule } from "./organizations/organizations.module";
 import { ContractsModule } from "./contracts/contracts.module";
 import { ClientRecordsModule } from "./client-records/client-records.module";
 import { ClientOnboardingModule } from "./client-onboarding/client-onboarding.module";
+import { ProposalsModule } from "./proposals/proposals.module";
+import { FormLinksModule } from "./form-links/form-links.module";
+import { ProjectWorkflowModule } from "./project-workflow/project-workflow.module";
+import { DeliverablesModule } from "./deliverables/deliverables.module";
+import { HandoverModule } from "./handover/handover.module";
+import { SupportModule } from "./support/support.module";
+import { PipelineModule } from "./pipeline/pipeline.module";
 import { AppController } from "./app.controller";
 import { HealthController } from "./health.controller";
 import { SessionMiddleware } from "./auth/session.middleware";
@@ -95,6 +102,13 @@ import { PlanGuard } from "./common/guards/plan.guard";
     ContractsModule,
     ClientRecordsModule,
     ClientOnboardingModule,
+    ProposalsModule,
+    FormLinksModule,
+    ProjectWorkflowModule,
+    DeliverablesModule,
+    HandoverModule,
+    SupportModule,
+    PipelineModule,
   ],
   controllers: [AppController, HealthController],
   providers: [

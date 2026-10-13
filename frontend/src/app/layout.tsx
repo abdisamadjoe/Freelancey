@@ -1,25 +1,14 @@
 import type { Metadata } from "next";
-import { Manrope, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
 import Script from "next/script";
 import { Providers } from "./providers";
 import { themeInitScript } from "@/lib/theme";
 import "./globals.css";
 
-// Only regular/medium/semibold are loaded — bold (700) and heavier weights
-// are never used in this app, so there's no reason to ship those font files.
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-manrope",
-});
-
-// Inter is used only for numeric values (money, metrics, durations, table
-// number columns) via the `font-numeric` utility — its tabular figures keep
-// digits fixed-width, which Manrope's numerals don't guarantee.
+// The dashboard template's typeface.
 const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
   variable: "--font-inter",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -70,7 +59,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${manrope.variable} ${inter.variable}`}
+      className={`${inter.variable} ${inter.className} antialiased`}
       suppressHydrationWarning
     >
       <head>

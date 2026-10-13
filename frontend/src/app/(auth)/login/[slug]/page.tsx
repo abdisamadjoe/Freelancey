@@ -42,7 +42,7 @@ export default async function BrandedLoginPage({
   if (!branding) notFound();
 
   return (
-    <div style={brandedStyle(branding)}>
+    <div style={brandedStyle(branding)} data-branded={branding?.primaryColor ? "" : undefined}>
       <LoginForm
         orgName={branding.orgName}
         logoSrc={branding.logoSrc}

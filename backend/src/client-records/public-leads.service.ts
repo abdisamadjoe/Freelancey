@@ -5,7 +5,7 @@ import { ActivityService } from "../activity/activity.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { PublicLeadDto } from "./public-leads.dto";
 
-const SOURCE = "website form";
+const SOURCE = "website_inquiry";
 /** Stop creating records if a single workspace receives this many form leads in an hour. */
 const HOURLY_CAP = 30;
 const DAY_MS = 24 * 60 * 60 * 1000;

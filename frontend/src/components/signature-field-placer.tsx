@@ -426,7 +426,7 @@ export function SignatureFieldPlacer({
                       key={field.id}
                       data-field
                       className={cn(
-                        "absolute flex items-center justify-center rounded border-2 border-dashed select-none",
+                        "absolute flex items-center justify-center rounded-sm border-2 border-dashed select-none",
                         colors.border,
                         colors.bg,
                       )}

@@ -690,7 +690,7 @@ export function FilesSection({
                           aria-expanded={hasDetail ? isExpanded : undefined}
                           disabled={!hasDetail}
                           aria-label={hasDetail ? (isExpanded ? "Hide document details" : "Show document details") : "Document"}
-                          className="flex w-full items-start gap-3 rounded-md text-left outline-none focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring disabled:cursor-default"
+                          className="flex w-full items-start gap-3 rounded-md text-left outline-hidden focus-visible:ring-4 focus-visible:ring-button-outline-focus-ring disabled:cursor-default"
                         >
                           {isExpanded ? (
                             <ChevronDown className="mt-0.5 size-4 shrink-0 text-icon-tertiary" aria-hidden />
@@ -992,7 +992,7 @@ export function FilesSection({
                     onClick={handleCardClick}
                     onKeyDown={(e) => handleFileRowKeyDown(e, handleCardClick)}
                     data-testid={`file-row-${file.id}`}
-                    className="cursor-pointer transition-colors hover:bg-background-gray-secondary_alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-button-primary-focus-ring"
+                    className="cursor-pointer transition-colors hover:bg-background-gray-secondary_alt focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-button-primary-focus-ring"
                   >
                     <TableCell className="font-normal">
                       <div className="flex min-w-0 items-start gap-2.5">

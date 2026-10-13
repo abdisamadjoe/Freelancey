@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("h-3 animate-pulse rounded-full bg-skeleton-gradient-50", className)}
+      className={cn("h-3 animate-pulse-custom rounded-full bg-skeleton-gradient-50", className)}
       {...props}
     />
   );

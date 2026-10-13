@@ -3,7 +3,11 @@ import { applyTheme, getActiveTheme, getStoredTheme, nextTheme, setTheme, themeI
 
 function fakeDom(opts: { stored?: string | null; systemDark?: boolean; storageThrows?: boolean }) {
   const classes = new Set<string>();
+  const attrs = new Map<string, string>();
   const root = {
+    setAttribute: (name: string, value: string) => {
+      attrs.set(name, value);
+    },
     classList: {
       toggle: (name: string, force?: boolean) => {
         if (force === undefined ? !classes.has(name) : force) classes.add(name);
@@ -29,7 +33,7 @@ function fakeDom(opts: { stored?: string | null; systemDark?: boolean; storageTh
   vi.stubGlobal("document", { documentElement: root });
   vi.stubGlobal("localStorage", localStorage);
   vi.stubGlobal("window", { matchMedia });
-  return { root, classes, store };
+  return { root, classes, store, attrs };
 }
 
 afterEach(() => vi.unstubAllGlobals());
@@ -41,6 +45,7 @@ describe("themeInitScript (runs before first paint)", () => {
     const d = fakeDom({ stored: "dark", systemDark: false });
     run();
     expect(d.classes.has("dark")).toBe(true);
+    expect(d.attrs.get("data-theme")).toBe("dark");
     expect(d.root.style.colorScheme).toBe("dark");
   });
 
@@ -49,6 +54,7 @@ describe("themeInitScript (runs before first paint)", () => {
     d.classes.add("dark");
     run();
     expect(d.classes.has("dark")).toBe(false);
+    expect(d.attrs.get("data-theme")).toBe("light");
     expect(d.root.style.colorScheme).toBe("light");
   });
 

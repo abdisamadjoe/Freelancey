@@ -14,10 +14,7 @@ const TONE_STYLES: Record<StatTone, string> = {
   brand: "bg-badge-primary-background text-neutral-brand-color",
 };
 
-/**
- * Metric card matching the NextAdmin overview stats
- * (dashboard/.../overview-stats/index.tsx): icon chip, value, label + delta.
- */
+/** Metric card props. Renders the template's overview stat card. */
 export interface StatCardProps {
   title: string;
   value: ReactNode;
@@ -41,26 +38,24 @@ export function StatCard({
   className,
 }: StatCardProps) {
   return (
-    <Card className={cn("flex flex-col", className)}>
-      <div
-        className={cn(
-          "flex size-8 items-center justify-center rounded-lg [&>svg]:size-4.5",
-          TONE_STYLES[tone],
-        )}
-      >
-        <Icon aria-hidden />
+    // The template's overview stat card (overview-stats/index.tsx): icon tile, value, label and change.
+    <Card className={className}>
+      <div className="relative flex w-full flex-wrap items-center justify-between gap-3">
+        <div className={cn("flex size-8 items-center justify-center rounded-lg [&>svg]:size-4.5", TONE_STYLES[tone])}>
+          <Icon aria-hidden />
+        </div>
       </div>
 
-      <div className="mt-6 font-numeric text-2xl leading-8 font-semibold tracking-[-0.3px] text-text-primary tabular-nums">
-        {value}
+      <div className="mt-6 p-0">
+        <div className="mb-1.25 text-xl leading-7 font-semibold text-text-primary md:text-2xl md:leading-8">{value}</div>
       </div>
 
-      <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="truncate text-sm leading-5 font-medium text-text-tertiary">{title}</span>
+      <div className="flex items-center justify-between p-0">
+        <span className="text-sm leading-5 font-medium text-text-tertiary">{title}</span>
         {change ? (
           <span
             className={cn(
-              "flex shrink-0 items-center gap-0.5 font-numeric text-sm leading-5 font-medium tabular-nums",
+              "flex items-center gap-1 text-sm leading-5 font-medium",
               isPositive ? "text-green-600" : "text-red-600",
             )}
           >

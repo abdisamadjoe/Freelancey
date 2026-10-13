@@ -227,7 +227,7 @@ export function ContractPreview({
         </h2>
         <div className="grid grid-cols-1 gap-8 pt-4 md:grid-cols-2">
           <div className="space-y-6">
-            <div className="flex h-12 items-end border-b border-border-color-base-300 pb-1">
+            <div className="flex h-12 items-end border-b border-(color:--border-color-base-300) pb-1">
               <span className="text-xs text-text-tertiary italic">Signature Placeholder</span>
             </div>
             <div>
@@ -236,7 +236,7 @@ export function ContractPreview({
             </div>
           </div>
           <div className="space-y-6">
-            <div className="flex h-12 items-end border-b border-border-color-base-300 pb-1">
+            <div className="flex h-12 items-end border-b border-(color:--border-color-base-300) pb-1">
               <span className="text-xs text-text-tertiary italic">Signature Placeholder</span>
             </div>
             <div>

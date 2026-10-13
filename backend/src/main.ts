@@ -51,6 +51,12 @@ const appSecret = process.env.APP_ENCRYPTION_SECRET!;
 const isProduction = process.env.NODE_ENV === "production";
 
 if (isProduction) {
+  // Emails and secure links (proposals, contracts, forms, reviews) are built from WEB_URL;
+  // without it clients would be sent links to localhost.
+  if (!process.env.WEB_URL) {
+    console.error("FATAL: WEB_URL must be set in production. Secure links sent to clients are built from it.");
+    process.exit(1);
+  }
   if (appSecret === DEFAULT_SECRET) {
     console.error(
       "FATAL: APP_ENCRYPTION_SECRET is set to the default value. " +

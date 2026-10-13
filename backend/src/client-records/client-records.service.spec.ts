@@ -194,4 +194,55 @@ describe("ClientRecordsService", () => {
       expect(activity.findByClient).not.toHaveBeenCalled();
     });
   });
+
+  describe("discovery", () => {
+    it("404s for another organization's record and writes nothing", async () => {
+      await expect(service.saveDiscovery("other", { needs: "site" }, ORG, USER)).rejects.toBeInstanceOf(NotFoundException);
+      expect(client.update).not.toHaveBeenCalled();
+    });
+
+    it("trims values, drops blanks and logs the change", async () => {
+      client.findFirst.mockResolvedValue({ id: "c1" });
+      await service.saveDiscovery("c1", { needs: " New site ", budget: "   ", timeline: "6 weeks" }, ORG, USER);
+      expect(client.update.mock.calls[0][0].data).toEqual({ discovery: { needs: "New site", timeline: "6 weeks" } });
+      expect(activity.createForClient).toHaveBeenCalledWith(
+        expect.objectContaining({ action: "discovery_saved", organizationId: ORG }),
+      );
+    });
+  });
+
+  describe("importLeads", () => {
+    const csv = "Name,Email,Phone,Website\nAnn,ann@x.com,,https://www.ann.com\nBob,,+254700,\nAnn Again,ann@x.com,,\nSite Dup,,123,ann.com\nNoContact,,,\n";
+
+    it("rejects an empty file and one that is too long", async () => {
+      await expect(service.importLeads("Name\n", ORG, USER)).rejects.toBeInstanceOf(BadRequestException);
+      const big = "Name,Phone\n" + Array.from({ length: 201 }, (_, i) => `L${i},${i}`).join("\n");
+      await expect(service.importLeads(big, ORG, USER)).rejects.toBeInstanceOf(BadRequestException);
+    });
+
+    it("creates new leads as source import, skips duplicates and reports bad rows", async () => {
+      const res = await service.importLeads(csv, ORG, USER);
+      expect(res.created).toBe(2);
+      expect(res.skipped.map((s) => s.line)).toEqual([4, 5]);
+      expect(res.problems.map((p) => p.line)).toEqual([6]);
+      const first = client.create.mock.calls[0][0].data;
+      expect(first).toMatchObject({ organizationId: ORG, name: "Ann", source: "import", stage: "lead", leadStatus: "new", ownerId: USER });
+      expect(activity.createForClient).toHaveBeenCalledTimes(2);
+    });
+
+    it("skips leads that already exist in the workspace by email or website", async () => {
+      client.findMany.mockResolvedValue([{ email: "ann@x.com", website: null }, { email: null, website: "https://bob.com/" }]);
+      const res = await service.importLeads("Name,Email,Website,Phone\nAnn,ANN@x.com,,1\nBobby,,www.bob.com,2\nNew,new@x.com,,3\n", ORG, USER);
+      expect(res.created).toBe(1);
+      expect(res.skipped).toHaveLength(2);
+      expect(client.findMany.mock.calls[0][0].where.organizationId).toBe(ORG);
+    });
+
+    it("reports a row that fails to save instead of aborting the import", async () => {
+      client.create.mockRejectedValueOnce(new Error("db"));
+      const res = await service.importLeads("Name,Phone\nA,1\nB,2\n", ORG, USER);
+      expect(res.created).toBe(1);
+      expect(res.problems).toEqual([{ line: 2, reason: "Could not be saved" }]);
+    });
+  });
 });

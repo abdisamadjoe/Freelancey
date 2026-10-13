@@ -128,6 +128,7 @@ export class ContractsService {
       where: { id, organizationId },
       include: {
         project: { select: { id: true, name: true } },
+        clientRecord: { select: { id: true, name: true, email: true, stage: true } },
         versions: { orderBy: { version: "desc" } },
       },
     });
@@ -144,6 +145,9 @@ export class ContractsService {
     if (contract.status === CONTRACT_STATUSES.VOID) {
       throw new BadRequestException("Cannot edit a void contract");
     }
+    if (contract.status === CONTRACT_STATUSES.SIGNED) {
+      throw new BadRequestException("A signed contract cannot be edited");
+    }
 
     const data: Record<string, unknown> = {};
     // Editing a contract that already went out starts a new draft version; the
@@ -151,6 +155,7 @@ export class ContractsService {
     if (dto.content !== undefined && contract.status !== CONTRACT_STATUSES.DRAFT) {
       data.version = contract.version + 1;
       data.status = CONTRACT_STATUSES.DRAFT;
+      data.tokenHash = null; // the link that went out with the old version stops working
     }
     if (dto.title !== undefined) data.title = dto.title;
     if (dto.template !== undefined) data.template = dto.template;
@@ -190,7 +195,7 @@ export class ContractsService {
         title: contract.title,
         version,
         status: contract.status,
-        projectName: contract.project.name,
+        projectName: contract.project?.name ?? contract.title,
         content: content as unknown as ContractContent,
       },
       organizationId,
@@ -202,6 +207,9 @@ export class ContractsService {
       where: { id, organizationId },
     });
     if (!contract) throw new NotFoundException("Contract not found");
+    if (!contract.projectId) {
+      throw new BadRequestException("Send this contract with a signing link instead");
+    }
 
     // "generated" is a legacy status from when PDFs were stored; treat it as a draft.
     const sendable: string[] = [CONTRACT_STATUSES.DRAFT, CONTRACT_STATUSES.GENERATED];
@@ -331,6 +339,8 @@ export class ContractsService {
     });
     if (!contract) throw new NotFoundException("Contract not found");
 
+    // Contracts written from a proposal have no project and are signed through their own link.
+    if (!contract.projectId) throw new ForbiddenException("You are not assigned to this project");
     const assignment = await this.prisma.projectClient.findFirst({
       where: { projectId: contract.projectId, userId: clientUserId },
     });
