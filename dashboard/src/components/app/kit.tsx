@@ -30,6 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/tailgrids/core/select";
+import { Pagination } from "@/components/tailgrids/core/pagination";
 import { Skeleton } from "@/components/tailgrids/core/skeleton";
 import { Spinner } from "@/components/tailgrids/core/spinner";
 import {
@@ -604,4 +605,190 @@ export function ErrorNote({ error, onRetry }: { error: unknown; onRetry?: () => 
 
 export function Muted({ children, className }: { children: ReactNode; className?: string }) {
   return <span className={cn("text-sm text-text-tertiary", className)}>{children}</span>;
+}
+
+/* ───────────────────────── Shared status vocabulary ───────────────────────── */
+
+const STATUS_COLORS: Record<string, BadgeColor> = {
+  not_started: "gray",
+  in_progress: "blue",
+  in_review: "warning",
+  completed: "success",
+  on_hold: "gray",
+  cancelled: "error",
+  archived: "gray",
+  open: "gray",
+  done: "success",
+  draft: "gray",
+  sent: "blue",
+  viewed: "violet",
+  paid: "success",
+  overdue: "error",
+  void: "gray",
+  voided: "gray",
+  pending: "warning",
+  accepted: "success",
+  declined: "error",
+  rejected: "error",
+  acknowledged: "blue",
+  signed: "success",
+  expired: "gray",
+  active: "success",
+  inactive: "gray",
+  failed: "error",
+  resolved: "success",
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  not_started: "Not Started",
+  in_progress: "In Progress",
+  in_review: "In Review",
+  completed: "Completed",
+};
+
+export function statusColor(status: string | null | undefined): BadgeColor {
+  if (!status) return "gray";
+  return STATUS_COLORS[status.toLowerCase().replace(/[\s-]+/g, "_")] ?? "gray";
+}
+
+export function statusLabel(status: string | null | undefined): string {
+  if (!status) return "-";
+  const key = status.toLowerCase().replace(/[\s-]+/g, "_");
+  if (STATUS_LABELS[key]) return STATUS_LABELS[key];
+  return key
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+export function StatusPill({ status, label }: { status: string | null | undefined; label?: string }) {
+  return <Badge color={statusColor(status)}>{label ?? statusLabel(status)}</Badge>;
+}
+
+/* ───────────────────────── Lists, definition rows, toolbars ───────────────────────── */
+
+/** Card with divided rows (the "last transactions" list pattern). */
+export function ListRows({ children, className }: { children: ReactNode; className?: string }) {
+  return <ul className={cn("divide-y divide-card-border", className)}>{children}</ul>;
+}
+
+export function ListRow({
+  href,
+  onClick,
+  children,
+  className,
+}: {
+  href?: string;
+  onClick?: () => void;
+  children: ReactNode;
+  className?: string;
+}) {
+  const body = "flex items-center justify-between gap-3 px-5 py-3 text-left";
+  if (href) {
+    return (
+      <li>
+        <Link href={href} className={cn(body, "transition-colors hover:bg-background-gray-primary", className)}>
+          {children}
+        </Link>
+      </li>
+    );
+  }
+  if (onClick) {
+    return (
+      <li>
+        <button type="button" onClick={onClick} className={cn(body, "w-full transition-colors hover:bg-background-gray-primary", className)}>
+          {children}
+        </button>
+      </li>
+    );
+  }
+  return <li className={cn(body, className)}>{children}</li>;
+}
+
+export function DefList({ rows }: { rows: { label: ReactNode; value: ReactNode }[] }) {
+  return (
+    <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
+      {rows.map((r, i) => (
+        <div key={i} className="min-w-0">
+          <dt className="text-xs text-text-tertiary">{r.label}</dt>
+          <dd className="mt-0.5 text-sm break-words text-text-primary">{r.value || <span className="text-text-tertiary">-</span>}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+export function Toolbar({ children }: { children: ReactNode }) {
+  return <div className="flex flex-wrap items-center gap-3">{children}</div>;
+}
+
+export function SearchBox({
+  value,
+  onChange,
+  placeholder = "Search...",
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  className?: string;
+}) {
+  return (
+    <TextField className={cn("w-full sm:w-72", className)} value={value} onChange={onChange} aria-label={placeholder}>
+      <Input placeholder={placeholder} className={INPUT} type="search" />
+    </TextField>
+  );
+}
+
+export function PagerRow({
+  page,
+  totalPages,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+}) {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="w-full">
+      <Pagination currentPage={page} totalPages={totalPages} onPageChange={onPageChange} />
+    </div>
+  );
+}
+
+export function LabelChip({ name, color }: { name: string; color: string }) {
+  const r = parseInt(color.slice(1, 3), 16);
+  const g = parseInt(color.slice(3, 5), 16);
+  const b = parseInt(color.slice(5, 7), 16);
+  const dark = (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5;
+  return (
+    <span
+      className="inline-flex items-center rounded-full px-2 py-0.5 text-xs leading-4 font-medium whitespace-nowrap"
+      style={{ backgroundColor: color, color: dark ? "#000000" : "#ffffff" }}
+    >
+      {name}
+    </span>
+  );
+}
+
+export function money(cents: number, currency = "USD"): string {
+  try {
+    return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(cents / 100);
+  } catch {
+    return `${(cents / 100).toFixed(2)} ${currency}`;
+  }
+}
+
+export function fmtDate(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleDateString() : "-";
+}
+
+export function fmtDateTime(iso: string | null | undefined): string {
+  return iso ? new Date(iso).toLocaleString() : "-";
+}
+
+export interface Paginated<T> {
+  data: T[];
+  meta: { total: number; page: number; limit: number; totalPages: number };
 }
