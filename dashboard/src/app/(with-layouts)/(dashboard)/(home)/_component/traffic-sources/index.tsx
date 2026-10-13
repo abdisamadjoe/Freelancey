@@ -7,24 +7,37 @@ import { MenuDotsIcon } from "@/utils/icon";
 import { useQuery } from "@tanstack/react-query";
 import TrafficSourcesSkeleton from "./skeleton";
 import { mapTrafficSourcesResponse } from "./utils";
+import type { TrafficSourceViewModel } from "./types";
 
-export default function TrafficSources() {
+interface TrafficSourcesProps {
+  /** Rows to show instead of the template's mock API data. */
+  sources?: TrafficSourceViewModel[];
+  title?: string;
+  valueHeading?: string;
+}
+
+export default function TrafficSources({
+  sources: providedSources,
+  title = "Traffic Sources",
+  valueHeading = "Impression",
+}: TrafficSourcesProps) {
   const { data, isLoading } = useQuery({
     queryKey: ["traffic-sources"],
     queryFn: getTrafficSourcesData,
+    enabled: !providedSources,
   });
 
-  if (isLoading || !data) {
+  if (!providedSources && (isLoading || !data)) {
     return <TrafficSourcesSkeleton />;
   }
 
-  const sources = mapTrafficSourcesResponse(data);
+  const sources = providedSources ?? mapTrafficSourcesResponse(data!);
 
   return (
     <Card>
       {/* Header */}
       <CardHeader className="mb-6">
-        <CardTitle className="leading-6 font-semibold text-text-primary">Traffic Sources</CardTitle>
+        <CardTitle className="leading-6 font-semibold text-text-primary">{title}</CardTitle>
 
         <Button iconOnly size="xs" variant="ghost">
           <MenuDotsIcon />
@@ -35,7 +48,7 @@ export default function TrafficSources() {
       <CardContent className="flex flex-col p-0">
         <div className="mb-3.5 flex items-center justify-between">
           <span className="block text-sm leading-5 font-medium text-text-tertiary">Source</span>
-          <span className="block text-sm leading-5 font-medium text-text-tertiary">Impression</span>
+          <span className="block text-sm leading-5 font-medium text-text-tertiary">{valueHeading}</span>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -43,7 +56,7 @@ export default function TrafficSources() {
             <div key={index} className="flex items-center justify-between">
               <div className="flex h-8 max-w-[90%] flex-1 items-center">
                 <div
-                  className="flex h-full items-center rounded bg-background-gray-secondary_alt px-3"
+                  className="flex h-full min-w-fit items-center rounded bg-background-gray-secondary_alt px-3 whitespace-nowrap"
                   style={{ width: `${source.percentage}%` }}
                 >
                   <span className="text-sm font-medium text-text-primary">{source.name}</span>

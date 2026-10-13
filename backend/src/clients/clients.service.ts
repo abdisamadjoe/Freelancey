@@ -9,7 +9,7 @@ import { render } from "@react-email/render";
 import { InvitationEmail } from "@/email";
 import { PrismaService } from "../prisma/prisma.service";
 import { AuthService } from "../auth/auth.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { MailService } from "../mail/mail.service";
 import { UpdateClientProfileDto } from "./client-profile.dto";
 
@@ -20,7 +20,7 @@ export class ClientsService {
     private authService: AuthService,
     private mail: MailService,
     private config: ConfigService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   /** Invites a client (or, less commonly, a teammate) to the organization. */
@@ -85,7 +85,7 @@ export class ClientsService {
     if (member.role === "owner" && requestingRole !== "owner") {
       throw new ForbiddenException("Only owners can reset another owner");
     }
-    const user = await this.neonAuthUsers.findUnique(member.userId);
+    const user = await this.authUsers.findUnique(member.userId);
     if (!user?.email) {
       throw new NotFoundException("Member has no email on file");
     }

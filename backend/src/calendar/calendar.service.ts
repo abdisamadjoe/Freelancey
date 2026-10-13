@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { CALENDAR_EVENT_TYPES, type CalendarEvent } from "@/shared";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { CalendarQueryDto } from "./calendar.dto";
 
 export type { CalendarEvent };
@@ -12,7 +12,7 @@ const VALID_TYPES = new Set<string>(CALENDAR_EVENT_TYPES);
 export class CalendarService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   async list(orgId: string, query: CalendarQueryDto): Promise<CalendarEvent[]> {
@@ -123,7 +123,7 @@ export class CalendarService {
     const events: CalendarEvent[] = [];
 
     const assigneeIds = [...new Set(tasks.map((t) => t.assigneeId).filter((id): id is string => !!id))];
-    const assignees = await this.neonAuthUsers.findMany(assigneeIds);
+    const assignees = await this.authUsers.findMany(assigneeIds);
     const assigneeNameById = new Map(assignees.map((a) => [a.id, a.name]));
 
     for (const t of tasks) {

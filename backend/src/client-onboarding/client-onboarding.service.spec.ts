@@ -6,7 +6,7 @@ import type { MailService } from "../mail/mail.service";
 import type { ConfigService } from "@nestjs/config";
 import type { ActivityService } from "../activity/activity.service";
 import type { NotificationsService } from "../notifications/notifications.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 
 const ORG = "org-1";
 const CLIENT = "c1";
@@ -54,7 +54,7 @@ function build() {
     config as unknown as ConfigService,
     activity as unknown as ActivityService,
     notifications as unknown as NotificationsService,
-    neon as unknown as NeonAuthUsersRepository,
+    neon as unknown as AuthUsersRepository,
   );
   return { service, prisma, mail, activity, notifications, neon };
 }

@@ -31,11 +31,7 @@ loadEnv(resolve(process.cwd(), ".env"));
 // Initialize Sentry after env vars are loaded and before NestJS bootstrap
 initSentry();
 
-const required = [
-  "DATABASE_URL",
-  "APP_ENCRYPTION_SECRET",
-  "NEON_AUTH_BASE_URL",
-];
+const required = ["DATABASE_URL", "APP_ENCRYPTION_SECRET"];
 for (const key of required) {
   if (!process.env[key]) {
     console.error(`Missing required environment variable: ${key}`);
@@ -44,8 +40,7 @@ for (const key of required) {
 }
 
 // App encryption secret validation (used to derive AES/HMAC key material for
-// settings encryption, push subscriptions, and payment signing — decoupled
-// from the auth provider now that Neon Auth manages its own signing keys)
+// settings encryption, push subscriptions, and payment signing)
 const DEFAULT_SECRET = "change-me-in-production";
 const appSecret = process.env.APP_ENCRYPTION_SECRET!;
 const isProduction = process.env.NODE_ENV === "production";
@@ -82,6 +77,8 @@ if (isProduction) {
 
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
+import { BetterAuthService } from "./auth/better-auth.service";
+import type { NextFunction, Request, Response } from "express";
 import { ValidationPipe, RequestMethod } from "@nestjs/common";
 import { Logger } from "nestjs-pino";
 import cookieParser from "cookie-parser";
@@ -125,6 +122,15 @@ async function bootstrap() {
   app.enableCors({
     origin: process.env.WEB_URL || "http://localhost:3000",
     credentials: true,
+  });
+
+  // Better Auth serves /api/auth/* itself. It reads the raw request body, so it must be
+  // mounted before Nest registers its body parsers (they are added when the app starts).
+  // `/api/auth/me` stays with the Nest controller.
+  const authHandler = await app.get(BetterAuthService).nodeHandler();
+  expressApp.all("/api/auth/*splat", (req: Request, res: Response, next: NextFunction) => {
+    if (req.path === "/api/auth/me") return next();
+    return authHandler(req, res);
   });
 
   app.useGlobalPipes(

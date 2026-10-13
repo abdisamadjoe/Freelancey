@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { SearchService } from "./search.service";
 import type { PrismaService } from "../prisma/prisma.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -39,10 +39,10 @@ const mockPrisma = {
 };
 
 // ---------------------------------------------------------------------------
-// Mock NeonAuthUsersRepository
+// Mock AuthUsersRepository
 // ---------------------------------------------------------------------------
 
-const mockNeonAuthUsers = {
+const mockAuthUserRows = {
   searchByNameOrEmail: vi.fn(() => Promise.resolve([])),
 };
 
@@ -83,7 +83,7 @@ function makeFile(overrides: Record<string, unknown> = {}) {
 
 // A raw row as returned by `prisma.member.findMany` (post-migration select is
 // just `{ id, userId }` — the display name/email come from a separate
-// NeonAuthUsersRepository lookup, not a Prisma relation).
+// AuthUsersRepository lookup, not a Prisma relation).
 function makeMember(overrides: Record<string, unknown> = {}) {
   return {
     id: "member-1",
@@ -92,8 +92,8 @@ function makeMember(overrides: Record<string, unknown> = {}) {
   };
 }
 
-// A row as returned by `neonAuthUsers.searchByNameOrEmail`.
-function makeNeonAuthUser(overrides: Record<string, unknown> = {}) {
+// A row as returned by `authUsers.searchByNameOrEmail`.
+function makeAuthUserRow(overrides: Record<string, unknown> = {}) {
   return {
     id: "user-1",
     name: "Alice Alpha",
@@ -120,7 +120,7 @@ function clearAllMocks() {
   mockPrisma.file.findMany.mockClear();
   mockPrisma.member.findMany.mockClear();
   mockPrisma.clientProfile.findMany.mockClear();
-  mockNeonAuthUsers.searchByNameOrEmail.mockClear();
+  mockAuthUserRows.searchByNameOrEmail.mockClear();
 }
 
 function resetAllMocksToEmpty() {
@@ -137,8 +137,8 @@ function resetAllMocksToEmpty() {
   // Default: one matching Neon Auth user, so the member query (which is only
   // fired when there's at least one matching user id) still exercises its
   // where/select/take shape in tests that don't care about the matching path.
-  mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
-    Promise.resolve([makeNeonAuthUser()]),
+  mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
+    Promise.resolve([makeAuthUserRow()]),
   );
 }
 
@@ -154,7 +154,7 @@ describe("SearchService", () => {
     resetAllMocksToEmpty();
     service = new SearchService(
       mockPrisma as unknown as PrismaService,
-      mockNeonAuthUsers as unknown as NeonAuthUsersRepository,
+      mockAuthUserRows as unknown as AuthUsersRepository,
     );
   });
 
@@ -449,7 +449,7 @@ describe("SearchService", () => {
     it("looks up matching Neon Auth users by name or email before querying members", async () => {
       await service.search(ORG, QUERY);
 
-      expect(mockNeonAuthUsers.searchByNameOrEmail).toHaveBeenCalledWith(
+      expect(mockAuthUserRows.searchByNameOrEmail).toHaveBeenCalledWith(
         QUERY,
         20,
         ["user-1"],
@@ -470,11 +470,11 @@ describe("SearchService", () => {
 
       await service.search(ORG, QUERY);
 
-      expect(mockNeonAuthUsers.searchByNameOrEmail).not.toHaveBeenCalled();
+      expect(mockAuthUserRows.searchByNameOrEmail).not.toHaveBeenCalled();
     });
 
     it("skips the member row query when no Neon Auth users match", async () => {
-      mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
+      mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([]),
       );
 
@@ -505,10 +505,10 @@ describe("SearchService", () => {
     });
 
     it("filters members by the userIds returned from the Neon Auth user lookup", async () => {
-      mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
+      mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([
-          makeNeonAuthUser({ id: "user-1" }),
-          makeNeonAuthUser({ id: "user-2" }),
+          makeAuthUserRow({ id: "user-1" }),
+          makeAuthUserRow({ id: "user-2" }),
         ]),
       );
 
@@ -542,12 +542,12 @@ describe("SearchService", () => {
     });
 
     it("attaches the matched Neon Auth user record to each member result", async () => {
-      const neonUser = makeNeonAuthUser({
+      const neonUser = makeAuthUserRow({
         id: "user-1",
         name: "Alice Alpha",
         email: "alice@example.com",
       });
-      mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
+      mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([neonUser]),
       );
       mockPrisma.member.findMany.mockReturnValue(
@@ -642,10 +642,10 @@ describe("SearchService", () => {
     });
 
     it("correctly maps company to each client when multiple members have profiles", async () => {
-      mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
+      mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([
-          makeNeonAuthUser({ id: "user-1", name: "Alice", email: "alice@example.com" }),
-          makeNeonAuthUser({ id: "user-2", name: "Bob", email: "bob@example.com" }),
+          makeAuthUserRow({ id: "user-1", name: "Alice", email: "alice@example.com" }),
+          makeAuthUserRow({ id: "user-2", name: "Bob", email: "bob@example.com" }),
         ]),
       );
       const members = [
@@ -693,12 +693,12 @@ describe("SearchService", () => {
     });
 
     it("preserves all original member fields in the enriched client record", async () => {
-      const neonUser = makeNeonAuthUser({
+      const neonUser = makeAuthUserRow({
         id: "user-1",
         name: "Alice Alpha",
         email: "alice@example.com",
       });
-      mockNeonAuthUsers.searchByNameOrEmail.mockReturnValue(
+      mockAuthUserRows.searchByNameOrEmail.mockReturnValue(
         Promise.resolve([neonUser]),
       );
       const member = makeMember({ id: "m-1", userId: "user-1" });

@@ -200,8 +200,8 @@ export default function SignupPage() {
     }
 
     try {
-      // 1. Create the identity in Neon Auth
-      const { error: signUpError } = await authClient.signUp.email({ email, password, name });
+      // 1. Create the identity in Better Auth
+      const { error: signUpError } = await authClient.signUp.email({ email, password, name, callbackURL: "/verify-email?verified=true" });
       if (signUpError) {
         throw new Error(signUpError.message || "Signup failed");
       }

@@ -1,8 +1,8 @@
 import { Injectable, NestMiddleware } from "@nestjs/common";
 import type { Request, Response, NextFunction } from "express";
 import { PrismaService } from "../prisma/prisma.service";
-import { StackAuthClient } from "./stack-auth.client";
-import { NeonAuthUsersRepository } from "./neon-auth-users.repository";
+import { BetterAuthService } from "./better-auth.service";
+import { AuthUsersRepository } from "./auth-users.repository";
 import type { AuthenticatedRequest, AuthUser, FullOrganization, OrgMember } from "../common";
 
 export const ACTIVE_ORG_COOKIE = "active_org";
@@ -21,9 +21,9 @@ export class SessionMiddleware implements NestMiddleware {
   private cache = new Map<string, CachedSession>();
 
   constructor(
-    private stackAuth: StackAuthClient,
+    private betterAuth: BetterAuthService,
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   async use(req: Request, _res: Response, next: NextFunction) {
@@ -35,7 +35,9 @@ export class SessionMiddleware implements NestMiddleware {
     try {
       const authHeader = req.headers.authorization;
       const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : undefined;
-      if (!token) {
+      // Server-rendered pages send the session cookie instead of a bearer token.
+      const sessionCookie = token ? undefined : (req.headers.cookie ?? "").includes("session_token") ? req.headers.cookie : undefined;
+      if (!token && !sessionCookie) {
         next();
         return;
       }
@@ -44,7 +46,7 @@ export class SessionMiddleware implements NestMiddleware {
       // also carry the active workspace: switching workspace (or joining one)
       // changes the cookie, not the token.
       const activeOrgCookie = req.cookies?.[ACTIVE_ORG_COOKIE];
-      const cacheKey = `${token}|${activeOrgCookie ?? ""}`;
+      const cacheKey = `${token ?? sessionCookie}|${activeOrgCookie ?? ""}`;
 
       const cached = this.cache.get(cacheKey);
       if (cached && cached.expiresAt > Date.now()) {
@@ -55,13 +57,19 @@ export class SessionMiddleware implements NestMiddleware {
       }
       if (cached) this.cache.delete(cacheKey);
 
-      const payload = await this.stackAuth.verifyAccessToken(token);
+      let payload: { sub: string } | null = null;
+      if (token) {
+        payload = await this.betterAuth.verifyAccessToken(token);
+      } else {
+        const userId = await this.betterAuth.getSessionUserId(req.headers);
+        payload = userId ? { sub: userId } : null;
+      }
       if (!payload) {
         next();
         return;
       }
 
-      const userRecord = await this.neonAuthUsers.findUnique(payload.sub);
+      const userRecord = await this.authUsers.findUnique(payload.sub);
       if (!userRecord) {
         next();
         return;

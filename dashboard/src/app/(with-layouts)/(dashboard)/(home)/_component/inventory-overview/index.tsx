@@ -15,18 +15,31 @@ import { useQuery } from "@tanstack/react-query";
 import { Pie, PieChart } from "recharts";
 import InventoryOverviewSkeleton from "./skeleton";
 import { mapInventoryOverviewResponse } from "./utils";
+import type { InventoryOverviewViewModel } from "./types";
 
-export default function InventoryOverview() {
+interface InventoryOverviewProps {
+  /** Gauge and summary to show instead of the template's mock API data. */
+  overview?: InventoryOverviewViewModel;
+  title?: string;
+  gaugeLabel?: string;
+}
+
+export default function InventoryOverview({
+  overview,
+  title = "Inventory Overview",
+  gaugeLabel = "Available",
+}: InventoryOverviewProps) {
   const { data, isLoading } = useQuery({
     queryKey: ["inventory-overview"],
     queryFn: getInventoryOverviewData,
+    enabled: !overview,
   });
 
-  if (isLoading) {
+  if (!overview && isLoading) {
     return <InventoryOverviewSkeleton />;
   }
 
-  const inventoryOverview = data ? mapInventoryOverviewResponse(data) : undefined;
+  const inventoryOverview = overview ?? (data ? mapInventoryOverviewResponse(data) : undefined);
   const gaugeSegmentCount = 32;
   const inStockSegments = inventoryOverview
     ? Math.round((inventoryOverview.availablePercent / 100) * gaugeSegmentCount)
@@ -47,7 +60,7 @@ export default function InventoryOverview() {
       {/* Header */}
       <CardHeader className="mb-6 px-3">
         <CardTitle className="leading-6 font-semibold text-text-primary">
-          Inventory Overview
+          {title}
         </CardTitle>
 
         <Button iconOnly size="xs" variant="ghost">
@@ -84,7 +97,7 @@ export default function InventoryOverview() {
                 <p className="text-xl leading-6 font-semibold text-text-primary">
                   {inventoryOverview?.availablePercent}%
                 </p>
-                <p className="text-sm leading-5 text-text-tertiary">Available</p>
+                <p className="text-sm leading-5 text-text-tertiary">{gaugeLabel}</p>
               </div>
             </ChartContainer>
           </div>

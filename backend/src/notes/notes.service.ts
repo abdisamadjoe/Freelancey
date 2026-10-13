@@ -1,13 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { paginationArgs, paginatedResponse } from "../common";
 
 @Injectable()
 export class NotesService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   async create(
@@ -48,7 +48,7 @@ export class NotesService {
     ]);
 
     const authorIds = [...new Set(notes.map((n) => n.authorId))];
-    const authors = await this.neonAuthUsers.findMany(authorIds);
+    const authors = await this.authUsers.findMany(authorIds);
     const authorMap = new Map(authors.map((a) => [a.id, a]));
 
     const enriched = notes.map((n) => {

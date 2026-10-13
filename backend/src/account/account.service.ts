@@ -1,7 +1,7 @@
 import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectPinoLogger, PinoLogger } from "nestjs-pino";
 import { PrismaService } from "../prisma/prisma.service";
-import { StackAuthClient } from "../auth/stack-auth.client";
+import { BetterAuthService } from "../auth/better-auth.service";
 import { DELETED_USER_SENTINEL } from "@/shared";
 import type { DeletionInfo } from "@/shared";
 import type { StorageProvider } from "../files/storage/storage.interface";
@@ -11,7 +11,7 @@ import { STORAGE_PROVIDER } from "../files/storage/storage.interface";
 export class AccountService {
   constructor(
     private prisma: PrismaService,
-    private stackAuth: StackAuthClient,
+    private betterAuth: BetterAuthService,
     @Inject(STORAGE_PROVIDER) private storage: StorageProvider,
     @InjectPinoLogger(AccountService.name) private readonly logger: PinoLogger,
   ) {}
@@ -56,7 +56,7 @@ export class AccountService {
 
   async deleteAccount(userId: string, password: string): Promise<void> {
     // Verify password before proceeding
-    const valid = await this.stackAuth.verifyPassword(userId, password);
+    const valid = await this.betterAuth.verifyPassword(userId, password);
     if (!valid) {
       throw new UnauthorizedException("Password verification failed.");
     }
@@ -124,9 +124,8 @@ export class AccountService {
             where: { uploadedById: userId, organizationId: { in: remainingOrgIds } },
             data: { uploadedById: DELETED_USER_SENTINEL },
           }),
-          // Neon Auth's users_sync is soft-delete-only, so the FK cascades
-          // that used to clean these up automatically (via the local User
-          // table) no longer fire — remove/anonymize explicitly instead.
+          // Memberships and portal access have no FK to the identity row, so
+          // remove them explicitly.
           tx.member.deleteMany({ where: { userId, organizationId: { in: remainingOrgIds } } }),
           tx.projectClient.deleteMany({ where: { userId } }),
         ]);
@@ -149,9 +148,9 @@ export class AccountService {
       ]);
     });
 
-    // Delete the identity itself from Neon Auth (fire-and-forget, best-effort)
-    this.stackAuth.deleteUser(userId).catch((err) => {
-      this.logger.warn({ err, userId }, "Failed to delete Stack Auth identity after local cleanup");
+    // Delete the identity itself (fire-and-forget, best-effort)
+    this.betterAuth.deleteUser(userId).catch((err) => {
+      this.logger.warn({ err, userId }, "Failed to delete auth identity after local cleanup");
     });
 
     // Purge file blobs from storage (fire-and-forget, best-effort)

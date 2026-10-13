@@ -6,7 +6,7 @@ describe("ContractsService", () => {
   let service: ContractsService;
   let prismaMock: any;
   let pdfServiceMock: any;
-  let neonAuthUsersMock: any;
+  let authUsersMock: any;
 
   beforeEach(() => {
     prismaMock = {
@@ -35,14 +35,14 @@ describe("ContractsService", () => {
       render: vi.fn(),
     };
 
-    neonAuthUsersMock = {
+    authUsersMock = {
       findUnique: vi.fn(),
     };
 
     service = new ContractsService(
       prismaMock,
       pdfServiceMock,
-      neonAuthUsersMock,
+      authUsersMock,
     );
   });
 
@@ -54,7 +54,7 @@ describe("ContractsService", () => {
       await expect(
         service.create("p1", { title: "T", template: "website-design", clientId: "foreign-user" } as any, "org-1", "u1"),
       ).rejects.toBeInstanceOf(BadRequestException);
-      expect(neonAuthUsersMock.findUnique).not.toHaveBeenCalled();
+      expect(authUsersMock.findUnique).not.toHaveBeenCalled();
       expect(prismaMock.contract.create).not.toHaveBeenCalled();
     });
 
@@ -81,7 +81,7 @@ describe("ContractsService", () => {
         clients: [{ userId: "user_client_1" }],
       });
       prismaMock.organization.findUnique.mockResolvedValue({ name: "Acme Agency" });
-      neonAuthUsersMock.findUnique.mockResolvedValue({ name: "John Client", email: "client@example.com" });
+      authUsersMock.findUnique.mockResolvedValue({ name: "John Client", email: "client@example.com" });
       prismaMock.clientProfile.findUnique.mockResolvedValue({ company: "Client Co", address: "123 Main St" });
 
       prismaMock.contract.create.mockResolvedValue({

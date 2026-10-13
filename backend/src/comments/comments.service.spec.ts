@@ -3,13 +3,13 @@ import { CommentsService } from "./comments.service";
 import { NotFoundException, ForbiddenException } from "@nestjs/common";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { NotificationsService } from "../notifications/notifications.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 
 const mockNotifications = {
   notifyComment: vi.fn(() => Promise.resolve()),
 } as unknown as NotificationsService;
 
-const mockNeonAuthUsers = {
+const mockAuthUserRows = {
   findMany: vi.fn(() => Promise.resolve([])),
 };
 
@@ -91,7 +91,7 @@ function clearAllMocks() {
   mockPrisma.comment.count.mockClear();
   mockPrisma.comment.findFirst.mockClear();
   mockPrisma.comment.delete.mockClear();
-  mockNeonAuthUsers.findMany.mockClear();
+  mockAuthUserRows.findMany.mockClear();
 }
 
 // ---------------------------------------------------------------------------
@@ -121,12 +121,12 @@ describe("CommentsService", () => {
     mockPrisma.comment.count.mockReturnValue(Promise.resolve(0));
     mockPrisma.comment.findFirst.mockReturnValue(Promise.resolve(null));
     mockPrisma.comment.delete.mockReturnValue(Promise.resolve({ id: COMMENT_ID }));
-    mockNeonAuthUsers.findMany.mockReturnValue(Promise.resolve([]));
+    mockAuthUserRows.findMany.mockReturnValue(Promise.resolve([]));
 
     service = new CommentsService(
       mockPrisma as unknown as PrismaService,
       mockNotifications,
-      mockNeonAuthUsers as unknown as NeonAuthUsersRepository,
+      mockAuthUserRows as unknown as AuthUsersRepository,
     );
   });
 
@@ -345,7 +345,7 @@ describe("CommentsService", () => {
         const comment = makeComment({ authorId: USER });
         mockPrisma.comment.findMany.mockReturnValue(Promise.resolve([comment]));
         mockPrisma.comment.count.mockReturnValue(Promise.resolve(1));
-        mockNeonAuthUsers.findMany.mockReturnValue(
+        mockAuthUserRows.findMany.mockReturnValue(
           Promise.resolve([makeAuthor({ id: USER, name: "Alice Smith" })]),
         );
 
@@ -372,7 +372,7 @@ describe("CommentsService", () => {
         mockPrisma.comment.findMany.mockReturnValue(Promise.resolve([comment]));
         mockPrisma.comment.count.mockReturnValue(Promise.resolve(1));
         // user lookup returns no matching user
-        mockNeonAuthUsers.findMany.mockReturnValue(Promise.resolve([]));
+        mockAuthUserRows.findMany.mockReturnValue(Promise.resolve([]));
 
         const result = await service.findByTarget(
           "update",
@@ -395,15 +395,15 @@ describe("CommentsService", () => {
         ];
         mockPrisma.comment.findMany.mockReturnValue(Promise.resolve(comments));
         mockPrisma.comment.count.mockReturnValue(Promise.resolve(3));
-        mockNeonAuthUsers.findMany.mockReturnValue(
+        mockAuthUserRows.findMany.mockReturnValue(
           Promise.resolve([makeAuthor({ id: USER })]),
         );
 
         await service.findByTarget("update", UPDATE_ID, ORG, USER, "owner", 1, 50);
 
         // findMany should be called once with a deduplicated set of IDs
-        expect(mockNeonAuthUsers.findMany).toHaveBeenCalledTimes(1);
-        const inIds = (mockNeonAuthUsers.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0] as string[];
+        expect(mockAuthUserRows.findMany).toHaveBeenCalledTimes(1);
+        const inIds = (mockAuthUserRows.findMany as ReturnType<typeof vi.fn>).mock.calls[0][0] as string[];
         expect(inIds).toHaveLength(1);
         expect(inIds[0]).toBe(USER);
       });
@@ -414,9 +414,9 @@ describe("CommentsService", () => {
 
         await service.findByTarget("update", UPDATE_ID, ORG, USER, "owner", 1, 50);
 
-        // NeonAuthUsersRepository.findMany short-circuits on an empty array
+        // AuthUsersRepository.findMany short-circuits on an empty array
         // before it would ever touch the database.
-        expect(mockNeonAuthUsers.findMany).toHaveBeenCalledWith([]);
+        expect(mockAuthUserRows.findMany).toHaveBeenCalledWith([]);
       });
 
       it("handles multiple authors across different comments", async () => {
@@ -426,7 +426,7 @@ describe("CommentsService", () => {
         ];
         mockPrisma.comment.findMany.mockReturnValue(Promise.resolve(comments));
         mockPrisma.comment.count.mockReturnValue(Promise.resolve(2));
-        mockNeonAuthUsers.findMany.mockReturnValue(
+        mockAuthUserRows.findMany.mockReturnValue(
           Promise.resolve([
             { id: "user-a", name: "Alice" },
             { id: "user-b", name: "Bob" },
@@ -541,7 +541,7 @@ describe("CommentsService", () => {
         const comment = makeComment();
         mockPrisma.comment.findMany.mockReturnValue(Promise.resolve([comment]));
         mockPrisma.comment.count.mockReturnValue(Promise.resolve(1));
-        mockNeonAuthUsers.findMany.mockReturnValue(
+        mockAuthUserRows.findMany.mockReturnValue(
           Promise.resolve([makeAuthor()]),
         );
 

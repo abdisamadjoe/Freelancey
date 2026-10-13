@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import { Test } from "@nestjs/testing";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { CalendarService } from "./calendar.service";
 
 let service: CalendarService;
@@ -28,7 +28,7 @@ async function cleanupOrg(org: string) {
 
 beforeAll(async () => {
   const mod = await Test.createTestingModule({
-    providers: [CalendarService, PrismaService, NeonAuthUsersRepository],
+    providers: [CalendarService, PrismaService, AuthUsersRepository],
   }).compile();
   service = mod.get(CalendarService);
   prisma = mod.get(PrismaService);

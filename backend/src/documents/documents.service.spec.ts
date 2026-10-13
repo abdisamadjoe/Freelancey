@@ -10,7 +10,7 @@ import type { StorageProvider } from "../files/storage/storage.interface";
 import type { NotificationsService } from "../notifications/notifications.service";
 import type { ActivityService } from "../activity/activity.service";
 import type { DocumentAuditService } from "./document-audit.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 import type { PinoLogger } from "nestjs-pino";
 
 // ---------------------------------------------------------------------------
@@ -155,7 +155,7 @@ const mockPrisma = {
   $queryRawUnsafe: vi.fn(() => Promise.resolve([])),
 };
 
-const mockNeonAuthUsers = {
+const mockAuthUserRows = {
   findUnique: vi.fn(() => Promise.resolve({ id: CLIENT_USER, name: "Test Client" })),
   findMany: vi.fn(() => Promise.resolve([])),
 };
@@ -206,8 +206,8 @@ function resetMocks() {
   mockActivityService.create.mockClear();
   mockLogger.warn.mockClear();
   mockLogger.error.mockClear();
-  mockNeonAuthUsers.findUnique.mockClear();
-  mockNeonAuthUsers.findMany.mockClear();
+  mockAuthUserRows.findUnique.mockClear();
+  mockAuthUserRows.findMany.mockClear();
 }
 
 // ---------------------------------------------------------------------------
@@ -222,7 +222,7 @@ function makeService() {
     mockNotifications as unknown as NotificationsService,
     mockActivityService as unknown as ActivityService,
     mockAuditService as unknown as DocumentAuditService,
-    mockNeonAuthUsers as unknown as NeonAuthUsersRepository,
+    mockAuthUserRows as unknown as AuthUsersRepository,
   );
 }
 
@@ -1838,7 +1838,7 @@ describe("DocumentsService", () => {
       const token = makeTokenRecord();
       mockPrisma.document.findFirst.mockReturnValue(Promise.resolve({ id: DOC_ID }));
       mockPrisma.documentAccessToken.findMany.mockReturnValue(Promise.resolve([token]));
-      mockNeonAuthUsers.findMany.mockReturnValue(
+      mockAuthUserRows.findMany.mockReturnValue(
         Promise.resolve([{ id: CLIENT_USER, name: "Test Client", email: "client@test.com" }]),
       );
 
@@ -1854,7 +1854,7 @@ describe("DocumentsService", () => {
       const expiredToken = makeTokenRecord({ expiresAt: new Date(Date.now() - 1000) });
       mockPrisma.document.findFirst.mockReturnValue(Promise.resolve({ id: DOC_ID }));
       mockPrisma.documentAccessToken.findMany.mockReturnValue(Promise.resolve([expiredToken]));
-      mockNeonAuthUsers.findMany.mockReturnValue(
+      mockAuthUserRows.findMany.mockReturnValue(
         Promise.resolve([{ id: CLIENT_USER, name: "Test Client", email: "client@test.com" }]),
       );
 
@@ -1867,7 +1867,7 @@ describe("DocumentsService", () => {
       const revokedToken = makeTokenRecord({ revokedAt: new Date(Date.now() - 500) });
       mockPrisma.document.findFirst.mockReturnValue(Promise.resolve({ id: DOC_ID }));
       mockPrisma.documentAccessToken.findMany.mockReturnValue(Promise.resolve([revokedToken]));
-      mockNeonAuthUsers.findMany.mockReturnValue(
+      mockAuthUserRows.findMany.mockReturnValue(
         Promise.resolve([{ id: CLIENT_USER, name: "Test Client", email: "client@test.com" }]),
       );
 

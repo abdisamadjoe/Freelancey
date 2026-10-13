@@ -3,7 +3,7 @@ import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
 import { BillingService } from "../billing/billing.service";
-import { StackAuthClient } from "./stack-auth.client";
+import { BetterAuthService } from "./better-auth.service";
 import { DEFAULT_STATUSES, DEFAULT_BRANDING } from "@/shared";
 
 @Injectable()
@@ -14,7 +14,7 @@ export class AuthService {
     private config: ConfigService,
     private prisma: PrismaService,
     private billingService: BillingService,
-    private stackAuth: StackAuthClient,
+    private betterAuth: BetterAuthService,
   ) {}
 
   /**
@@ -58,19 +58,10 @@ export class AuthService {
     }
   }
 
-  /**
-   * Admin-initiated password reset: asks Neon Auth to email a reset link
-   * directly to the target user. Unlike Better Auth (self-hosted, so we
-   * could intercept the outgoing email to capture the raw URL for the admin
-   * UI to display/copy), Neon Auth sends this email from its own hosted
-   * infrastructure — there's no link to hand back, only a delivery result.
-   */
+  /** Admin-initiated password reset: emails the target user a reset link. */
   async sendAdminPasswordReset(email: string): Promise<{ emailSent: boolean }> {
     const webUrl = this.config.get("WEB_URL", "http://localhost:3000");
-    const emailSent = await this.stackAuth.sendPasswordResetEmail(
-      email,
-      `${webUrl}/reset-password`,
-    );
+    const emailSent = await this.betterAuth.sendPasswordResetEmail(email, `${webUrl}/reset-password`);
     return { emailSent };
   }
 }

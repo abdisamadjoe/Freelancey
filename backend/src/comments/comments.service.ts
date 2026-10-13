@@ -4,7 +4,7 @@ import {
   ForbiddenException,
 } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { paginationArgs, paginatedResponse, assertProjectAccess } from "../common";
 import { NotificationsService } from "../notifications/notifications.service";
 
@@ -13,7 +13,7 @@ export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private notifications: NotificationsService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   private async resolveProjectId(
@@ -104,7 +104,7 @@ export class CommentsService {
     ]);
 
     const authorIds = [...new Set(comments.map((c) => c.authorId))];
-    const authors = await this.neonAuthUsers.findMany(authorIds);
+    const authors = await this.authUsers.findMany(authorIds);
     const authorMap = new Map(authors.map((a) => [a.id, a]));
 
     const enriched = comments.map((c) => ({

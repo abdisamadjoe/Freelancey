@@ -3,7 +3,7 @@ import { ForbiddenException } from "@nestjs/common";
 import { ClientsService } from "./clients.service";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { AuthService } from "../auth/auth.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 import type { MailService } from "../mail/mail.service";
 import type { ConfigService } from "@nestjs/config";
 
@@ -17,7 +17,7 @@ function build() {
     {} as AuthService,
     { send } as unknown as MailService,
     { get: vi.fn((_k: string, fallback?: string) => fallback) } as unknown as ConfigService,
-    {} as NeonAuthUsersRepository,
+    {} as AuthUsersRepository,
   );
   return { service, invitationCreate, send };
 }

@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import { Test } from "@nestjs/testing";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { TimeEntriesService } from "./time-entries.service";
 
 // Neon Auth owns the `neon_auth.user` table outside of the app's Prisma
 // schema — Member.userId etc. are plain scalars with no FK, so tests don't
 // need real rows there. This in-memory directory + fake repository stand in
-// for NeonAuthUsersRepository wherever the service resolves user names.
+// for AuthUsersRepository wherever the service resolves user names.
 const userDirectory = new Map<string, { id: string; name: string; email: string }>();
 
 function registerUser(id: string, name: string, email: string) {
@@ -16,7 +16,7 @@ function registerUser(id: string, name: string, email: string) {
   return rec;
 }
 
-const fakeNeonAuthUsers = {
+const fakeAuthUserRows = {
   findMany: async (ids: string[]) =>
     ids.map((id) => userDirectory.get(id)).filter((u): u is { id: string; name: string; email: string } => !!u),
   findUnique: async (id: string) => userDirectory.get(id) ?? null,
@@ -36,7 +36,7 @@ beforeAll(async () => {
     providers: [
       TimeEntriesService,
       PrismaService,
-      { provide: NeonAuthUsersRepository, useValue: fakeNeonAuthUsers },
+      { provide: AuthUsersRepository, useValue: fakeAuthUserRows },
     ],
   }).compile();
   service = mod.get(TimeEntriesService);

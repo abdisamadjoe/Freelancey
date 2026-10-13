@@ -8,8 +8,8 @@ import { Suspense, useState } from "react";
 
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
-  // Neon Auth's reset-password email links use `token`; keep `code` as a
-  // fallback in case an old-style (Stack Auth) link is still bookmarked.
+  // Better Auth's reset-password links redirect here with `?token=`; `code` is
+  // kept as a fallback for older links.
   const token = searchParams.get("token") || searchParams.get("code");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

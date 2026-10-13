@@ -8,18 +8,85 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─── Neon Auth (Managed Better Auth) owns a `neon_auth` schema in this same
-// database (user/session/account/verification/jwks/organization/member/
-// invitation/project_config) that this app must never let Prisma manage —
-// Prisma's schema-diffing treats any schema listed in `datasource.schemas`
-// as fully owned by this app and will drop undeclared tables in it, which
-// would destroy Neon Auth's own internal tables. So `neon_auth` is
-// deliberately NOT listed above, and there is no Prisma model for it: user
-// lookups (id/name/email/etc, for display purposes) go through a plain
-// read-only raw query against `neon_auth."user"` — see
-// backend/src/auth/neon-auth-users.repository.ts — the same "loose
-// coupling" pattern already used for author-type fields like
-// Document.uploadedById below (a plain String, no declared relation).
+// ─── Identity (Better Auth, self-hosted in this API) ───
+// Better Auth's own tables, prefixed `auth_` so they never collide with app
+// tables. Rows are written and read by Better Auth through its Prisma adapter
+// (see src/auth/better-auth.ts); other tables refer to users by plain string
+// id (Member.userId, Document.uploadedById, ...) with no declared relation.
+
+model AuthUser {
+  id            String   @id
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  sessions AuthSession[]
+  accounts AuthAccount[]
+
+  @@map("auth_user")
+}
+
+model AuthSession {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_session")
+}
+
+model AuthAccount {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user AuthUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("auth_account")
+}
+
+model AuthVerification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("auth_verification")
+}
+
+model AuthJwks {
+  id         String    @id
+  publicKey  String
+  privateKey String
+  createdAt  DateTime  @default(now())
+  expiresAt  DateTime?
+
+  @@map("auth_jwks")
+}
 
 // ─── App-owned organization/membership tables (unchanged in shape from the
 // Better Auth "organization" plugin — Neon Auth has no equivalent, so the
@@ -723,7 +790,7 @@ model Client {
 model ClientContact {
   id        String   @id @default(cuid())
   clientId  String
-  userId    String?  // portal login (Neon Auth user id); null until an invite is accepted
+  userId    String?  // portal login (auth user id); null until an invite is accepted
   name      String
   email     String?
   phone     String?

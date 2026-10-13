@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from "@nestjs/common";
 import type { TimeEntry } from "@/database";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import {
   StartTimerDto,
   CreateManualEntryDto,
@@ -94,14 +94,14 @@ export type GenerateInvoiceResult = { invoiceId: string };
 export class TimeEntriesService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
-  /** Attaches `.user` on each row — userId points at Neon Auth's table, not a Prisma relation. */
+  /** Attaches `.user` on each row — userId points at the auth user table, not a declared Prisma relation. */
   private async attachUsers<T extends { userId: string }>(
     rows: T[],
   ): Promise<(T & { user: { id: string; name: string; email: string } })[]> {
-    const users = await this.neonAuthUsers.findMany([...new Set(rows.map((r) => r.userId))]);
+    const users = await this.authUsers.findMany([...new Set(rows.map((r) => r.userId))]);
     const userMap = new Map(users.map((u) => [u.id, { id: u.id, name: u.name, email: u.email }]));
     return rows.map((r) => ({
       ...r,
@@ -414,7 +414,7 @@ export class TimeEntriesService {
             select: { id: true, name: true },
           })
         : Promise.resolve([] as { id: string; name: string }[]),
-      this.neonAuthUsers.findMany(Array.from(userIds)),
+      this.authUsers.findMany(Array.from(userIds)),
     ]);
     const projectNameById = new Map(projects.map((p) => [p.id, p.name]));
     const userNameById = new Map(users.map((u) => [u.id, u.name]));

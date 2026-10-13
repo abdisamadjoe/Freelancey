@@ -13,7 +13,7 @@ describe("TasksService", () => {
   };
   const mockActivity = { create: vi.fn(() => Promise.resolve()) };
   const mockLogger = { warn: vi.fn(() => {}), error: vi.fn(() => {}) };
-  const mockNeonAuthUsers = {
+  const mockAuthUserRows = {
     findMany: vi.fn(() => Promise.resolve([])),
     findUnique: vi.fn(() => Promise.resolve(null)),
   };
@@ -44,7 +44,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
     });
@@ -71,7 +71,7 @@ describe("TasksService", () => {
         mockPrismaForbidden as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
       await expect(
@@ -99,7 +99,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
       const result = await service.create({ title: "Agency Task" }, "proj1", "org1");
@@ -124,7 +124,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
     }
@@ -233,7 +233,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
     }
@@ -264,7 +264,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
 
@@ -335,7 +335,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
       const result = await service.cancelClientTask("task1", "client1", "org1");
@@ -361,7 +361,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
       await expect(
@@ -388,7 +388,7 @@ describe("TasksService", () => {
         mockPrisma as never,
         mockNotifications as never,
         mockActivity as never,
-        mockNeonAuthUsers as never,
+        mockAuthUserRows as never,
         mockLogger as never,
       );
       await expect(

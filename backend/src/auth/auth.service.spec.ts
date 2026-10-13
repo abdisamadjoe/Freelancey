@@ -3,7 +3,7 @@ import { AuthService } from "./auth.service";
 import type { ConfigService } from "@nestjs/config";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { BillingService } from "../billing/billing.service";
-import type { StackAuthClient } from "./stack-auth.client";
+import type { BetterAuthService } from "./better-auth.service";
 
 const mockConfig = {
   get: vi.fn((key: string, fallback?: string) => {
@@ -30,7 +30,7 @@ function makeService(): AuthService {
     mockConfig as unknown as ConfigService,
     mockPrisma as unknown as PrismaService,
     mockBilling as unknown as BillingService,
-    mockStackAuth as unknown as StackAuthClient,
+    mockStackAuth as unknown as BetterAuthService,
   );
 }
 

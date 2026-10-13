@@ -10,7 +10,7 @@ Freelancey is designed to run on managed cloud infrastructure:
 - **Frontend App**: Deployed on **Vercel**
 - **Backend API**: Deployed on **Railway**
 - **Database**: Hosted on **Neon Postgres**
-- **Authentication**: Managed via **Neon Auth**
+- **Authentication**: Self-hosted **Better Auth**, running inside the API and storing users in the same Neon Postgres database
 - **File Storage**: Hosted on **Cloudflare R2**
 
 ## 2. Environment Variables
@@ -24,14 +24,13 @@ Configuration lives in two per-app `.env` files: `backend/.env` for the API (dat
 | `DATABASE_URL`             | Neon Postgres connection string (pooled, used at runtime)                |
 | `DIRECT_URL`                | Neon Postgres connection string (direct/unpooled, used by `prisma migrate`) |
 | `APP_ENCRYPTION_SECRET`    | App-level secret (min 32 chars) for settings encryption, push-subscription encryption, and payment HMAC signing -- unrelated to authentication |
-| `NEON_AUTH_BASE_URL`        | Neon Auth's "Auth URL" from your Neon project's Auth tab (includes the project's db-name path segment) -- needed by both backend (JWKS verification) and web app (auth proxy route) |
-| `NEON_AUTH_COOKIE_SECRET`   | Frontend-only. Signs the auth proxy's first-party session cookies -- not a Neon credential, generate with `openssl rand -base64 32` |
+| `BETTER_AUTH_SECRET`        | Signs sessions and encrypts auth data (min 32 chars, `openssl rand -base64 32`). Falls back to `APP_ENCRYPTION_SECRET` when unset |
 | `R2_ACCOUNT_ID`             | Cloudflare account ID for R2                                              |
 | `R2_ACCESS_KEY_ID`          | R2 access key ID                                                          |
 | `R2_SECRET_ACCESS_KEY`      | R2 secret access key                                                      |
 | `R2_BUCKET_NAME`            | R2 bucket name used for file storage                                     |
 
-`DATABASE_URL`, `DIRECT_URL`, `APP_ENCRYPTION_SECRET`, `NEON_AUTH_BASE_URL`, and the four `R2_*` variables are required everywhere -- the API refuses to start without them. The web app additionally requires `NEON_AUTH_COOKIE_SECRET`.
+`DATABASE_URL`, `DIRECT_URL`, `APP_ENCRYPTION_SECRET`, and the four `R2_*` variables are required everywhere -- the API refuses to start without them. Set `BETTER_AUTH_SECRET` too (it falls back to `APP_ENCRYPTION_SECRET`). The web app needs no auth variables.
 
 ### Common Optional Variables
 
@@ -46,7 +45,7 @@ Configuration lives in two per-app `.env` files: `backend/.env` for the API (dat
 | `BILLING_ENABLED`      | Set to `true` to enable billing/plan gates (hosted only) | `false`                    |
 | `LOG_LEVEL`             | Pino log level                                   | `info`                            |
 
-> **Note on traditional self-hosting:** This project uses a decoupled serverless architecture. `BETTER_AUTH_SECRET`, `STORAGE_PROVIDER`, `UPLOAD_DIR`, `S3_*`, and all Docker/Postgres-container variables have been removed. Authentication is strictly Neon Auth and storage is Cloudflare R2.
+> **Note on traditional self-hosting:** This project uses a decoupled serverless architecture. `STORAGE_PROVIDER`, `UPLOAD_DIR`, `S3_*`, and all Docker/Postgres-container variables have been removed.
 
 ## 3. Storage & Authentication Details
 
@@ -54,9 +53,13 @@ Configuration lives in two per-app `.env` files: `backend/.env` for the API (dat
 File storage is Cloudflare R2 only. Set the four `R2_*` variables above; there is no other supported backend and no local-disk fallback.
 
 ### Authentication
-Authentication is handled by Neon Auth -- Neon's own managed [Better Auth](https://www.better-auth.com) instance, configured from your Neon project's **Auth** tab. The web app integrates the `@neondatabase/auth` SDK in "proxy" mode: `dashboard/src/lib/auth/server.ts` creates the Neon Auth instance and `dashboard/src/app/api/auth/[...path]/route.ts` proxies auth requests through the web app's own origin (so the session cookie is first-party and readable by server components), while `dashboard/src/lib/auth/client.ts` is the browser-side client used in React components. The backend verifies Neon Auth JWTs statelessly via JWKS (`backend/src/auth/stack-auth.client.ts`, `backend/src/auth/session.middleware.ts`) rather than validating cookie-based sessions. The web app forwards the current session's JWT (via `auth.token()`/`authClient.token()`) as an `Authorization: Bearer` header on every backend API call. 
+Authentication is handled by [Better Auth](https://www.better-auth.com), self-hosted inside the NestJS API (`backend/src/auth/better-auth.service.ts`). Its tables (`auth_user`, `auth_session`, `auth_account`, `auth_verification`, `auth_jwks`) live in the app's own Postgres database and are managed by Prisma migrations.
 
-One behavioral note: an admin resetting a client's password now only triggers a reset email, sent from Neon Auth's own infrastructure -- there is no "copy a raw reset link" option, since Neon Auth's mail delivery isn't something this app can intercept.
+- The API serves Better Auth at `/api/auth/*` (sign-up, sign-in, sign-out, password reset, email verification, and the `jwt` plugin's `/api/auth/token` and `/api/auth/jwks`).
+- The web app talks to those endpoints through its own proxy route `dashboard/src/app/api/auth/[...path]/route.ts`, so the session cookie is first-party for the web origin. `dashboard/src/lib/auth/client.ts` is the browser client.
+- The browser sends the API a short-lived JWT (`authClient.token()`) as `Authorization: Bearer`. Server components forward the session cookie instead (`dashboard/src/lib/server-api.ts`). The API resolves either one in `backend/src/auth/session.middleware.ts`; JWTs are verified against the app's own JWKS.
+- Verification and password-reset emails are sent through the API's `MailService`, with the same React Email templates as every other email (env-var Resend as the fallback, since there is no workspace yet at sign-up).
+- An admin resetting a client's password triggers the same reset email for that user.
 
 ---
 
@@ -120,7 +123,7 @@ Turn the portal into the system of record for client work.
 Enterprise auth, automation, and analytics.
 
 - [ ] **SAML/SSO** -- Enterprise single sign-on for teams and clients
-- [ ] **2FA/MFA** -- TOTP and passkey support via Neon Auth
+- [ ] **2FA/MFA** -- TOTP and passkey support via Better Auth plugins
 - [ ] **Granular permissions** -- Per-project and per-section access control beyond owner/admin/member roles
 - [ ] **Activity / audit log** -- Track who did what and when across the organization
 - [ ] **Workflow automations** -- Trigger-action engine for automated task assignment, notifications, and status changes

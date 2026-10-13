@@ -16,7 +16,7 @@ import {
 } from "@/email";
 import { MailService } from "../mail/mail.service";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { InAppNotificationsService } from "./in-app-notifications.service";
 import { PushService } from "./push.service";
 import { calculateInvoiceTotal } from "../payments/invoice-total";
@@ -40,7 +40,7 @@ export class NotificationsService {
     private config: ConfigService,
     private inApp: InAppNotificationsService,
     private push: PushService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
     @InjectPinoLogger(NotificationsService.name)
     private readonly logger: PinoLogger,
   ) {
@@ -697,7 +697,7 @@ export class NotificationsService {
         where: { id: doc.projectId },
         select: { name: true },
       }),
-      this.neonAuthUsers.findUnique(userId),
+      this.authUsers.findUnique(userId),
     ]);
     if (!project) return;
 
@@ -877,7 +877,7 @@ export class NotificationsService {
         where: { id: doc.projectId },
         select: { name: true },
       }),
-      this.neonAuthUsers.findUnique(userId),
+      this.authUsers.findUnique(userId),
     ]);
     if (!project || !user) return;
 
@@ -1105,7 +1105,7 @@ export class NotificationsService {
     });
     if (!includeDetails) return admins;
 
-    const users = await this.neonAuthUsers.findMany(admins.map((a) => a.userId));
+    const users = await this.authUsers.findMany(admins.map((a) => a.userId));
     const userMap = new Map(users.map((u) => [u.id, { name: u.name, email: u.email }]));
     return admins.map((a) => ({
       ...a,
@@ -1120,7 +1120,7 @@ export class NotificationsService {
       where: { projectId },
       select: { userId: true },
     });
-    const users = await this.neonAuthUsers.findMany(assignments.map((a) => a.userId));
+    const users = await this.authUsers.findMany(assignments.map((a) => a.userId));
     return users.map((u) => ({ id: u.id, name: u.name, email: u.email }));
   }
 

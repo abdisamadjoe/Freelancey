@@ -13,7 +13,7 @@ import {
 import type { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import {
   AuthGuard,
   RolesGuard,
@@ -38,7 +38,7 @@ export class ClientsController {
     private prisma: PrismaService,
     private config: ConfigService,
     private clientsService: ClientsService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   @Get()
@@ -72,7 +72,7 @@ export class ClientsController {
       this.prisma.clientProfile.findMany({
         where: { userId: { in: userIds }, organizationId: orgId },
       }),
-      this.neonAuthUsers.findMany(userIds),
+      this.authUsers.findMany(userIds),
     ]);
     const profileMap = new Map(profiles.map((p) => [p.userId, p]));
     const userMap = new Map(users.map((u) => [u.id, { id: u.id, name: u.name, email: u.email }]));
@@ -100,7 +100,7 @@ export class ClientsController {
     });
     const [profiles, users] = await Promise.all([
       this.prisma.clientProfile.findMany({ where: { organizationId: orgId } }),
-      this.neonAuthUsers.findMany(members.map((m) => m.userId)),
+      this.authUsers.findMany(members.map((m) => m.userId)),
     ]);
     const profileMap = new Map(profiles.map((p) => [p.userId, p]));
     const userMap = new Map(users.map((u) => [u.id, u]));

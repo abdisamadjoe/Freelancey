@@ -10,14 +10,14 @@ import { CreateContractDto, UpdateContractDto, DuplicateContractDto } from "./co
 import { buildDefaultContractContent } from "./templates/contract-templates";
 import { ContractContent, CONTRACT_STATUSES } from "@/shared";
 import { paginationArgs, paginatedResponse } from "../common";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 
 @Injectable()
 export class ContractsService {
   constructor(
     private prisma: PrismaService,
     private contractPdfService: ContractPdfService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   /** A contract's client must be a client of this organization; otherwise their name/email would be copied from the global user table. */
@@ -56,7 +56,7 @@ export class ContractsService {
     if (dto.clientId) await this.assertClientInOrg(dto.clientId, organizationId);
     const targetClientId = dto.clientId || (project.clients[0] ? project.clients[0].userId : undefined);
     if (targetClientId) {
-      const user = await this.neonAuthUsers.findUnique(targetClientId);
+      const user = await this.authUsers.findUnique(targetClientId);
       const profile = await this.prisma.clientProfile.findUnique({
         where: { userId_organizationId: { userId: targetClientId, organizationId } },
       });

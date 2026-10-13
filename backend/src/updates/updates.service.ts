@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import type { ProjectUpdate } from "@/database";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { NotificationsService } from "../notifications/notifications.service";
 import { ActivityService } from "../activity/activity.service";
 import type { StorageProvider } from "../files/storage/storage.interface";
@@ -48,7 +48,7 @@ export class UpdatesService {
     private prisma: PrismaService,
     private notifications: NotificationsService,
     private activityService: ActivityService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
     @Inject(STORAGE_PROVIDER) private storage: StorageProvider,
   ) {}
 
@@ -144,7 +144,7 @@ export class UpdatesService {
 
     // Batch-resolve author names
     const authorIds = [...new Set(updates.map((u) => u.authorId))];
-    const authors = await this.neonAuthUsers.findMany(authorIds);
+    const authors = await this.authUsers.findMany(authorIds);
     const authorMap = new Map(authors.map((a) => [a.id, a]));
 
     // Generate attachment URLs: prefer file download endpoint, fall back to signed URL for legacy data
@@ -238,7 +238,7 @@ export class UpdatesService {
     const authorIds = [...new Set(updates.map((u) => u.authorId))];
     const actorIds = [...new Set(activities.map((a) => a.actorId))];
     const allUserIds = [...new Set([...authorIds, ...actorIds])];
-    const users = await this.neonAuthUsers.findMany(allUserIds);
+    const users = await this.authUsers.findMany(allUserIds);
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     // Build update entries with attachment URLs

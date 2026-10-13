@@ -20,10 +20,9 @@ import { SignupDto } from "./signup.dto";
 import { ROLES } from "@/shared";
 
 /**
- * Runs after the frontend has already created the user in Neon Auth (Stack
- * Auth) via its SDK and is calling us with a valid bearer token — this
- * endpoint's job is now just "create my first organization", not "create an
- * account" (Better Auth used to do both in one round trip here).
+ * Runs after the web app has already created the user in Better Auth through
+ * the `/api/auth` endpoints and is calling us with a valid bearer token. This
+ * endpoint's job is just "create my first organization", not "create an account".
  */
 @Controller("onboarding")
 @UseGuards(UserOnlyAuthGuard)

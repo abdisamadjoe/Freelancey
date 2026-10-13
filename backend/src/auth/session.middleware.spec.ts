@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Request } from "express";
 import { SessionMiddleware } from "./session.middleware";
 import type { PrismaService } from "../prisma/prisma.service";
-import type { StackAuthClient } from "./stack-auth.client";
-import type { NeonAuthUsersRepository } from "./neon-auth-users.repository";
+import type { BetterAuthService } from "./better-auth.service";
+import type { AuthUsersRepository } from "./auth-users.repository";
 
 const user = { id: "u1", name: "U", email: "u@x.com", emailVerified: true, image: null, createdAt: new Date(), updatedAt: new Date() };
 const membership = (organizationId: string) => ({
@@ -20,9 +20,9 @@ function build() {
   const verify = vi.fn().mockResolvedValue({ sub: "u1" });
   const findUnique = vi.fn().mockResolvedValue(user);
   const mw = new SessionMiddleware(
-    { verifyAccessToken: verify } as unknown as StackAuthClient,
+    { verifyAccessToken: verify } as unknown as BetterAuthService,
     { member: { findFirst } } as unknown as PrismaService,
-    { findUnique } as unknown as NeonAuthUsersRepository,
+    { findUnique } as unknown as AuthUsersRepository,
   );
   const call = async (token: string | undefined, cookie?: string) => {
     const req = {

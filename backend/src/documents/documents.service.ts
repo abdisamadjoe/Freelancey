@@ -21,7 +21,7 @@ import { CreateDocumentDto } from "./documents.dto";
 import { NotificationsService } from "../notifications/notifications.service";
 import { ActivityService } from "../activity/activity.service";
 import { DocumentAuditService } from "./document-audit.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 
 /** Max PDF size allowed for signing (50MB) to prevent OOM. */
 const MAX_SIGNABLE_PDF_BYTES = 50 * 1024 * 1024;
@@ -42,9 +42,9 @@ const SIGN_BLOCKED_STATUSES = new Set(["draft", "voided", "expired", "signed"]);
 /**
  * Shared include shape for document queries that need full details.
  *
- * `responses.userId` and `versions.uploadedById` point at Neon Auth's
- * `neon_auth."user"` table, which isn't a Prisma relation (see
- * NeonAuthUsersRepository) — `enrichDocument()` below batch-fetches and
+ * `responses.userId` and `versions.uploadedById` point at the
+ * `auth_user` table, which isn't a declared Prisma relation (see
+ * AuthUsersRepository) — `enrichDocument()` below batch-fetches and
  * attaches `.user`/`.uploadedBy` onto the raw query result below.
  */
 const DOCUMENT_FULL_INCLUDE = {
@@ -69,14 +69,14 @@ export class DocumentsService {
     private notifications: NotificationsService,
     private activityService: ActivityService,
     private auditService: DocumentAuditService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   /**
    * Attaches `.user` on each response and `.uploadedBy` on each version of a
    * document queried with DOCUMENT_FULL_INCLUDE — those used to be Prisma
-   * relation includes; userId/uploadedById now point at Neon Auth's table,
-   * which isn't a Prisma relation (see NeonAuthUsersRepository).
+   * relation includes; userId/uploadedById point at the auth user table,
+   * which isn't a Prisma relation (see AuthUsersRepository).
    */
   private async enrichDocument<
     T extends {
@@ -90,7 +90,7 @@ export class DocumentsService {
         ...doc.versions.map((v) => v.uploadedById),
       ]),
     ];
-    const users = await this.neonAuthUsers.findMany(ids);
+    const users = await this.authUsers.findMany(ids);
     const userMap = new Map(users.map((u) => [u.id, { id: u.id, name: u.name }]));
     return {
       ...doc,
@@ -588,7 +588,7 @@ export class DocumentsService {
       const [assignment, existingResponse, signer] = await Promise.all([
         isAdmin ? null : tx.projectClient.findFirst({ where: { projectId: doc.projectId, userId } }),
         tx.documentResponse.findFirst({ where: { documentId: id, userId, fieldId: dto.fieldId } }),
-        this.neonAuthUsers.findUnique(userId),
+        this.authUsers.findUnique(userId),
       ]);
       if (!isAdmin && !assignment) throw new ForbiddenException("Not assigned to this project");
       if (existingResponse) throw new BadRequestException("You have already signed this field");
@@ -1142,7 +1142,7 @@ export class DocumentsService {
 
     // Enrich version uploaders
     const uploaderIds = doc.versions.map((v) => v.uploadedById);
-    const uploaders = await this.neonAuthUsers.findMany(uploaderIds);
+    const uploaders = await this.authUsers.findMany(uploaderIds);
     const uploaderMap = new Map(uploaders.map((u) => [u.id, u.name]));
 
     return {
@@ -1261,7 +1261,7 @@ export class DocumentsService {
 
     // Enrich with user names
     const userIds = [...new Set(tokens.map((t) => t.userId))];
-    const users = await this.neonAuthUsers.findMany(userIds);
+    const users = await this.authUsers.findMany(userIds);
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     const now = new Date();
@@ -1388,7 +1388,7 @@ export class DocumentsService {
         ...doc.responses.map((r) => r.userId),
       ]),
     ];
-    const users = await this.neonAuthUsers.findMany(userIds);
+    const users = await this.authUsers.findMany(userIds);
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     const pdfDoc = await PDFDocument.create();

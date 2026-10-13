@@ -1,16 +1,16 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 
 @Injectable()
 export class SearchService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   async search(orgId: string, q: string) {
-    // Members are matched by their Neon Auth user's name/email, which isn't
+    // Members are matched by their auth user's name/email, which isn't
     // a Prisma relation — resolve matching user ids first.
     // Only this organization's clients are searched; the auth table is global.
     const orgClientIds = (
@@ -20,7 +20,7 @@ export class SearchService {
       })
     ).map((m) => m.userId);
     const matchingUsers = orgClientIds.length
-      ? await this.neonAuthUsers.searchByNameOrEmail(q, 20, orgClientIds)
+      ? await this.authUsers.searchByNameOrEmail(q, 20, orgClientIds)
       : [];
     const matchingUserIds = matchingUsers.map((u) => u.id);
     const userById = new Map(matchingUsers.map((u) => [u.id, u]));

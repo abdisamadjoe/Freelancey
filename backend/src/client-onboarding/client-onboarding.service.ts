@@ -6,7 +6,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { MailService } from "../mail/mail.service";
 import { ActivityService } from "../activity/activity.service";
 import { NotificationsService } from "../notifications/notifications.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import {
   DEFAULT_INTAKE_FIELDS,
   DEFAULT_INTAKE_KEY,
@@ -44,7 +44,7 @@ export class ClientOnboardingService {
     private config: ConfigService,
     private activity: ActivityService,
     private notifications: NotificationsService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   // ─── helpers ───
@@ -333,7 +333,7 @@ export class ClientOnboardingService {
       projectName = project.name;
     }
 
-    const existingUser = await this.neonAuthUsers.findByEmail(email);
+    const existingUser = await this.authUsers.findByEmail(email);
     if (existingUser) {
       const membership = await this.prisma.member.findFirst({
         where: { userId: existingUser.id, organizationId: orgId },

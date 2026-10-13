@@ -1,17 +1,43 @@
-import { getAuth } from "@/lib/auth/server";
+import { NextRequest, NextResponse } from "next/server";
 
-// Deferred handlers: the auth instance is created on the first request, so
-// `next build` never initializes `createNeonAuth` and therefore doesn't
-// require NEON_AUTH_BASE_URL / NEON_AUTH_COOKIE_SECRET at build time (they
-// are runtime-only Vercel environment variables). `force-dynamic` stops
-// Next.js from statically optimizing this route, which would otherwise
-// invoke the handler — and thus `createNeonAuth` — during the build.
+// Forwards Better Auth requests to the API, which runs Better Auth itself. Going
+// through this route keeps the session cookie first-party for the web origin, so
+// server components can read it and browsers never treat it as third-party.
 export const dynamic = "force-dynamic";
 
-type AuthRouteContext = { params: Promise<{ path: string[] }> };
+const API_URL = (process.env.API_URL || "http://localhost:3001").replace(/\/$/, "");
 
-export const GET = (request: Request, context: AuthRouteContext) =>
-  getAuth().handler().GET(request, context);
+type RouteContext = { params: Promise<{ path: string[] }> };
 
-export const POST = (request: Request, context: AuthRouteContext) =>
-  getAuth().handler().POST(request, context);
+async function forward(request: NextRequest, context: RouteContext): Promise<NextResponse> {
+  const { path } = await context.params;
+  const target = `${API_URL}/api/auth/${path.map(encodeURIComponent).join("/")}${request.nextUrl.search}`;
+
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("content-length");
+  headers.set("x-forwarded-host", request.headers.get("host") ?? "");
+  headers.set("x-forwarded-proto", request.nextUrl.protocol.replace(":", ""));
+
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const upstream = await fetch(target, {
+    method: request.method,
+    headers,
+    body: hasBody ? await request.arrayBuffer() : undefined,
+    redirect: "manual",
+    cache: "no-store",
+  });
+
+  const responseHeaders = new Headers(upstream.headers);
+  // fetch has already decoded the body.
+  responseHeaders.delete("content-encoding");
+  responseHeaders.delete("content-length");
+
+  return new NextResponse(upstream.body, { status: upstream.status, headers: responseHeaders });
+}
+
+export const GET = forward;
+export const POST = forward;
+export const PUT = forward;
+export const PATCH = forward;
+export const DELETE = forward;

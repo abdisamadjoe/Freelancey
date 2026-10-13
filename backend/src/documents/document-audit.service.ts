@@ -1,14 +1,14 @@
 import { Injectable } from "@nestjs/common";
 import { InjectPinoLogger, PinoLogger } from "nestjs-pino";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { paginationArgs, paginatedResponse } from "../common";
 
 @Injectable()
 export class DocumentAuditService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
     @InjectPinoLogger(DocumentAuditService.name)
     private readonly logger: PinoLogger,
   ) {}
@@ -58,7 +58,7 @@ export class DocumentAuditService {
 
     // Enrich with user names (batch query, not N+1)
     const userIds = [...new Set(data.filter((e) => e.userId).map((e) => e.userId!))];
-    const users = await this.neonAuthUsers.findMany(userIds);
+    const users = await this.authUsers.findMany(userIds);
     const userMap = new Map(users.map((u) => [u.id, u]));
 
     const enriched = data.map((event) => ({

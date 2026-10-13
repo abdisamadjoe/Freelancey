@@ -2,11 +2,11 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { UnauthorizedException } from "@nestjs/common";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { StorageProvider } from "../files/storage/storage.interface";
-import type { StackAuthClient } from "../auth/stack-auth.client";
+import type { BetterAuthService } from "../auth/better-auth.service";
 import { AccountService } from "./account.service";
 
 // ---------------------------------------------------------------------------
-// Mock StackAuthClient
+// Mock BetterAuthService
 // ---------------------------------------------------------------------------
 const mockStackAuth = {
   verifyPassword: vi.fn(() => Promise.resolve(true)),
@@ -136,7 +136,7 @@ describe("AccountService", () => {
     clearAllMocks();
     service = new AccountService(
       mockPrisma as unknown as PrismaService,
-      mockStackAuth as unknown as StackAuthClient,
+      mockStackAuth as unknown as BetterAuthService,
       mockStorage as unknown as StorageProvider,
       mockLogger as never,
     );

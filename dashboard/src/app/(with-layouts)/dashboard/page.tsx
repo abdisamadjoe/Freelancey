@@ -19,10 +19,11 @@ import {
 import { buttonStyles } from "@/components/tailgrids/core/button";
 import { Badge } from "@/components/tailgrids/core/badge";
 import { BoxIcon, EyeIcon, MoneyBagIcon, UserGroupIcon } from "@/app/(with-layouts)/(dashboard)/(home)/_component/overview-stats/icons";
-import { LEAD_STATUS_OPTIONS } from "@/lib/leads";
 import { useApi } from "@/lib/query";
 import { useSession } from "@/lib/session";
 import Link from "next/link";
+import InventoryOverview from "@/app/(with-layouts)/(dashboard)/(home)/_component/inventory-overview";
+import TrafficSources from "@/app/(with-layouts)/(dashboard)/(home)/_component/traffic-sources";
 
 interface Project {
   id: string;
@@ -82,6 +83,19 @@ export default function DashboardPage() {
   const due = useApi<Paginated<DueLead>>("/client-records?stage=lead&followUpDue=true&limit=5");
   const summary = useApi<Summary>("/pipeline/summary");
 
+  const countFor = (status: string) => summary.data?.leadsByStatus.find((l) => l.status === status)?.count ?? 0;
+  const advanced = countFor("qualified") + countFor("proposal_sent");
+  const attention = summary.data
+    ? [
+        { name: "Follow-ups due", count: summary.data.followUpsDue },
+        { name: "Proposals awaiting answer", count: summary.data.proposalsAwaiting.count },
+        { name: "Contracts awaiting signature", count: summary.data.contractsAwaiting.count },
+        { name: "Work with the client", count: summary.data.deliverables.inReview },
+        { name: "Open support tickets", count: summary.data.openTickets },
+      ]
+    : [];
+  const maxAttention = Math.max(1, ...attention.map((a) => a.count));
+
   const firstName = user.name ? user.name.split(" ")[0] : "User";
 
   return (
@@ -126,22 +140,31 @@ export default function DashboardPage() {
               <h2 className="leading-6 font-semibold tracking-[-0.2px] text-text-primary">Pipeline</h2>
               <p className="mt-0.5 text-sm leading-5 text-text-tertiary">What needs a response or a next step.</p>
             </div>
-            <StatGrid>
-              {summary.data.leadsByStatus.map((s) => (
-                <StatCard
-                  key={s.status}
-                  label={LEAD_STATUS_OPTIONS.find((o) => o.value === s.status)?.label ?? s.status}
-                  value={s.count}
-                />
-              ))}
-            </StatGrid>
-            <StatGrid>
-              <StatCard label="Follow-ups due" value={summary.data.followUpsDue} />
-              <StatCard label="Proposals awaiting answer" value={summary.data.proposalsAwaiting.count} />
-              <StatCard label="Contracts awaiting signature" value={summary.data.contractsAwaiting.count} />
-              <StatCard label="Work with the client" value={summary.data.deliverables.inReview} />
-              <StatCard label="Open support tickets" value={summary.data.openTickets} />
-            </StatGrid>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <InventoryOverview
+                title="Lead progress"
+                gaugeLabel="Qualified or beyond"
+                overview={{
+                  availablePercent: summary.data.totalLeads
+                    ? Math.round((advanced / summary.data.totalLeads) * 100)
+                    : 0,
+                  summary: [
+                    { label: "Total leads", value: summary.data.totalLeads },
+                    { label: "Qualified", value: countFor("qualified") },
+                    { label: "Proposal sent", value: countFor("proposal_sent") },
+                  ],
+                }}
+              />
+              <TrafficSources
+                title="Needs attention"
+                valueHeading="Items"
+                sources={attention.map((a) => ({
+                  name: a.name,
+                  value: String(a.count),
+                  percentage: Math.round((a.count / maxAttention) * 100),
+                }))}
+              />
+            </div>
 
             {(summary.data.proposalsAwaiting.items.length > 0 || summary.data.contractsAwaiting.items.length > 0) && (
               <Panel flush>

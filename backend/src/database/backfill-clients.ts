@@ -11,17 +11,15 @@
  * are touched. Point DATABASE_URL at a Neon dev branch before using --apply.
  */
 import { PrismaClient } from "@prisma/client";
-import { NeonAuthPrismaClient } from "./index";
 
 const apply = process.argv.includes("--apply");
 const prisma = new PrismaClient();
-const neonAuth = new NeonAuthPrismaClient();
 
 async function main() {
   console.log(apply ? "APPLY mode: writing changes" : "DRY RUN: nothing will be written (use --apply)");
 
   const members = await prisma.member.findMany({ where: { role: "member" } });
-  const users = await neonAuth.neonAuthUser.findMany({
+  const users = await prisma.authUser.findMany({
     where: { id: { in: [...new Set(members.map((m) => m.userId))] } },
   });
   const userById = new Map(users.map((u) => [u.id, u]));
@@ -105,5 +103,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await neonAuth.$disconnect();
   });

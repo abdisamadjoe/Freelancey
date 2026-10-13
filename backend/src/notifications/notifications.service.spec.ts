@@ -7,7 +7,7 @@ import type { ConfigService } from "@nestjs/config";
 import type { PinoLogger } from "nestjs-pino";
 import type { InAppNotificationsService } from "./in-app-notifications.service";
 import type { PushService } from "./push.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 
 // --- Module mocks ---
 
@@ -122,7 +122,7 @@ const DEFAULT_USERS = [
   { id: "user-2", name: "Bob", email: "bob@example.com" },
 ];
 
-function makeNeonAuthUsers() {
+function makeAuthUserRows() {
   return {
     findUnique: vi.fn(() => Promise.resolve(null)),
     findMany: vi.fn((ids: string[]) =>
@@ -137,7 +137,7 @@ describe("NotificationsService", () => {
   let prisma: ReturnType<typeof makePrisma>;
   let inApp: ReturnType<typeof makeInAppService>;
   let push: ReturnType<typeof makePushService>;
-  let neonAuthUsers: ReturnType<typeof makeNeonAuthUsers>;
+  let authUsers: ReturnType<typeof makeAuthUserRows>;
 
   beforeEach(() => {
     // render is mocked at module scope, so its call log outlives each test
@@ -146,14 +146,14 @@ describe("NotificationsService", () => {
     prisma = makePrisma();
     inApp = makeInAppService();
     push = makePushService();
-    neonAuthUsers = makeNeonAuthUsers();
+    authUsers = makeAuthUserRows();
     service = new NotificationsService(
       mail as unknown as MailService,
       prisma as unknown as PrismaService,
       makeConfig() as unknown as ConfigService,
       inApp as unknown as InAppNotificationsService,
       push as unknown as PushService,
-      neonAuthUsers as unknown as NeonAuthUsersRepository,
+      authUsers as unknown as AuthUsersRepository,
       mockLogger as unknown as PinoLogger,
     );
   });
@@ -388,7 +388,7 @@ describe("NotificationsService", () => {
       makeConfig("https://app.example.com/") as unknown as ConfigService,
       inApp as unknown as InAppNotificationsService,
       push as unknown as PushService,
-      neonAuthUsers as unknown as NeonAuthUsersRepository,
+      authUsers as unknown as AuthUsersRepository,
       mockLogger as unknown as PinoLogger,
     );
     const done = new Promise<void>((resolve) => setTimeout(resolve, 50));
@@ -513,7 +513,7 @@ describe("NotificationsService", () => {
     (prisma as any).member = {
       findMany: vi.fn(() => Promise.resolve([{ userId: "admin-1" }])),
     };
-    neonAuthUsers.findMany.mockImplementation((ids: string[]) =>
+    authUsers.findMany.mockImplementation((ids: string[]) =>
       Promise.resolve(
         ids.includes("admin-1")
           ? [{ id: "admin-1", name: "Ada", email: "ada@example.com" }]

@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { paginationArgs, paginatedResponse } from "../common";
 
 /** Non-user actors written by the app itself. */
@@ -32,7 +32,7 @@ export interface CreateClientActivityInput {
 export class ActivityService {
   constructor(
     private prisma: PrismaService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
   ) {}
 
   async create(dto: CreateActivityDto) {
@@ -68,7 +68,7 @@ export class ActivityService {
 
     // Batch-resolve actor names
     const actorIds = [...new Set(data.map((a) => a.actorId))];
-    const actors = await this.neonAuthUsers.findMany(actorIds);
+    const actors = await this.authUsers.findMany(actorIds);
     const actorMap = new Map(actors.map((a) => [a.id, a]));
 
     const enriched = data.map((a) => ({
@@ -109,7 +109,7 @@ export class ActivityService {
     ]);
 
     const actorIds = [...new Set(data.map((a) => a.actorId))];
-    const actors = await this.neonAuthUsers.findMany(actorIds);
+    const actors = await this.authUsers.findMany(actorIds);
     const actorMap = new Map(actors.map((a) => [a.id, a]));
 
     const enriched = data.map((a) => ({

@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { InjectPinoLogger, PinoLogger } from "nestjs-pino";
 import { PrismaService } from "../prisma/prisma.service";
-import { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { NotificationsService } from "../notifications/notifications.service";
 import { ActivityService } from "../activity/activity.service";
 import { paginationArgs, paginatedResponse } from "../common";
@@ -18,13 +18,13 @@ export class TasksService {
     private prisma: PrismaService,
     private notifications: NotificationsService,
     private activityService: ActivityService,
-    private neonAuthUsers: NeonAuthUsersRepository,
+    private authUsers: AuthUsersRepository,
     @InjectPinoLogger(TasksService.name) private readonly logger: PinoLogger,
   ) {}
 
   /**
    * Attaches `.requester`/`.assignee` on each task — requestedById/assigneeId
-   * point at Neon Auth's table, not a Prisma relation.
+   * point at the auth user table, not a declared Prisma relation.
    */
   private async attachRequesterAssignee<
     T extends { requestedById: string | null; assigneeId: string | null },
@@ -34,7 +34,7 @@ export class TasksService {
         tasks.flatMap((t) => [t.requestedById, t.assigneeId]).filter((id): id is string => !!id),
       ),
     ];
-    const users = await this.neonAuthUsers.findMany(ids);
+    const users = await this.authUsers.findMany(ids);
     const userMap = new Map(users.map((u) => [u.id, { id: u.id, name: u.name }]));
     return tasks.map((t) => ({
       ...t,
@@ -116,7 +116,7 @@ export class TasksService {
       where: { projectId, userId, project: { organizationId: orgId } },
     });
     if (!assignment) throw new ForbiddenException("Not assigned to this project");
-    const assignmentUser = await this.neonAuthUsers.findUnique(userId);
+    const assignmentUser = await this.authUsers.findUnique(userId);
 
     const maxOrder = await this.prisma.task.aggregate({
       where: { projectId, organizationId: orgId },

@@ -85,7 +85,7 @@ freelancey/
 │   │   ├── email/              #     React Email templates & Resend client
 │   │   └── shared/             #     TypeScript types, DTO schemas & constants
 │   ├── src/
-│   │   ├── auth/               #   Neon Auth / Better Auth session integrations
+│   │   ├── auth/               #   Better Auth (self-hosted identity, sessions, JWT)
 │   │   ├── billing/            #   Subscription tiers & billing control
 │   │   ├── clients/            #   Client accounts & tenant isolation
 │   │   ├── contracts/          #   Contracts & e-signature workflows
@@ -132,7 +132,7 @@ npm install
 npm run dev                 # Launches NestJS API in watch mode
 ```
 
-On your first run, you will need to copy `backend/.env.example` to `backend/.env` and fill in your Neon and Neon Auth/R2 credentials. 
+On your first run, you will need to copy `backend/.env.example` to `backend/.env` and fill in your Neon database, `BETTER_AUTH_SECRET` and R2 credentials. 
 To generate the Prisma client and push the schema to your Neon dev branch:
 ```bash
 npm run db:push
@@ -147,7 +147,7 @@ npm install
 npm run dev                 # Launches Next.js dev server on http://localhost:3000
 ```
 
-On your first run, copy `dashboard/.env.example` to `dashboard/.env.local`. Ensure you provide the matching `NEON_AUTH_BASE_URL`.
+On your first run, copy `dashboard/.env.example` to `dashboard/.env.local`. Point `API_URL` and `NEXT_PUBLIC_API_URL` at the API; authentication itself runs in the API.
 
 ---
 
@@ -155,7 +155,7 @@ On your first run, copy `dashboard/.env.example` to `dashboard/.env.local`. Ensu
 
 A **NestJS 11** micro-service owning business logic, access control, and data persistence.
 
-- **Authentication**: Managed cookie sessions via Neon Auth / Better Auth mounted at `/api/auth/*`.
+- **Authentication**: Self-hosted [Better Auth](https://www.better-auth.com) mounted at `/api/auth/*`: email and password, cookie sessions, and short-lived JWTs the web app sends as bearer tokens. Users live in this database (`auth_*` tables).
 - **Data Layer**: Cloud PostgreSQL database powered by **Neon Postgres** and **Prisma ORM** (`packages/database`).
 - **File Management**: Direct-to-object storage uploads using Cloudflare R2 presigned S3 URLs (`@aws-sdk/client-s3`).
 - **Invoicing**: Dynamic invoice creation, PDF generation via `pdfkit`, and Resend email delivery.

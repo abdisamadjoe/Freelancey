@@ -7,7 +7,7 @@ import {
 } from "@nestjs/common";
 import type { PrismaService } from "../prisma/prisma.service";
 import type { AuthService } from "../auth/auth.service";
-import type { NeonAuthUsersRepository } from "../auth/neon-auth-users.repository";
+import type { AuthUsersRepository } from "../auth/auth-users.repository";
 
 interface PrismaArgs {
   where?: Record<string, unknown>;
@@ -39,7 +39,7 @@ const mockAuthService = {
   sendAdminPasswordReset: vi.fn(() => Promise.resolve({ emailSent: true })),
 };
 
-const mockNeonAuthUsers = {
+const mockAuthUserRows = {
   findUnique: vi.fn((id: string) =>
     Promise.resolve({ id, name: null, email: `${id}@test.com` }),
   ),
@@ -75,7 +75,7 @@ describe("ClientsService", () => {
       mockAuthService as unknown as AuthService,
       { send: vi.fn(() => Promise.resolve()) } as unknown as import("../mail/mail.service").MailService,
       { get: vi.fn((_key: string, fallback?: string) => fallback) } as unknown as import("@nestjs/config").ConfigService,
-      mockNeonAuthUsers as unknown as NeonAuthUsersRepository,
+      mockAuthUserRows as unknown as AuthUsersRepository,
     );
     mockPrisma.member.findFirst.mockClear();
     mockPrisma.member.count.mockClear();

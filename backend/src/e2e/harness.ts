@@ -9,7 +9,7 @@
 process.env.LOG_LEVEL = "silent";
 process.env.NODE_ENV = "test";
 process.env.APP_ENCRYPTION_SECRET ??= "e2e-secret-e2e-secret-e2e-secret-1234";
-process.env.NEON_AUTH_BASE_URL ??= "http://127.0.0.1:1/auth";
+process.env.BETTER_AUTH_SECRET ??= "e2e-better-auth-secret-0123456789abcd";
 process.env.WEB_URL ??= "http://localhost:3000";
 process.env.R2_ACCOUNT_ID ??= "e2e";
 process.env.R2_BUCKET_NAME ??= "e2e";
@@ -21,7 +21,7 @@ import { ValidationPipe, RequestMethod, type INestApplication } from "@nestjs/co
 import { Test } from "@nestjs/testing";
 import cookieParser from "cookie-parser";
 import { AppModule } from "../app.module";
-import { StackAuthClient } from "../auth/stack-auth.client";
+import { BetterAuthService } from "../auth/better-auth.service";
 import { MailService } from "../mail/mail.service";
 import { PrismaService } from "../prisma/prisma.service";
 
@@ -44,7 +44,7 @@ export async function bootApp(): Promise<Harness> {
   const mails: SentMail[] = [];
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(StackAuthClient)
+    .overrideProvider(BetterAuthService)
     .useValue({
       verifyAccessToken: async (token: string) => (token.startsWith("test:") ? { sub: token.slice(5) } : null),
     })
