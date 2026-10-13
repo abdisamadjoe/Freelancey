@@ -150,6 +150,7 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [orgName, setOrgName] = useState("");
+  const [accountStep, setAccountStep] = useState<1 | 2>(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -170,6 +171,11 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (accountStep === 1) {
+      setError("");
+      setAccountStep(2);
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -288,48 +294,70 @@ export default function SignupPage() {
   return (
     <AuthShell>
       <div className="space-y-6">
-        <AuthHeading title="Create your account" description="Set up your agency portal" />
+        <AuthHeading
+          title="Create your account"
+          description={accountStep === 1 ? "Step 1 of 2 · Your agency" : "Step 2 of 2 · Sign-in details"}
+        />
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <Notice status="error">{error}</Notice>}
 
-          <TextInput label="Your Name" value={name} onChange={setName} required name="name" />
-          <TextInput label="Agency / Company Name" value={orgName} onChange={setOrgName} required name="orgName" />
-          <TextInput label="Email" type="email" value={email} onChange={setEmail} required name="email" />
+          {accountStep === 1 ? (
+            <>
+              <TextInput label="Your Name" value={name} onChange={setName} required name="name" />
+              <TextInput label="Agency / Company Name" value={orgName} onChange={setOrgName} required name="orgName" />
+              <ActionButton type="submit" variant="primary" size="lg" className="w-full">
+                Continue
+              </ActionButton>
+            </>
+          ) : (
+            <>
+              <TextInput label="Email" type="email" value={email} onChange={setEmail} required name="email" />
 
-          <div className="flex flex-col gap-1.5">
-            <TextInput label="Password" type="password" value={password} onChange={setPassword} required name="password" autoComplete="new-password" />
+              <div className="flex flex-col gap-1.5">
+                <TextInput label="Password" type="password" value={password} onChange={setPassword} required name="password" autoComplete="new-password" />
 
-            {password.length > 0 && (
-              <div className="mt-0.5 flex flex-col gap-1.5">
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div
-                      key={i}
-                      className={cn("h-1 flex-1 rounded-full", i <= passed ? strengthBar : "bg-background-gray-secondary")}
-                    />
+                {password.length > 0 && (
+                  <div className="mt-0.5 flex flex-col gap-1.5">
+                    <div className="flex gap-1">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div
+                          key={i}
+                          className={cn("h-1 flex-1 rounded-full", i <= passed ? strengthBar : "bg-background-gray-secondary")}
+                        />
+                      ))}
+                    </div>
+                    <p className={cn("text-xs font-medium", strengthText)}>{strength}</p>
+                  </div>
+                )}
+
+                <ul className="mt-0.5 flex flex-col gap-1 text-xs leading-5 text-text-tertiary">
+                  {requirements.map((requirement) => (
+                    <li key={requirement.label} className={requirement.met ? "text-success-500" : undefined}>
+                      {requirement.met ? "✓" : "•"} {requirement.label}
+                    </li>
                   ))}
-                </div>
-                <p className={cn("text-xs font-medium", strengthText)}>{strength}</p>
+                </ul>
               </div>
-            )}
 
-            <ul className="mt-0.5 flex flex-col gap-1 text-xs leading-5 text-text-tertiary">
-              {requirements.map((requirement) => (
-                <li key={requirement.label} className={requirement.met ? "text-success-500" : undefined}>
-                  {requirement.met ? "✓" : "•"} {requirement.label}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <ActionButton type="submit" variant="primary" size="lg" className="w-full" loading={loading}>
-            {loading ? "Creating account..." : "Create Account"}
-          </ActionButton>
+              <ActionButton type="submit" variant="primary" size="lg" className="w-full" loading={loading}>
+                {loading ? "Creating account..." : "Create Account"}
+              </ActionButton>
+            </>
+          )}
         </form>
 
         <div className="flex flex-col items-center gap-2 text-sm text-text-tertiary">
-          {billingEnabled && (
+          {accountStep === 2 && (
+            <button
+              type="button"
+              onClick={() => setAccountStep(1)}
+              className="font-medium text-neutral-brand-color hover:underline"
+            >
+              Back
+            </button>
+          )}
+          {accountStep === 1 && billingEnabled && (
             <button
               type="button"
               onClick={() => setStep("plan")}

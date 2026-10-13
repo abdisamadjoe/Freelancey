@@ -40,6 +40,7 @@ import { DeliverablesModule } from "./deliverables/deliverables.module";
 import { HandoverModule } from "./handover/handover.module";
 import { SupportModule } from "./support/support.module";
 import { PipelineModule } from "./pipeline/pipeline.module";
+import { KeepAliveModule } from "./keep-alive/keep-alive.module";
 import { AppController } from "./app.controller";
 import { HealthController } from "./health.controller";
 import { SessionMiddleware } from "./auth/session.middleware";
@@ -109,6 +110,7 @@ import { PlanGuard } from "./common/guards/plan.guard";
     HandoverModule,
     SupportModule,
     PipelineModule,
+    KeepAliveModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
