@@ -82,6 +82,8 @@ model AuthJwks {
   id         String    @id
   publicKey  String
   privateKey String
+  alg        String?
+  crv        String?
   createdAt  DateTime  @default(now())
   expiresAt  DateTime?
 

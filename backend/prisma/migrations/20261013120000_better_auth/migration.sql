@@ -57,6 +57,8 @@ CREATE TABLE "auth_jwks" (
     "id" TEXT NOT NULL,
     "publicKey" TEXT NOT NULL,
     "privateKey" TEXT NOT NULL,
+    "alg" TEXT,
+    "crv" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "expiresAt" TIMESTAMP(3),
 
