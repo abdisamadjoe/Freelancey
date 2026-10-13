@@ -1,6 +1,6 @@
 <div align="center">
 <a href="https://freelancey.groundwork.co.ke/" target="_blank">
-  <img width="100" height="100" alt="icon" src="https://github.com/user-attachments/assets/c5eb99ab-cc87-47c5-9959-e585049ab4a7" />
+  <img width="100" height="100" alt="Freelancey logo" src="dashboard/public/logo-symbol.svg" />
 </a>
 
 # Freelancey
@@ -12,7 +12,7 @@
 ![Next.js](https://img.shields.io/badge/Next.js-black?logo=nextdotjs&logoColor=white&style=flat)
 ![React](https://img.shields.io/badge/React-61DAFB?logo=react&logoColor=black&style=flat)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white&style=flat)
-![Neon](https://img.shields.io/badge/Neon_Postgres-00E599?logo=neon&logoColor=black&style=flat)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white&style=flat)
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?logo=prisma&logoColor=white&style=flat)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?logo=tailwindcss&logoColor=white&style=flat)
 <br/>
@@ -73,7 +73,7 @@ Lead → Contacted → Discovery → Qualified → Proposal → Contract → Sig
 
 | Directory | What it is | Runtime / Tech |
 |---|---|---|
-| [`backend/`](#the-backend-api) | The REST API server and shared monorepo libraries (database models, email templates, DTO types) | **NestJS 11**, Prisma 6, React Email, Neon Postgres |
+| [`backend/`](#the-backend-api) | The REST API server and shared monorepo libraries (database models, email templates, DTO types) | **NestJS 11**, Prisma 6, React Email, Postgres |
 | [`dashboard/`](#the-web-app) | The web application containing agency management dashboards and client portals | **Next.js 16 App Router**, React 19, Tailwind CSS |
 | [`docs/`](#documentation) | Architectural guides and environment configuration | Markdown |
 
@@ -81,7 +81,7 @@ Lead → Contacted → Discovery → Qualified → Proposal → Contract → Sig
 freelancey/
 ├── backend/                    # NestJS API Server
 │   ├── packages/               #   Monorepo Shared Packages
-│   │   ├── database/           #     Prisma schema, migrations & seeders (Neon Postgres)
+│   │   ├── database/           #     Prisma schema, migrations & seeders (Postgres)
 │   │   ├── email/              #     React Email templates & Resend client
 │   │   └── shared/             #     TypeScript types, DTO schemas & constants
 │   ├── src/
@@ -114,7 +114,7 @@ freelancey/
 
 - **Node.js 22+** (configured in `.nvmrc` and root `package.json`)
 - **npm 10+** (package manager `npm@10.9.8`)
-- **Neon Postgres** (Neon cloud database or dev database branch)
+- **Postgres** (a hosted or local database)
 
 ---
 
@@ -132,8 +132,8 @@ npm install
 npm run dev                 # Launches NestJS API in watch mode
 ```
 
-On your first run, you will need to copy `backend/.env.example` to `backend/.env` and fill in your Neon database, `BETTER_AUTH_SECRET` and R2 credentials. 
-To generate the Prisma client and push the schema to your Neon dev branch:
+On your first run, you will need to copy `backend/.env.example` to `backend/.env` and fill in your Postgres connection strings, `BETTER_AUTH_SECRET` and R2 credentials. 
+To generate the Prisma client and push the schema to your development database:
 ```bash
 npm run db:push
 npm run db:generate
@@ -156,7 +156,7 @@ On your first run, copy `dashboard/.env.example` to `dashboard/.env.local`. Poin
 A **NestJS 11** micro-service owning business logic, access control, and data persistence.
 
 - **Authentication**: Self-hosted [Better Auth](https://www.better-auth.com) mounted at `/api/auth/*`: email and password, cookie sessions, and short-lived JWTs the web app sends as bearer tokens. Users live in this database (`auth_*` tables).
-- **Data Layer**: Cloud PostgreSQL database powered by **Neon Postgres** and **Prisma ORM** (`packages/database`).
+- **Data Layer**: **Postgres** database accessed through **Prisma ORM** (`packages/database`).
 - **File Management**: Direct-to-object storage uploads using Cloudflare R2 presigned S3 URLs (`@aws-sdk/client-s3`).
 - **Invoicing**: Dynamic invoice creation, PDF generation via `pdfkit`, and Resend email delivery.
 - **Security & Authorization**: Strict server-side guards for multi-tenant isolation across organizations and clients.
@@ -200,7 +200,7 @@ The web application serving agency dashboards and client portal views.
 - **Server-Enforced Access Control**: All authorization rules and tenant boundaries are evaluated server-side.
 - **Isolated Multi-Tenancy**: Organization data is compartmentalized; client users are strictly scoped to their explicit projects.
 - **Secure Presigned Uploads**: Files are stored in private S3/R2 storage buckets using short-lived presigned URLs.
-- **Database Safety**: Serverless data isolation and connection pooling backed by Neon Postgres.
+- **Database Safety**: Data isolation and connection pooling backed by Postgres.
 
 ---
 

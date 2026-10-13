@@ -48,21 +48,6 @@ export const STAFF_NAV: NavSection[] = [
       { title: "Reports", url: "/dashboard/reports", icon: <PieChartIcon />, items: [] },
     ],
   },
-  {
-    label: "SYSTEM",
-    items: [
-      {
-        title: "Settings",
-        icon: <Widget4Icon />,
-        items: [
-          { title: "Account", url: "/dashboard/settings/account" },
-          { title: "Workspace", url: "/dashboard/settings/workspace" },
-          { title: "Billing", url: "/dashboard/settings/billing" },
-          { title: "Payments", url: "/dashboard/settings/payments" },
-        ],
-      },
-    ],
-  },
 ];
 
 /** Navigation for client (portal) members. */

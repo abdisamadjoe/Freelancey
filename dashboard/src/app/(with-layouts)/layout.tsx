@@ -1,5 +1,4 @@
 import { DynamicFavicon } from "@/components/app/dynamic-favicon";
-import { TelemetryConsentBanner } from "@/components/app/telemetry-banner";
 import { AppShell } from "@/components/common/app-shell";
 import { getSession } from "@/lib/auth";
 import { customPrimary, getLogoSrc, getOrgBranding } from "@/lib/org-branding";
@@ -22,13 +21,6 @@ export default async function WithLayout({ children }: { children: ReactNode }) 
     }
   }
 
-  let telemetryEnabled: boolean | null = null;
-  const isHosted = process.env.NEXT_PUBLIC_SENTRY_ENABLED === "true";
-  if (session.member.role === "owner" && !isHosted) {
-    const settings = await serverApiFetch<{ telemetryEnabled?: boolean | null }>("/settings");
-    telemetryEnabled = settings?.telemetryEnabled ?? null;
-  }
-
   const primary = customPrimary(branding?.primaryColor);
   const logoSrc = getLogoSrc(branding);
 
@@ -47,7 +39,6 @@ export default async function WithLayout({ children }: { children: ReactNode }) 
           hideLogo={branding?.hideLogo}
         >
           <DynamicFavicon href={logoSrc || "/icon.png"} />
-          {session.member.role === "owner" && !isHosted && telemetryEnabled === null && <TelemetryConsentBanner />}
           {children}
         </AppShell>
       </SessionProvider>
