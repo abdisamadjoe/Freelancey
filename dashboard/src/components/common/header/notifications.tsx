@@ -4,7 +4,6 @@ import {
   BellIcon,
   CreditCardIcon,
   LetterIcon,
-  PrinterIcon,
   } from "@/components/common/header/icons";
 import { Button } from "@/components/tailgrids/core/button";
 import { OverlayWrapper } from "@/components/tailgrids/core/overlay";

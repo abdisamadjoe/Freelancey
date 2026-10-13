@@ -115,6 +115,8 @@ function Content() {
   const initialTab = tabParam && TAB_IDS.includes(tabParam) ? tabParam : searchParams.get("task") ? "tasks" : "updates";
 
   const isArchived = !!project?.archivedAt;
+  // Fixed per mount so rendering stays pure.
+  const [nowMs] = useState(() => Date.now());
 
   useEffect(() => {
     if (!project?.clientId) return;
@@ -284,7 +286,7 @@ function Content() {
 
   const daysLeft = (() => {
     if (!project.endDate || isArchived) return null;
-    const diff = Math.ceil((new Date(project.endDate).getTime() - Date.now()) / 86_400_000);
+    const diff = Math.ceil((new Date(project.endDate).getTime() - nowMs) / 86_400_000);
     if (diff < 0) return { text: `${Math.abs(diff)} day${Math.abs(diff) !== 1 ? "s" : ""} overdue`, warn: true };
     if (diff === 0) return { text: "Due today", warn: true };
     return { text: `${diff} day${diff !== 1 ? "s" : ""} left`, warn: diff <= 7 };

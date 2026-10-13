@@ -93,7 +93,7 @@ export function UpdatesSection({
       })
       .catch((err) => setLoadError(err instanceof Error ? err.message : "Failed to load updates"))
       .finally(() => setLoading(false));
-  }, [projectId, page]);
+  }, [projectId, page, timelinePath]);
 
   useEffect(() => {
     load();

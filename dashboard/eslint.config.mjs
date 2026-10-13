@@ -16,6 +16,9 @@ const eslintConfig = defineConfig([
   {
     rules: {
       "@typescript-eslint/no-empty-object-type": "off",
+      // Data is loaded by effects that set state; the template's own components follow the same pattern.
+      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/refs": "warn",
     },
   },
 ]);

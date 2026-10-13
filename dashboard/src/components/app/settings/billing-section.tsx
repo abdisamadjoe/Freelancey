@@ -111,7 +111,7 @@ export function BillingSection() {
           cancelUrl: `${window.location.origin}/dashboard/settings/billing`,
         }),
       });
-      window.location.href = res.url;
+      window.location.assign(res.url);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create checkout session");
       setBusySlug(null);

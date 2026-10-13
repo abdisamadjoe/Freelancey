@@ -3,7 +3,6 @@
 import {
   useState,
   useEffect,
-  useCallback,
   createContext,
   useContext,
 } from "react";
@@ -98,11 +97,6 @@ export interface Notification {
   link: string | null;
   read: boolean;
   createdAt: string;
-}
-
-interface PaginatedResponse {
-  data: Notification[];
-  meta: { total: number; page: number; limit: number; totalPages: number };
 }
 
 export function timeAgo(dateStr: string): string {

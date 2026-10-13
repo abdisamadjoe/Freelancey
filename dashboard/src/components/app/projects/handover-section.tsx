@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionButton, CheckInput, Notice, Panel, StatusBadge, TextAreaInput, TextInput } from "@/components/app/kit";
+import { ActionButton, CheckInput, Notice, Panel, StatusBadge, TextInput } from "@/components/app/kit";
 import { Button } from "@/components/tailgrids/core/button";
 import { apiFetch } from "@/lib/api";
 import type { CompletionCheck, HandoverData, HandoverItemRow } from "@/lib/workflow";

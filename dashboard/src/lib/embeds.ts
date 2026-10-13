@@ -44,12 +44,6 @@ export function nextSize(current: PreviewSize): PreviewSize {
   return current === "full" ? "compact" : "full";
 }
 
-const PROVIDER_LABELS: Record<EmbedProvider, string> = {
-  youtube: "YouTube",
-  loom: "Loom",
-  figma: "Figma",
-  "google-docs": "Google Docs",
-};
 
 // ---------------------------------------------------------------------------
 // Regex fast-path detection (zero network).
