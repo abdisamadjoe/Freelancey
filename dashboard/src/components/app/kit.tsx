@@ -41,13 +41,14 @@ import {
   TableRoot,
   TableRow,
 } from "@/components/tailgrids/core/table";
+import { TabContent, TabList, TabRoot, TabTrigger } from "@/components/tailgrids/core/tabs";
 import { TextArea } from "@/components/tailgrids/core/text-area";
 import { TextField } from "@/components/tailgrids/core/text-field";
 import { Toggle } from "@/components/tailgrids/core/toggle";
 import type { BadgeColor } from "@/lib/badge-color";
 import { cn } from "@/utils/cn";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { DialogTrigger } from "react-aria-components";
 
 /* ───────────────────────── Page scaffolding (home page markup) ───────────────────────── */
@@ -791,4 +792,145 @@ export function fmtDateTime(iso: string | null | undefined): string {
 export interface Paginated<T> {
   data: T[];
   meta: { total: number; page: number; limit: number; totalPages: number };
+}
+
+/* ───────────────────────── Imperative confirm ───────────────────────── */
+
+
+interface ConfirmOptions {
+  title: string;
+  message?: ReactNode;
+  confirmLabel?: string;
+  danger?: boolean;
+}
+
+/** `const { confirm, dialog } = useConfirm()`; render `{dialog}` once, then `await confirm({...})`. */
+export function useConfirm() {
+  const [opts, setOpts] = useState<ConfirmOptions | null>(null);
+  const resolver = useRef<((v: boolean) => void) | null>(null);
+
+  const confirm = useCallback((o: ConfirmOptions) => {
+    setOpts(o);
+    return new Promise<boolean>((resolve) => {
+      resolver.current = resolve;
+    });
+  }, []);
+
+  const settle = (value: boolean) => {
+    resolver.current?.(value);
+    resolver.current = null;
+    setOpts(null);
+  };
+
+  const dialog = (
+    <ConfirmModal
+      open={opts !== null}
+      onClose={() => settle(false)}
+      onConfirm={() => settle(true)}
+      title={opts?.title ?? ""}
+      description={opts?.message}
+      confirmLabel={opts?.confirmLabel}
+      danger={opts?.danger}
+    />
+  );
+
+  return { confirm, dialog };
+}
+
+/* ───────────────────────── Tabs (TabRoot, mounted lazily) ───────────────────────── */
+
+
+export interface TabDef {
+  value: string;
+  label: string;
+  badge?: string | number;
+  content: ReactNode;
+}
+
+/** The template's tabs; a tab's content is only mounted (and fetched) once it has been opened. */
+export function AppTabs({ tabs, defaultValue, onChange }: { tabs: TabDef[]; defaultValue?: string; onChange?: (v: string) => void }) {
+  const [active, setActive] = useState(defaultValue ?? tabs[0]?.value ?? "");
+  const [opened, setOpened] = useState<Set<string>>(() => new Set([defaultValue ?? tabs[0]?.value ?? ""]));
+
+  return (
+    <TabRoot
+      defaultValue={active}
+      value={active}
+      onValueChange={(v) => {
+        setActive(v);
+        setOpened((prev) => new Set(prev).add(v));
+        onChange?.(v);
+      }}
+      variant="minimal"
+    >
+      <TabList>
+        {tabs.map((t) => (
+          <TabTrigger key={t.value} value={t.value} badge={t.badge}>
+            {t.label}
+          </TabTrigger>
+        ))}
+      </TabList>
+      {tabs.map((t) => (
+        <TabContent key={t.value} value={t.value} className="px-0! py-5!">
+          {opened.has(t.value) ? <div className="space-y-5">{t.content}</div> : null}
+        </TabContent>
+      ))}
+    </TabRoot>
+  );
+}
+
+/* ───────────────────────── Multi-select (form-elements "Multi-Select" markup) ───────────────────────── */
+
+export function MultiSelectInput({
+  label,
+  value,
+  onChange,
+  options,
+  placeholder = "Select options",
+  className,
+}: {
+  label?: ReactNode;
+  value: string[];
+  onChange: (v: string[]) => void;
+  options: readonly Option[];
+  placeholder?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex w-full flex-col gap-1.5", className)}>
+      {label && <span className={LABEL}>{label}</span>}
+      <Select
+        selectionMode="multiple"
+        value={value}
+        onChange={(v) => onChange(Array.from(v as Iterable<string>))}
+        className="w-full"
+        aria-label={typeof label === "string" ? label : placeholder}
+      >
+        <SelectTrigger className="h-auto min-h-11 w-full flex-wrap justify-between gap-1.5 border-border-secondary bg-input-background py-1.5 pr-2.5 pl-3 text-sm">
+          <div className="flex flex-1 flex-wrap items-center gap-1.5">
+            {value.length === 0 ? (
+              <span className="text-input-placeholder-text">{placeholder}</span>
+            ) : (
+              value.map((v) => (
+                <span
+                  key={v}
+                  className="inline-flex items-center gap-1 rounded-md bg-dropdown-hover-background px-2 py-1 text-sm font-medium text-text-primary"
+                >
+                  {options.find((o) => o.value === v)?.label ?? v}
+                </span>
+              ))
+            )}
+          </div>
+          <SelectIndicator />
+        </SelectTrigger>
+        <SelectContent className="min-w-(--trigger-width)">
+          {options.map((o) => (
+            <SelectItem key={o.value} id={o.value} textValue={o.label}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }

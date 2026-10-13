@@ -50,6 +50,9 @@ const tabRootStyles = cva("max-w-full rounded-xl border border-card-border", {
 
 type TabsProps = {
   defaultValue: string;
+  /** Controlled value; lets a page mount a tab's content only once it is opened. */
+  value?: string;
+  onValueChange?: (value: string) => void;
   children: React.ReactNode;
   className?: string;
   variant?: StyleVariant;
@@ -58,12 +61,19 @@ type TabsProps = {
 
 export function TabRoot({
   defaultValue,
+  value,
+  onValueChange,
   children,
   className,
   variant = "default",
   direction = "vertical",
 }: TabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultValue);
+  const [internalTab, setInternalTab] = useState(defaultValue);
+  const activeTab = value ?? internalTab;
+  const setActiveTab = (next: string) => {
+    setInternalTab(next);
+    onValueChange?.(next);
+  };
   const id = useId();
 
   return (
