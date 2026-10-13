@@ -5,7 +5,6 @@ dist/
 .wrangler/
 .turbo/
 *.tsbuildinfo
-frontend/CHANGELOG.md
 .env
 .env.local
 uploads/

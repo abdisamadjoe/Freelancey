@@ -74,7 +74,7 @@ Lead → Contacted → Discovery → Qualified → Proposal → Contract → Sig
 | Directory | What it is | Runtime / Tech |
 |---|---|---|
 | [`backend/`](#the-backend-api) | The REST API server and shared monorepo libraries (database models, email templates, DTO types) | **NestJS 11**, Prisma 6, React Email, Neon Postgres |
-| [`frontend/`](#the-frontend-app) | The web application containing agency management dashboards and client portals | **Next.js 15 App Router**, React 19, Tailwind CSS |
+| [`dashboard/`](#the-web-app) | The web application containing agency management dashboards and client portals | **Next.js 16 App Router**, React 19, Tailwind CSS |
 | [`docs/`](#documentation) | Architectural guides and environment configuration | Markdown |
 
 ```
@@ -95,7 +95,7 @@ freelancey/
 │   │   └── search/             #   Global full-text search engine
 │   └── package.json
 │
-├── frontend/                   # Next.js 15 Authenticated App & Client Portal
+├── dashboard/                  # Next.js 16 Authenticated App & Client Portal
 │   ├── src/
 │   │   ├── app/                #   App router: (dashboard), (portal), (auth), (setup)
 │   │   ├── components/         #   UI design tokens, widgets & domain components
@@ -106,7 +106,7 @@ freelancey/
 ├── docs/                       # Configuration and roadmap
 ```
 
-> **Decoupled Architecture:** Freelancey is built as two completely separate applications: a Next.js frontend and a NestJS backend. They operate independently and must be run in their respective directories.
+> **Decoupled Architecture:** Freelancey is built as two completely separate applications: a Next.js web app and a NestJS backend. They operate independently and must be run in their respective directories.
 
 ---
 
@@ -139,15 +139,15 @@ npm run db:push
 npm run db:generate
 ```
 
-#### 2. Frontend App
+#### 2. Web App
 
 ```bash
-cd frontend
+cd dashboard
 npm install
 npm run dev                 # Launches Next.js dev server on http://localhost:3000
 ```
 
-On your first run, copy `frontend/.env.example` to `frontend/.env`. Ensure you provide the matching `NEON_AUTH_BASE_URL`.
+On your first run, copy `dashboard/.env.example` to `dashboard/.env.local`. Ensure you provide the matching `NEON_AUTH_BASE_URL`.
 
 ---
 
@@ -173,24 +173,24 @@ A **NestJS 11** micro-service owning business logic, access control, and data pe
 
 ---
 
-## The frontend app (`frontend/`)
+## The web app (`dashboard/`)
 
 The web application serving agency dashboards and client portal views.
 
-- **Framework**: **Next.js 15 App Router + React 19**, styled with Tailwind CSS and Lucide React icons.
+- **Framework**: **Next.js 16 App Router + React 19**, styled with Tailwind CSS and the NextAdmin (TailGrids) component set.
 - **Dual Interface**:
   - **Agency Dashboard (`/dashboard`)**: Project management, milestone planning, invoice creation, team access, and analytics.
   - **Client Portal (`/portal`)**: Secure client workspace to view assigned project status, inspect deliverables, sign contracts, and review invoices.
 - **White-Label Engine**: Customizable primary colors, agency branding logo, and domain routing.
 
-### Frontend Command Reference
+### Web App Command Reference
 
 | Command | Purpose |
 |---|---|
-| `npm run dev -w frontend` | Start Next.js development server on port 3000 |
-| `npm run build -w frontend` | Build production Next.js assets |
-| `npm run deploy:cf -w frontend` | Build and deploy frontend to Cloudflare Workers via OpenNext |
-| `npm run lint -w frontend` | Run ESLint checks across frontend pages and components |
+| `npm run dev -w dashboard` | Start Next.js development server on port 3000 |
+| `npm run build -w dashboard` | Build production Next.js assets |
+| `npm run lint -w dashboard` | Run ESLint checks across pages and components |
+| `npm run test -w dashboard` | Run the unit tests |
 
 ---
 

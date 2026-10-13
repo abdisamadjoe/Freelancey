@@ -15,7 +15,7 @@ Freelancey is designed to run on managed cloud infrastructure:
 
 ## 2. Environment Variables
 
-Configuration lives in two per-app `.env` files: `backend/.env` for the API (database, auth, storage, billing) and `frontend/.env` for the web app. Each is kept up to date with every variable that app reads.
+Configuration lives in two per-app `.env` files: `backend/.env` for the API (database, auth, storage, billing) and `dashboard/.env.local` for the web app. Each is kept up to date with every variable that app reads.
 
 ### Required Variables
 
@@ -24,14 +24,14 @@ Configuration lives in two per-app `.env` files: `backend/.env` for the API (dat
 | `DATABASE_URL`             | Neon Postgres connection string (pooled, used at runtime)                |
 | `DIRECT_URL`                | Neon Postgres connection string (direct/unpooled, used by `prisma migrate`) |
 | `APP_ENCRYPTION_SECRET`    | App-level secret (min 32 chars) for settings encryption, push-subscription encryption, and payment HMAC signing -- unrelated to authentication |
-| `NEON_AUTH_BASE_URL`        | Neon Auth's "Auth URL" from your Neon project's Auth tab (includes the project's db-name path segment) -- needed by both backend (JWKS verification) and frontend (auth proxy route) |
+| `NEON_AUTH_BASE_URL`        | Neon Auth's "Auth URL" from your Neon project's Auth tab (includes the project's db-name path segment) -- needed by both backend (JWKS verification) and web app (auth proxy route) |
 | `NEON_AUTH_COOKIE_SECRET`   | Frontend-only. Signs the auth proxy's first-party session cookies -- not a Neon credential, generate with `openssl rand -base64 32` |
 | `R2_ACCOUNT_ID`             | Cloudflare account ID for R2                                              |
 | `R2_ACCESS_KEY_ID`          | R2 access key ID                                                          |
 | `R2_SECRET_ACCESS_KEY`      | R2 secret access key                                                      |
 | `R2_BUCKET_NAME`            | R2 bucket name used for file storage                                     |
 
-`DATABASE_URL`, `DIRECT_URL`, `APP_ENCRYPTION_SECRET`, `NEON_AUTH_BASE_URL`, and the four `R2_*` variables are required everywhere -- the API refuses to start without them. The frontend additionally requires `NEON_AUTH_COOKIE_SECRET`.
+`DATABASE_URL`, `DIRECT_URL`, `APP_ENCRYPTION_SECRET`, `NEON_AUTH_BASE_URL`, and the four `R2_*` variables are required everywhere -- the API refuses to start without them. The web app additionally requires `NEON_AUTH_COOKIE_SECRET`.
 
 ### Common Optional Variables
 
@@ -54,7 +54,7 @@ Configuration lives in two per-app `.env` files: `backend/.env` for the API (dat
 File storage is Cloudflare R2 only. Set the four `R2_*` variables above; there is no other supported backend and no local-disk fallback.
 
 ### Authentication
-Authentication is handled by Neon Auth -- Neon's own managed [Better Auth](https://www.better-auth.com) instance, configured from your Neon project's **Auth** tab. The frontend integrates the `@neondatabase/auth` SDK in "proxy" mode: `frontend/src/lib/auth/server.ts` creates the Neon Auth instance and `frontend/src/app/api/auth/[...path]/route.ts` proxies auth requests through the frontend's own origin (so the session cookie is first-party and readable by server components), while `frontend/src/lib/auth/client.ts` is the browser-side client used in React components. The backend verifies Neon Auth JWTs statelessly via JWKS (`backend/src/auth/stack-auth.client.ts`, `backend/src/auth/session.middleware.ts`) rather than validating cookie-based sessions. The frontend forwards the current session's JWT (via `auth.token()`/`authClient.token()`) as an `Authorization: Bearer` header on every backend API call. 
+Authentication is handled by Neon Auth -- Neon's own managed [Better Auth](https://www.better-auth.com) instance, configured from your Neon project's **Auth** tab. The web app integrates the `@neondatabase/auth` SDK in "proxy" mode: `dashboard/src/lib/auth/server.ts` creates the Neon Auth instance and `dashboard/src/app/api/auth/[...path]/route.ts` proxies auth requests through the web app's own origin (so the session cookie is first-party and readable by server components), while `dashboard/src/lib/auth/client.ts` is the browser-side client used in React components. The backend verifies Neon Auth JWTs statelessly via JWKS (`backend/src/auth/stack-auth.client.ts`, `backend/src/auth/session.middleware.ts`) rather than validating cookie-based sessions. The web app forwards the current session's JWT (via `auth.token()`/`authClient.token()`) as an `Authorization: Bearer` header on every backend API call. 
 
 One behavioral note: an admin resetting a client's password now only triggers a reset email, sent from Neon Auth's own infrastructure -- there is no "copy a raw reset link" option, since Neon Auth's mail delivery isn't something this app can intercept.
 
