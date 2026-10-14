@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { NavLink } from "@/lib/site";
 
-export function MobileMenu({ links }: { links: NavLink[] }) {
+export function MobileMenu({ links, cta }: { links: NavLink[]; cta: NavLink }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="tab:hidden">
@@ -28,6 +28,11 @@ export function MobileMenu({ links }: { links: NavLink[] }) {
               </Link>
             </li>
           ))}
+          <li className="border-t border-line pt-4">
+            <a href={cta.href} className="t-14-md block text-primary">
+              {cta.label}
+            </a>
+          </li>
         </ul>
       )}
     </div>

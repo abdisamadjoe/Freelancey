@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BrandLogo } from "@/components/illustrations/logo";
 import { Button } from "@/components/ui/button";
 import { MobileMenu } from "@/components/layout/mobile-menu";
-import { githubUrl, navPrimary } from "@/lib/site";
+import { navPrimary, portalUrl } from "@/lib/site";
 
 export function Navbar() {
   return (
@@ -25,11 +25,11 @@ export function Navbar() {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden tab:block">
-              <Button href={githubUrl} variant="dark" size="sm">
+              <Button href={portalUrl} variant="dark" size="sm">
                 Get started
               </Button>
             </div>
-            <MobileMenu links={navPrimary} />
+            <MobileMenu links={navPrimary} cta={{ label: "Get started", href: portalUrl }} />
           </div>
         </div>
       </nav>
