@@ -31,12 +31,8 @@ services:
         sync: false
       - key: API_URL
         sync: false
-      # Cloudflare R2 file storage.
-      - key: R2_ACCOUNT_ID
-        sync: false
-      - key: R2_ACCESS_KEY_ID
-        sync: false
-      - key: R2_SECRET_ACCESS_KEY
-        sync: false
-      - key: R2_BUCKET_NAME
-        value: freelancey
+      # Cloudflare R2 file storage is optional. Without these four, files use local (ephemeral) disk.
+      # - key: R2_ACCOUNT_ID
+      # - key: R2_ACCESS_KEY_ID
+      # - key: R2_SECRET_ACCESS_KEY
+      # - key: R2_BUCKET_NAME
