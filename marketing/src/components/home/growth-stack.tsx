@@ -52,7 +52,7 @@ export function GrowthStack() {
   const tab = tabs[active];
   return (
     <section id="workflow" className="scroll-mt-24 relative flex flex-col items-center justify-center bg-white px-4 pb-12 pt-[60px] tab:px-6 tab:pt-20 lg:pt-[130px]">
-      <div className="flex w-full flex-col items-center justify-center gap-[42px] overflow-clip tab:gap-12 lg:gap-20">
+      <div className="flex w-full flex-col items-center justify-center gap-[42px] overflow-x-clip tab:gap-12 lg:gap-20">
         <InView className="w-full max-w-[574px]">
           <SectionTitle
             badge={
@@ -65,18 +65,23 @@ export function GrowthStack() {
           />
         </InView>
 
-        <div className="relative flex w-full flex-col items-center justify-center overflow-clip pt-6 tab:pt-10 lg:pt-[60px]">
+        <div className="relative flex w-full flex-col items-center justify-center overflow-x-clip pt-6 tab:pt-10 lg:pt-[60px]">
           <div className="absolute left-0 right-0 top-0 h-[296px] overflow-clip rounded-[16px] tab:h-[386px] lg:h-[554px] lg:rounded-[24px]">
             <div className="relative h-full w-full [mask-image:linear-gradient(#000_40%,transparent_80%)]">
               <Image src="/images/growth-stack-dashboard.png" alt="" fill sizes="1152px" className="object-cover [filter:url(#brand-green)]" />
             </div>
           </div>
-          <div className="relative flex w-full flex-col items-center gap-4 tab:gap-[30px]">
+          <InView delay={120} className="relative flex w-full flex-col items-center gap-4 tab:gap-[30px]">
             <div
               role="tablist"
               aria-label="Workflow stages"
-              className="relative z-[1] grid w-[94%] grid-cols-3 overflow-hidden rounded-[14px] bg-surface-2 shadow-[0_0_0_1px_rgba(11,12,43,0.08),0_1px_2px_rgba(11,12,43,0.04)] backdrop-blur-[10px] tab:w-[68%] tab:rounded-[16px]"
+              className="relative z-[1] grid w-[94%] grid-cols-3 rounded-[14px] bg-surface-2 p-1 shadow-[0_0_0_1px_rgba(11,12,43,0.08),0_1px_2px_rgba(11,12,43,0.04)] tab:w-[68%] tab:rounded-[18px]"
             >
+              <span
+                aria-hidden
+                className="absolute bottom-1 left-1 top-1 w-[calc((100%-8px)/3)] rounded-[10px] bg-white shadow-[0_1px_3px_rgba(11,12,43,0.1),0_0_0_1px_rgba(11,12,43,0.04)] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] tab:rounded-[14px]"
+                style={{ transform: `translateX(${active * 100}%)` }}
+              />
               {tabs.map((t, i) => {
                 const on = i === active;
                 return (
@@ -86,33 +91,12 @@ export function GrowthStack() {
                     type="button"
                     aria-selected={on}
                     onClick={() => setActive(i)}
-                    className={cn(
-                      "relative flex flex-col items-start gap-1 px-3 py-3 text-left outline-none transition-colors duration-200 focus-visible:z-[1] focus-visible:ring-2 focus-visible:ring-primary/40 tab:gap-1.5 tab:px-5 tab:py-4",
-                      i > 0 && "border-l border-ink/[0.08]",
-                      on ? "bg-white" : "hover:bg-white/60",
-                    )}
+                    className="relative z-[1] flex flex-col items-start gap-1 rounded-[10px] px-3 py-3 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/40 tab:gap-1.5 tab:rounded-[14px] tab:px-5 tab:py-4"
                   >
-                    <span className="flex items-center gap-2">
-                      <span
-                        aria-hidden
-                        className={cn(
-                          "h-1.5 w-1.5 rounded-full transition-colors duration-200",
-                          on ? "bg-primary" : "bg-ink/20",
-                        )}
-                      />
-                      <span
-                        className={cn(
-                          "font-mono text-[12px] leading-none tracking-[0.02em] tabular-nums transition-colors duration-200",
-                          on ? "text-primary" : "text-muted",
-                        )}
-                      >
-                        0{i + 1}
-                      </span>
-                    </span>
                     <span
                       className={cn(
-                        "t-15-sb tracking-[-0.2px] transition-colors duration-200",
-                        on ? "text-ink" : "text-ink/60",
+                        "t-15-sb tracking-[-0.2px] transition-colors duration-500",
+                        on ? "text-ink" : "text-ink/55",
                       )}
                     >
                       {t.label}
@@ -126,7 +110,7 @@ export function GrowthStack() {
               role="tabpanel"
               className="w-[94%] overflow-clip rounded-[12px] bg-[linear-gradient(rgba(255,255,255,0.8)_0%,#d8d8df_100%)] p-[6px] backdrop-blur-[8px] tab:w-[68%] tab:rounded-[24px] tab:p-[10px]"
             >
-              <div className="flex flex-col gap-4 rounded-[6px] bg-surface-2 p-4 tab:gap-6 tab:rounded-[14px] tab:p-8">
+              <div key={active} className="tab-swap flex flex-col gap-4 rounded-[6px] bg-surface-2 p-4 tab:gap-6 tab:rounded-[14px] tab:p-8">
                 <div className="flex flex-col gap-2">
                   <h3 className="t-h4 text-ink">{tab.title}</h3>
                   <p className="t-body text-body">{tab.text}</p>
@@ -134,7 +118,7 @@ export function GrowthStack() {
                 {tab.panel}
               </div>
             </div>
-          </div>
+          </InView>
         </div>
       </div>
     </section>

@@ -11,7 +11,7 @@ export function Faq() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <section id="faq" className="scroll-mt-24 relative flex flex-col items-center justify-center px-4 py-[60px] tab:px-6 tab:py-20 lg:py-[130px]">
-      <div className="grid w-full grid-cols-12 items-center gap-x-4 gap-y-6 overflow-clip tab:gap-x-6">
+      <div className="grid w-full grid-cols-12 items-center gap-x-4 gap-y-6 overflow-x-clip tab:gap-x-6">
         <div className="col-span-12 flex w-full flex-col items-start gap-[42px] lg:col-span-6 lg:gap-[46px]">
           <InView className="flex w-full flex-col items-start gap-4">
             <SectionBadge icon={<BadgeIconFaq />} pillClassName="bg-surface-2">
@@ -22,7 +22,7 @@ export function Faq() {
               Answers about how Freelancey works, who it is for and how to run it yourself.
             </p>
           </InView>
-          <div className="relative flex min-h-[395px] w-full flex-col justify-end overflow-hidden rounded-[16px] bg-dark p-6">
+          <InView delay={150} className="relative flex min-h-[395px] w-full flex-col justify-end overflow-hidden rounded-[16px] bg-dark p-6">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6, 78, 59, 0.45),transparent_60%)]" />
             <div className="relative z-[1] flex max-w-[380px] flex-col items-start gap-4">
               <p className="t-14-md !leading-[23.1px] text-white">
@@ -36,14 +36,14 @@ export function Faq() {
                 </svg>
               </a>
             </div>
-          </div>
+          </InView>
         </div>
         <div className="col-span-12 flex w-full flex-col gap-2 lg:col-span-6">
           {faqs.map((f, i) => {
             const isOpen = open === i;
             return (
+              <InView key={f.q} delay={i * 70}>
               <div
-                key={f.q}
                 className={cn(
                   "relative rounded-[12px] after:pointer-events-none after:absolute after:inset-0 after:rounded-[12px] after:border after:border-line after:content-['']",
                   isOpen ? "bg-surface" : "bg-white",
@@ -84,6 +84,7 @@ export function Faq() {
                   </div>
                 </div>
               </div>
+              </InView>
             );
           })}
         </div>

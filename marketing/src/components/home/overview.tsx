@@ -3,7 +3,6 @@ import { SectionBadge, SectionTitle } from "@/components/ui/section-badge";
 import { BadgeIconMeet } from "@/components/illustrations/badges/meet";
 import { LeadBoardMock, ProjectTasksMock, PortalMock } from "@/components/mocks";
 
-const ring = "shadow-ring-lavender";
 const cardBg = "bg-[linear-gradient(#ECF6F2_0%,transparent_100%)]";
 
 const cards = [
@@ -47,14 +46,14 @@ export function Overview() {
               className={`flex ${i === cards.length - 1 ? "tab:col-span-2 lg:col-span-1" : ""}`}
             >
               <article
-                className={`relative flex w-full flex-col overflow-hidden rounded-[16px] ${cardBg} ${ring} transition-transform duration-500 ease-out hover:-translate-y-1`}
+                className={`relative flex w-full flex-col overflow-hidden rounded-[16px] ${cardBg} transition-transform duration-500 ease-out hover:-translate-y-1`}
               >
                 <div className="flex flex-col gap-3 p-5 tab:p-6">
                   <span className="t-geist-13 uppercase tracking-[0.08em] text-primary">{c.eyebrow}</span>
                   <h3 className="t-h4 text-ink">{c.title}</h3>
                   <p className="t-15 text-body">{c.text}</p>
                 </div>
-                <div className="relative mt-auto px-3 pb-3 tab:px-4 tab:pb-4">
+                <div className="relative mt-auto h-[230px] overflow-hidden px-3 tab:h-[240px] tab:px-4 [mask-image:linear-gradient(to_bottom,#000_45%,transparent_100%)]">
                   <c.Mock />
                 </div>
               </article>

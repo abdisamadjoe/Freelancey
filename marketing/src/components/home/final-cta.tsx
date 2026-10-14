@@ -21,14 +21,14 @@ export function FinalCta() {
             Open source, MIT licensed and free to self-host. Your clients and data stay yours.
           </p>
         </InView>
-        <div className="flex shrink-0 flex-wrap items-center gap-3">
+        <InView delay={150} className="flex shrink-0 flex-wrap items-center gap-3">
           <Button href={githubUrl} variant="light" size="sm">
             Get the code
           </Button>
           <Button href={`${githubUrl}/issues`} variant="outline" size="sm" className="!bg-white/10 !text-white after:!border-white/30">
             Ask a question
           </Button>
-        </div>
+        </InView>
       </div>
     </section>
   );

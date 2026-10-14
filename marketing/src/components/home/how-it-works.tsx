@@ -24,7 +24,7 @@ const steps = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="scroll-mt-24 relative flex flex-col items-center justify-center px-4 py-[60px] tab:px-6 tab:pb-20 tab:pt-0 lg:pb-[130px]">
-      <div className="flex w-full flex-col items-center justify-center gap-[42px] overflow-clip tab:gap-12 lg:gap-20">
+      <div className="flex w-full flex-col items-center justify-center gap-[42px] overflow-x-clip tab:gap-12 lg:gap-20">
         <InView className="w-full max-w-[515px]">
           <SectionTitle
             badge={
@@ -38,8 +38,9 @@ export function HowItWorks() {
         </InView>
         <div className="hidden h-[45px] lg:block" aria-hidden />
         <div className="grid w-full grid-cols-12 gap-x-4 gap-y-[42px] tab:gap-x-6 lg:-mt-20">
-          {steps.map((s) => (
-            <article key={s.title} className="col-span-12 flex w-full flex-col items-center justify-center gap-3 overflow-clip tab:col-span-4 tab:gap-6 lg:gap-9">
+          {steps.map((s, i) => (
+            <InView key={s.title} delay={i * 120} className="col-span-12 flex tab:col-span-4">
+            <article className="flex w-full flex-col items-center justify-center gap-3 overflow-clip tab:gap-6 lg:gap-9">
               <div className="w-full">
                 <div className="flex min-h-[250px] w-full items-center justify-center rounded-[12px] bg-[linear-gradient(#ECF6F2_0%,transparent_100%)] p-4 tab:min-h-[218px] lg:min-h-[353px] lg:rounded-[16px] lg:p-6">
                   {s.mock}
@@ -50,6 +51,7 @@ export function HowItWorks() {
                 <p className="t-14 !leading-[21px] text-body">{s.text}</p>
               </div>
             </article>
+            </InView>
           ))}
         </div>
       </div>

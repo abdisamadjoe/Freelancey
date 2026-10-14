@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/illustrations/logo";
+import { InView } from "@/components/ui/in-view";
 import { Button } from "@/components/ui/button";
 import { githubUrl, navPrimary } from "@/lib/site";
 
@@ -43,7 +44,7 @@ export function Footer() {
         className="absolute left-1/2 top-0 -z-10 h-[300px] w-[900px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary-light/40 blur-[120px]"
       />
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-4 pb-8 pt-14 tab:px-6 lg:gap-16 lg:pt-20">
-        <div className="flex flex-col gap-12 lg:flex-row lg:justify-between lg:gap-16">
+        <InView className="flex flex-col gap-12 lg:flex-row lg:justify-between lg:gap-16">
           <div className="flex max-w-[380px] flex-col items-start gap-5">
             <Link href="/" aria-label="Freelancey home" className="block h-10 w-[170px] shrink-0 [&_*]:!fill-white [&_*]:!text-white">
               <BrandLogo />
@@ -78,13 +79,13 @@ export function Footer() {
               </div>
             ))}
           </nav>
-        </div>
+        </InView>
 
-        <div aria-hidden className="select-none overflow-hidden">
+        <InView delay={120} className="select-none overflow-hidden">
           <span className="block text-center font-[family-name:var(--font-geist)] text-[19vw] font-semibold leading-[0.8] tracking-[-0.06em] text-white/[0.06] min-[1200px]:text-[220px]">
             Freelancey
           </span>
-        </div>
+        </InView>
 
         <div className="flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 tab:flex-row tab:items-center">
           <p className="t-14 text-white/55">© {new Date().getFullYear()} Freelancey. Released under the MIT licence.</p>

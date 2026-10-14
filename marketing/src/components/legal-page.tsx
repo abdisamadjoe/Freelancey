@@ -24,7 +24,7 @@ export function LegalPage({
             text={intro}
           />
         </InView>
-        <div className="flex w-full max-w-[1000px] flex-col gap-6">
+        <InView delay={120} className="flex w-full max-w-[1000px] flex-col gap-6">
           <article className="flex flex-col gap-8 rounded-[16px] bg-white p-5 shadow-ring-lavender tab:gap-10 tab:p-10">
             <p className="t-14-md text-primary">Last updated {updated}</p>
             {sections.map((s) => (
@@ -38,7 +38,7 @@ export function LegalPage({
               </div>
             ))}
           </article>
-        </div>
+        </InView>
       </div>
     </section>
   );
