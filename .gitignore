@@ -7,6 +7,7 @@ dist/
 *.tsbuildinfo
 .env
 .env.local
+.env.production
 uploads/
 coverage/
 test-results/

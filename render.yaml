@@ -1,0 +1,42 @@
+# Render blueprint for the Freelancey API (NestJS).
+# Secrets use `sync: false`, so Render asks for them on first deploy and they never live in git.
+services:
+  - type: web
+    name: freelancey-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    branch: main
+    autoDeploy: true
+    # NODE_ENV=production on Render skips devDependencies, which the build needs (nest CLI, prisma, typescript).
+    buildCommand: npm ci --include=dev && npm run build
+    # Applies pending Prisma migrations, then starts the API.
+    startCommand: npm run db:migrate:deploy && npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      # Aiven Postgres (add ?sslmode=require). DIRECT_URL is used by `prisma migrate`.
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      # Do not regenerate APP_ENCRYPTION_SECRET: it decrypts data already stored in the database.
+      - key: APP_ENCRYPTION_SECRET
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      # Dashboard URL (CORS and links) and this service's own public URL.
+      - key: WEB_URL
+        sync: false
+      - key: API_URL
+        sync: false
+      # Cloudflare R2 file storage.
+      - key: R2_ACCOUNT_ID
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET_NAME
+        value: freelancey
