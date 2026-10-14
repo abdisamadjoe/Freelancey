@@ -55,9 +55,7 @@ export function Overview() {
                   <p className="t-15 text-body">{c.text}</p>
                 </div>
                 <div className="relative mt-auto px-3 pb-3 tab:px-4 tab:pb-4">
-                  <div className="overflow-hidden rounded-[12px] bg-white/60 p-2 shadow-[0_0_0_1px_#D6EBE3] tab:p-3">
-                    <c.Mock />
-                  </div>
+                  <c.Mock />
                 </div>
               </article>
             </InView>
