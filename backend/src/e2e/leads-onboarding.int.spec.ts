@@ -24,7 +24,7 @@ let slugA: string;
 async function createUser(userId: string, name: string, mail: string) {
   const now = new Date();
   await h.prisma.$executeRawUnsafe(
-    `INSERT INTO neon_auth."user" (id, name, email, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, true, $4, $4)`,
+    `INSERT INTO auth_user (id, name, email, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, true, $4, $4)`,
     userId, name, mail, now,
   );
 }

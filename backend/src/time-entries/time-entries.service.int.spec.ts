@@ -4,8 +4,7 @@ import { PrismaService } from "../prisma/prisma.service";
 import { AuthUsersRepository } from "../auth/auth-users.repository";
 import { TimeEntriesService } from "./time-entries.service";
 
-// Neon Auth owns the `neon_auth.user` table outside of the app's Prisma
-// schema — Member.userId etc. are plain scalars with no FK, so tests don't
+// Better Auth owns the `auth_user` table; Member.userId etc. are plain scalars with no FK, so tests don't
 // need real rows there. This in-memory directory + fake repository stand in
 // for AuthUsersRepository wherever the service resolves user names.
 const userDirectory = new Map<string, { id: string; name: string; email: string }>();

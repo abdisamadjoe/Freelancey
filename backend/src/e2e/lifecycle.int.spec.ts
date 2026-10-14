@@ -28,7 +28,7 @@ const tokenOf = (link: string) => link.split("/").pop() as string;
 async function createUser(userId: string, name: string, mail: string) {
   const now = new Date();
   await h.prisma.$executeRawUnsafe(
-    `INSERT INTO neon_auth."user" (id, name, email, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, true, $4, $4)`,
+    `INSERT INTO auth_user (id, name, email, "emailVerified", "createdAt", "updatedAt") VALUES ($1, $2, $3, true, $4, $4)`,
     userId,
     name,
     mail,
@@ -69,7 +69,7 @@ afterAll(async () => {
     await h.prisma.formTemplate.deleteMany({ where: { organizationId: { in: orgs } } });
     await h.prisma.projectStatus.deleteMany({ where: { organizationId: { in: orgs } } });
     await h.prisma.organization.deleteMany({ where: { id: { in: orgs } } });
-    await h.prisma.$executeRawUnsafe(`DELETE FROM neon_auth."user" WHERE id = ANY($1)`, [U.owner, U.otherOwner]);
+    await h.prisma.$executeRawUnsafe(`DELETE FROM auth_user WHERE id = ANY($1)`, [U.owner, U.otherOwner]);
     await h.close();
   }
 });
