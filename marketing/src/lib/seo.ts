@@ -33,7 +33,7 @@ export const organizationJsonLd = {
   "@type": "Organization",
   name: siteName,
   url: SITE_URL,
-  logo: `${SITE_URL}/images/logo-symbol.svg`,
+  logo: `${SITE_URL}/images/logo.svg`,
   sameAs: ["https://github.com/GroundworkTechnologies/Freelancey"],
 };
 

@@ -50,7 +50,7 @@ export function Hero() {
         >
           <div className="relative min-w-0 grow overflow-hidden rounded-[6px] md:rounded-[12px] lg:rounded-[16px]">
             <Image
-              src="/images/dashboard-overview.png"
+              src="/images/dashboard-overview-v2.png"
               alt="Freelancey dashboard overview with project, receivables and lead pipeline summaries"
               width={2160}
               height={1350}
