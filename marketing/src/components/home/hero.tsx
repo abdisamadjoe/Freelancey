@@ -46,7 +46,7 @@ export function Hero() {
           </div>
         </div>
         <HeroShowcase
-          className="relative z-[3] flex w-[90%] items-center justify-center overflow-clip rounded-[16px] bg-[radial-gradient(96.4534%_96.4534%_at_50%_3.54659%,rgba(255,255,255,0.4)_0%,transparent_100%)] p-[10px] shadow-[0_271px_76px_0_transparent,0_11px_24px_0_rgba(0,0,0,0.05),0_98px_59px_0_rgba(0,0,0,0.03),0_43px_43px_0_rgba(0,0,0,0.04),0_174px_69px_0_rgba(0,0,0,0.01)] md:w-[75%] md:rounded-[24px] md:p-3 lg:rounded-[32px] lg:p-4"
+          className="relative z-[3] flex w-full items-center justify-center overflow-clip rounded-[16px] bg-[radial-gradient(96.4534%_96.4534%_at_50%_3.54659%,rgba(255,255,255,0.4)_0%,transparent_100%)] p-[10px] shadow-[0_271px_76px_0_transparent,0_11px_24px_0_rgba(0,0,0,0.05),0_98px_59px_0_rgba(0,0,0,0.03),0_43px_43px_0_rgba(0,0,0,0.04),0_174px_69px_0_rgba(0,0,0,0.01)] md:w-[90%] md:rounded-[24px] md:p-3 lg:rounded-[32px] lg:p-4"
         >
           <div className="relative min-w-0 grow overflow-hidden rounded-[6px] md:rounded-[12px] lg:rounded-[16px]">
             <Image
@@ -55,7 +55,7 @@ export function Hero() {
               width={2160}
               height={1350}
               priority
-              sizes="(min-width: 1200px) 870px, 75vw"
+              sizes="(min-width: 1200px) 1040px, 90vw"
               className="h-auto w-full rounded-[inherit]"
             />
           </div>
