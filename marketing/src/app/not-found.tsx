@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata: Metadata = { title: "Freelancey: Page Not Found", robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: "Gigly: Page Not Found", robots: { index: false, follow: false } };
 
 export default function NotFound() {
   return (

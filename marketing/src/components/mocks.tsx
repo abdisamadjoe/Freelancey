@@ -1,7 +1,7 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Small product mock-ups drawn in code. They show the shape of Freelancey screens
+ * Small product mock-ups drawn in code. They show the shape of Gigly screens
  * with sample labels only (no customer data).
  */
 

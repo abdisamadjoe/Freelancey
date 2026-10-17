@@ -1,10 +1,10 @@
 export const faqs = [
   {
-    q: "What is Freelancey?",
-    a: "Freelancey is an open-source client and project management platform for freelancers. It covers leads, proposals, contracts, onboarding, projects, files, invoices and a client portal in one app.",
+    q: "What is Gigly?",
+    a: "Gigly is an open-source client and project management platform for freelancers. It covers leads, proposals, contracts, onboarding, projects, files, invoices and a client portal in one app.",
   },
   {
-    q: "Is Freelancey free?",
+    q: "Is Gigly free?",
     a: "Yes. The code is MIT licensed, so you can self-host it for free and change it however you like. A hosted option is available if you would rather not run servers.",
   },
   {

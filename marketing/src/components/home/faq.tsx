@@ -19,7 +19,7 @@ export function Faq() {
             </SectionBadge>
             <h2 className="t-h2 text-ink">Got Questions?</h2>
             <p className="t-body text-body">
-              Answers about how Freelancey works, who it is for and how to run it yourself.
+              Answers about how Gigly works, who it is for and how to run it yourself.
             </p>
           </InView>
           <InView delay={150} className="relative flex min-h-[395px] w-full flex-col justify-end overflow-hidden rounded-[16px] bg-dark p-6">
@@ -29,7 +29,7 @@ export function Faq() {
                 Still have questions or need help setting up? Ask on GitHub and we will help you get
                 running.
               </p>
-              <a href="https://github.com/GroundworkTechnologies/Freelancey/issues" target="_blank" rel="noreferrer" className="t-body-md group flex min-h-11 items-center gap-[10px] !font-medium text-white">
+              <a href="https://github.com/GroundworkTechnologies/Gigly/issues" target="_blank" rel="noreferrer" className="t-body-md group flex min-h-11 items-center gap-[10px] !font-medium text-white">
                 Ask on GitHub
                 <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
                   <path d="M1 10L10 1M2.5 1H10v7.5" />

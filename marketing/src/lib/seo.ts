@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { siteName } from "@/lib/site";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://freelancey.groundwork.co.ke").replace(/\/$/, "");
+export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://gigly.groundwork.co.ke").replace(/\/$/, "");
 
 export const defaultDescription =
   "Open-source client and project management for freelancers. Leads, proposals, contracts, projects, files and invoices in one self-hosted app.";
@@ -34,7 +34,7 @@ export const organizationJsonLd = {
   name: siteName,
   url: SITE_URL,
   logo: `${SITE_URL}/images/logo.svg`,
-  sameAs: ["https://github.com/GroundworkTechnologies/Freelancey"],
+  sameAs: ["https://github.com/GroundworkTechnologies/Gigly"],
 };
 
 export const websiteJsonLd = {

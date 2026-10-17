@@ -1,11 +1,11 @@
 <div align="center">
-<a href="https://freelancey.groundwork.co.ke/" target="_blank">
-  <img width="100" height="100" alt="Freelancey logo" src="dashboard/public/logo-symbol.svg" />
+<a href="https://gigly.groundwork.co.ke/" target="_blank">
+  <img width="100" height="100" alt="Gigly logo" src="dashboard/public/logo-symbol.svg" />
 </a>
 
-# Freelancey
+# Gigly
 
-**Freelancey is an open-source client and project management platform for freelancers.**
+**Gigly is an open-source client and project management platform for freelancers.**
 <br/>
 
 ![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white&style=flat)
@@ -23,7 +23,7 @@
 
 <br/>
 
-<a href="https://freelancey.groundwork.co.ke/" target="_blank">Website</a> | [Documentation](docs/Everything-You-Need-To-Know.md) | [GitHub Issues](https://github.com/GroundworkTechnologies/Freelancey/issues)
+<a href="https://gigly.groundwork.co.ke/" target="_blank">Website</a> | [Documentation](docs/Everything-You-Need-To-Know.md) | [GitHub Issues](https://github.com/GroundworkTechnologies/Gigly/issues)
 
 <br/>
 
@@ -35,7 +35,7 @@ Created & maintained by [@abdisamadjoe](https://github.com/abdisamadjoe)
 
 ## Overview
 
-Freelancey is an open-source client and project management platform for freelancers. Most freelancers and independent agencies struggle with scattered shared drives, manual spreadsheets, and endless back-and-forth emails to keep clients updated. Freelancey consolidates client management, project tracking, file delivery, e-signatures, and invoicing into a unified self-hosted platform.
+Gigly is an open-source client and project management platform for freelancers. Most freelancers and independent agencies struggle with scattered shared drives, manual spreadsheets, and endless back-and-forth emails to keep clients updated. Gigly consolidates client management, project tracking, file delivery, e-signatures, and invoicing into a unified self-hosted platform.
 
 Every project lifecycle moves through a structured, auditable workflow:
 
@@ -54,7 +54,7 @@ ONBOARDING → PROJECT_CREATION → MILESTONES_&_TASKS → INVOICING_&_DELIVERY 
 
 ### From lead to handover
 
-Freelancey follows a freelancer from "I found this business" to "the project is finished and I'm maintaining it". The full specification is in [`plan.md`](plan.md) (Appendix A).
+Gigly follows a freelancer from "I found this business" to "the project is finished and I'm maintaining it". The full specification is in [`plan.md`](plan.md) (Appendix A).
 
 ```
 Lead → Contacted → Discovery → Qualified → Proposal → Contract → Signed → Client
@@ -63,7 +63,7 @@ Lead → Contacted → Discovery → Qualified → Proposal → Contract → Sig
 ```
 
 - **Leads** come from any source: added by hand, the public contact form, referrals, or a CSV import (up to 200 rows at a time). All of them land in the same lead list, with a board view by status.
-- **Proposals and contracts** are written inside Freelancey. Details carry forward (lead → proposal → contract → project), so nothing is typed twice. Signing a contract turns the lead into an active client and keeps the whole history.
+- **Proposals and contracts** are written inside Gigly. Details carry forward (lead → proposal → contract → project), so nothing is typed twice. Signing a contract turns the lead into an active client and keeps the whole history.
 - **Forms only collect information from the client**: onboarding, project brief and support requests. Everything else is a workflow the freelancer runs.
 - **Clients need no account** for any of this. Proposals, contracts, forms, deliverable reviews, handovers and support pages are reached through private links (`/proposal/…`, `/contract/…`, `/onboarding/…`, `/brief/…`, `/review/…`, `/handover/…`, `/support/…`). Only a hash of each link's token is stored, links can be replaced at any time, and those pages are never indexed, cached or shared through a Referer header.
 
@@ -78,7 +78,7 @@ Lead → Contacted → Discovery → Qualified → Proposal → Contract → Sig
 | [`docs/`](#documentation) | Architectural guides and environment configuration | Markdown |
 
 ```
-freelancey/
+gigly/
 ├── backend/                    # NestJS API Server
 │   ├── packages/               #   Monorepo Shared Packages
 │   │   ├── database/           #     Prisma schema, migrations & seeders (Postgres)
@@ -106,7 +106,7 @@ freelancey/
 ├── docs/                       # Configuration and roadmap
 ```
 
-> **Decoupled Architecture:** Freelancey is built as two completely separate applications: a Next.js web app and a NestJS backend. They operate independently and must be run in their respective directories.
+> **Decoupled Architecture:** Gigly is built as two completely separate applications: a Next.js web app and a NestJS backend. They operate independently and must be run in their respective directories.
 
 ---
 
@@ -214,9 +214,9 @@ The web application serving agency dashboards and client portal views.
 
 ## Contributing
 
-Contributions to Freelancey are welcome!
+Contributions to Gigly are welcome!
 
-1. **Open an issue first**: Discuss bugs or proposed features in a [GitHub Issue](https://github.com/GroundworkTechnologies/Freelancey/issues) before submitting code.
+1. **Open an issue first**: Discuss bugs or proposed features in a [GitHub Issue](https://github.com/GroundworkTechnologies/Gigly/issues) before submitting code.
 2. **Submit focused PRs**: Keep pull requests small and single-purpose to expedite code review.
 3. **Follow repository standards**: Ensure code passes type-checking (`npm run typecheck`), linting (`npm run lint`), and tests (`npm run test`).
 
@@ -226,4 +226,4 @@ Contributions to Freelancey are welcome!
 
 Created and maintained by **[@abdisamadjoe](https://github.com/abdisamadjoe)**.
 
-Freelancey is open-source software licensed under the [MIT License](LICENSE).
+Gigly is open-source software licensed under the [MIT License](LICENSE).

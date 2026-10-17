@@ -1,8 +1,8 @@
-# Render blueprint for the Freelancey API (NestJS).
+# Render blueprint for the Gigly API (NestJS).
 # Secrets use `sync: false`, so Render asks for them on first deploy and they never live in git.
 services:
   - type: web
-    name: freelancey-api
+    name: gigly-api
     runtime: node
     plan: free
     rootDir: backend

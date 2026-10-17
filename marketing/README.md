@@ -1,6 +1,6 @@
-# Freelancey marketing site
+# Gigly marketing site
 
-Marketing site for Freelancey: Next.js (App Router), TypeScript and Tailwind CSS v4. The layout was rebuilt from a saved reference site in `_reference/`; all copy and mockups are specific to Freelancey.
+Marketing site for Gigly: Next.js (App Router), TypeScript and Tailwind CSS v4. The layout was rebuilt from a saved reference site in `_reference/`; all copy and mockups are specific to Gigly.
 
 ## Run
 
@@ -55,10 +55,10 @@ npm run lint
 ## Deployment and SEO
 
 - **Host:** deploys as a standard Next.js app (Vercel, or any Node 22+ host with `npm run build && npm start`).
-- **Environment:** set `NEXT_PUBLIC_SITE_URL` (see `.env.example`). It defaults to `https://freelancey.groundwork.co.ke`
+- **Environment:** set `NEXT_PUBLIC_SITE_URL` (see `.env.example`). It defaults to `https://gigly.groundwork.co.ke`
   and drives canonical URLs, the sitemap, `robots.txt` and Open Graph tags.
 - **Deploy size:** `.vercelignore` excludes `_reference/` (the saved template, not needed at runtime).
-- **SEO** (follows `../SEO.md`): titles use "Freelancey: Tagline", descriptions are under 160 characters, one H1 per
+- **SEO** (follows `../SEO.md`): titles use "Gigly: Tagline", descriptions are under 160 characters, one H1 per
   page, canonical on every page, `sitemap.xml`, `robots.txt`, Open Graph and Twitter cards, a generated OG image,
   JSON-LD (Organization, WebSite, SoftwareApplication, FAQPage on the home page, BlogPosting on articles), and
   `noindex` on the 404 page.

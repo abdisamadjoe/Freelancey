@@ -46,7 +46,7 @@ export function Footer() {
       <div className="mx-auto flex w-full max-w-[1200px] flex-col gap-12 px-4 pb-8 pt-14 tab:px-6 lg:gap-16 lg:pt-20">
         <InView className="flex flex-col gap-12 lg:flex-row lg:justify-between lg:gap-16">
           <div className="flex max-w-[380px] flex-col items-start gap-5">
-            <Link href="/" aria-label="Freelancey home" className="block h-10 w-[170px] shrink-0 [&_*]:!fill-white [&_*]:!text-white">
+            <Link href="/" aria-label="Gigly home" className="block h-10 w-[170px] shrink-0 [&_*]:!fill-white [&_*]:!text-white">
               <BrandLogo />
             </Link>
             <p className="t-14 !leading-[22px] text-white/65">
@@ -83,17 +83,17 @@ export function Footer() {
 
         <InView delay={120} className="select-none overflow-hidden">
           <span className="block text-center font-[family-name:var(--font-geist)] text-[19vw] font-semibold leading-[0.8] tracking-[-0.06em] text-white/[0.06] min-[1200px]:text-[220px]">
-            Freelancey
+            Gigly
           </span>
         </InView>
 
         <div className="flex flex-col items-start justify-between gap-3 border-t border-white/10 pt-6 tab:flex-row tab:items-center">
-          <p className="t-14 text-white/55">© {new Date().getFullYear()} Freelancey. Released under the MIT licence.</p>
+          <p className="t-14 text-white/55">© {new Date().getFullYear()} Gigly. Released under the MIT licence.</p>
           <a
             href={githubUrl}
             target="_blank"
             rel="noreferrer"
-            aria-label="Freelancey on GitHub"
+            aria-label="Gigly on GitHub"
             className="flex h-10 w-10 items-center justify-center rounded-full text-white/65 transition-colors hover:bg-white/10 hover:text-white"
           >
             <GithubMark />

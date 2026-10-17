@@ -53,7 +53,7 @@ export function LoginForm({ orgName, logoSrc, hideLogo }: LoginFormProps) {
     <AuthShell logoSrc={logoSrc} logoAlt={orgName} hideLogo={hideLogo}>
       <div className="space-y-6">
         <AuthHeading
-          title={orgName ? `Sign in to ${orgName}` : "Sign in to Freelancey"}
+          title={orgName ? `Sign in to ${orgName}` : "Sign in to Gigly"}
           description="Enter your credentials to continue"
         />
 

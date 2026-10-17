@@ -33,7 +33,7 @@ export function HowItWorks() {
               </SectionBadge>
             }
             title="A simpler way to run client work"
-            text="Three steps cover most projects. Freelancey keeps the details in one place from the first message to the last file."
+            text="Three steps cover most projects. Gigly keeps the details in one place from the first message to the last file."
           />
         </InView>
         <div className="hidden h-[45px] lg:block" aria-hidden />

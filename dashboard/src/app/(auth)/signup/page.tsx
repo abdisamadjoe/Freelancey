@@ -246,7 +246,7 @@ export default function SignupPage() {
         <div className="space-y-6 text-center">
           <AuthHeading
             title="Signups are disabled"
-            description="This Freelancey instance isn't accepting new signups. If you already have an account, you can sign in."
+            description="This Gigly instance isn't accepting new signups. If you already have an account, you can sign in."
           />
           <Link href="/login" className="text-sm font-medium text-neutral-brand-color hover:underline">
             Go to sign in

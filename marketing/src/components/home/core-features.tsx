@@ -22,7 +22,7 @@ const features = [
   {
     Icon: CoreIcon2,
     title: "Proposals and contracts",
-    text: "Write proposals and contracts inside Freelancey. Clients accept and sign from a private link.",
+    text: "Write proposals and contracts inside Gigly. Clients accept and sign from a private link.",
   },
   {
     Icon: CoreIcon3,
@@ -56,7 +56,7 @@ export function CoreFeatures() {
               </SectionBadge>
             }
             title="Core features that run your client work"
-            text="Freelancey brings the tools a freelance business uses every day into one self-hosted platform you control."
+            text="Gigly brings the tools a freelance business uses every day into one self-hosted platform you control."
           />
           <div className="z-[1] grid w-full grid-cols-12 gap-x-4 gap-y-4 tab:gap-x-6 tab:gap-y-6">
             {features.map((f, i) => (

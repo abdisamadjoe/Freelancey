@@ -147,7 +147,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  app.get(Logger).log(`Freelancey API running on http://localhost:${port}`);
+  app.get(Logger).log(`Gigly API running on http://localhost:${port}`);
 }
 
 bootstrap();

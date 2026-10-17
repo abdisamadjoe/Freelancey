@@ -151,7 +151,7 @@ export class SettingsService {
     const from: string =
       settings?.emailFrom ??
       this.config.get("EMAIL_FROM") ??
-      "noreply@freelancey.local";
+      "noreply@gigly.local";
 
     return {
       provider,
@@ -266,8 +266,8 @@ export class SettingsService {
         await resend.emails.send({
           from: emailConfig.from,
           to: recipientEmail,
-          subject: "Freelancey - Test Email",
-          html: `<p>This is a test email from Freelancey to verify your email configuration is working correctly.</p><p>If you received this, your email settings are configured properly.</p>`,
+          subject: "Gigly - Test Email",
+          html: `<p>This is a test email from Gigly to verify your email configuration is working correctly.</p><p>If you received this, your email settings are configured properly.</p>`,
         });
       } else if (emailConfig.provider === "smtp") {
         const nodemailer = await import("nodemailer");
@@ -286,8 +286,8 @@ export class SettingsService {
         await transporter.sendMail({
           from: emailConfig.from,
           to: recipientEmail,
-          subject: "Freelancey - Test Email",
-          html: `<p>This is a test email from Freelancey to verify your email configuration is working correctly.</p><p>If you received this, your email settings are configured properly.</p>`,
+          subject: "Gigly - Test Email",
+          html: `<p>This is a test email from Gigly to verify your email configuration is working correctly.</p><p>If you received this, your email settings are configured properly.</p>`,
         });
       }
 

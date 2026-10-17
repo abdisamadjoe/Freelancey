@@ -20,7 +20,7 @@ export function Hero() {
       <div className="relative flex grow flex-col items-center justify-center gap-[60px] rounded-[24px] bg-white py-[50px] md:py-[60px] lg:pb-20">
         <div className="z-[6] flex flex-col items-center justify-center gap-5 px-2 md:gap-6 md:px-0 lg:w-[856px] md:w-[590px] w-full">
           <Link
-            href="https://github.com/GroundworkTechnologies/Freelancey/releases"
+            href="https://github.com/GroundworkTechnologies/Gigly/releases"
             className="t-15-md relative flex items-center gap-3 rounded-[10px] bg-white px-4 py-[7px] text-ink shadow-pill after:pointer-events-none after:absolute after:inset-0 after:rounded-[10px] after:border after:border-line after:content-['']"
           >
             Version 1.0 out now
@@ -34,10 +34,10 @@ export function Hero() {
             <Words text="Deliver Projects Faster" />
           </InView>
           <InView as="p" mode="words" className="t-body w-full max-w-[490px] text-center text-body">
-            <Words text="Freelancey is open-source client and project management for freelancers. Leads, proposals, contracts, projects, files and invoices, all in one app you own." />
+            <Words text="Gigly is open-source client and project management for freelancers. Leads, proposals, contracts, projects, files and invoices, all in one app you own." />
           </InView>
           <div className="flex flex-wrap items-center justify-center gap-3 pt-4">
-            <Button href="https://github.com/GroundworkTechnologies/Freelancey" variant="primary" icon={<ArrowUpRight />}>
+            <Button href="https://github.com/GroundworkTechnologies/Gigly" variant="primary" icon={<ArrowUpRight />}>
               View on GitHub
             </Button>
             <Button href="#workflow" variant="light">
@@ -51,7 +51,7 @@ export function Hero() {
           <div className="relative min-w-0 grow overflow-hidden rounded-[6px] md:rounded-[12px] lg:rounded-[16px]">
             <Image
               src="/images/dashboard-overview-v2.png"
-              alt="Freelancey dashboard overview with project, receivables and lead pipeline summaries"
+              alt="Gigly dashboard overview with project, receivables and lead pipeline summaries"
               width={2160}
               height={1350}
               priority

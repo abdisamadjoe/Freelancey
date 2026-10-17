@@ -1,4 +1,4 @@
-# Freelancey color system ("Calm Mint")
+# Gigly color system ("Calm Mint")
 
 ## Core palette
 | Role    | Name         | HEX      | RGB          | Use |

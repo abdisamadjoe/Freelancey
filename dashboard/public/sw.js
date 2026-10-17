@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
       badge: "/icon.png",
       data: { link: data.link },
     };
-    event.waitUntil(self.registration.showNotification(data.title || "Freelancey", options));
+    event.waitUntil(self.registration.showNotification(data.title || "Gigly", options));
   } catch {
     // Ignore malformed payloads
   }

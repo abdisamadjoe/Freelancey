@@ -3,8 +3,8 @@ import { pageMetadata } from "@/lib/seo";
 import { LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Freelancey: Terms and Conditions",
-  description: "The terms for using the Freelancey website, the open-source software and the hosted service.",
+  title: "Gigly: Terms and Conditions",
+  description: "The terms for using the Gigly website, the open-source software and the hosted service.",
   path: "/terms-conditions",
 });
 
@@ -18,19 +18,19 @@ export default function TermsConditionsPage() {
         {
           heading: "Open-source software",
           paragraphs: [
-            "Freelancey is released under the MIT licence. You may use, copy, modify and distribute it under the terms of that licence, which is provided as is, without warranty of any kind.",
+            "Gigly is released under the MIT licence. You may use, copy, modify and distribute it under the terms of that licence, which is provided as is, without warranty of any kind.",
           ],
         },
         {
           heading: "Self-hosting",
           paragraphs: [
-            "If you run Freelancey yourself, you are responsible for your servers, backups, security updates and the data you store, including any obligations you have to your own clients.",
+            "If you run Gigly yourself, you are responsible for your servers, backups, security updates and the data you store, including any obligations you have to your own clients.",
           ],
         },
         {
           heading: "Hosted service",
           paragraphs: [
-            "Where we run Freelancey for you, the plan, price and support terms are agreed with you directly. You are responsible for the content you store and for keeping your account credentials secure.",
+            "Where we run Gigly for you, the plan, price and support terms are agreed with you directly. You are responsible for the content you store and for keeping your account credentials secure.",
           ],
         },
         {

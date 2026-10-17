@@ -23,7 +23,7 @@ export default function AccountSettingsPage() {
             </Suspense>
           ) : null}
         </section>
-        {!billingEnabled && config && <Notice status="info">Billing is not configured on this Freelancey instance.</Notice>}
+        {!billingEnabled && config && <Notice status="info">Billing is not configured on this Gigly instance.</Notice>}
       </PageBody>
     </>
   );

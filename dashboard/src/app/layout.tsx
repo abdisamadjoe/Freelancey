@@ -13,8 +13,8 @@ const geistInter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | Freelancey",
-    default: "Freelancey",
+    template: "%s | Gigly",
+    default: "Gigly",
   },
   description: "Client portal for agencies and freelancers",
 };

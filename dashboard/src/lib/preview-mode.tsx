@@ -11,8 +11,8 @@ import {
 } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-const STORAGE_KEY = "freelancey:previewAs";
-const HANDOFF_PREFIX = "freelancey:previewPending:";
+const STORAGE_KEY = "gigly:previewAs";
+const HANDOFF_PREFIX = "gigly:previewPending:";
 const HANDOFF_TTL_MS = 60_000;
 
 export interface PreviewModeState {

@@ -50,7 +50,7 @@ export default function Header({
 
           {/* Center: Logo */}
           <div className="flex items-center justify-center">
-            <Link href={homeHref} aria-label={`${brand.orgName || "Freelancey"} home`}>
+            <Link href={homeHref} aria-label={`${brand.orgName || "Gigly"} home`}>
               {brand.logoSrc && !brand.hideLogo ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img src={brand.logoSrc} alt={brand.orgName || "Logo"} className="h-8 w-auto object-contain" />

@@ -175,7 +175,7 @@ export async function safeFetch(
         redirect: "manual",
         headers: {
           Accept: accept,
-          "User-Agent": "FreelanceyLinkPreview/1.0 (+https://portal.groundwork.co.ke)",
+          "User-Agent": "GiglyLinkPreview/1.0 (+https://portal.groundwork.co.ke)",
         },
       });
     } finally {

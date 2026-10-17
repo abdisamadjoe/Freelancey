@@ -23,21 +23,21 @@ const inter = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: "Freelancey: Win Clients and Deliver Projects Faster", template: "%s" },
+  title: { default: "Gigly: Win Clients and Deliver Projects Faster", template: "%s" },
   description: defaultDescription,
-  applicationName: "Freelancey",
+  applicationName: "Gigly",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "Freelancey",
+    siteName: "Gigly",
     url: SITE_URL,
-    title: "Freelancey: Win Clients and Deliver Projects Faster",
+    title: "Gigly: Win Clients and Deliver Projects Faster",
     description: defaultDescription,
     locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Freelancey: Win Clients and Deliver Projects Faster",
+    title: "Gigly: Win Clients and Deliver Projects Faster",
     description: defaultDescription,
   },
   robots: { index: true, follow: true },

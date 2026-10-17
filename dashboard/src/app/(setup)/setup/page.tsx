@@ -456,7 +456,7 @@ function StepComplete({ onBack }: { onBack: () => void }) {
   return (
     <Panel
       title="You are all set!"
-      description="Your Freelancey instance is configured and ready to use. You can always adjust these settings later from the dashboard."
+      description="Your Gigly instance is configured and ready to use. You can always adjust these settings later from the dashboard."
     >
       <div className="space-y-5">
         {error && <Notice status="error">{error}</Notice>}
@@ -542,7 +542,7 @@ function SetupWizardContent() {
         </Notice>
       )}
 
-      <PageHeader title="Welcome to Freelancey" description="Let's get your client portal set up in a few quick steps." />
+      <PageHeader title="Welcome to Gigly" description="Let's get your client portal set up in a few quick steps." />
 
       <Panel>
         <div className="space-y-4">

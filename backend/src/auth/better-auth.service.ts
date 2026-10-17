@@ -50,7 +50,7 @@ export class BetterAuthService {
     const secret = this.config.get<string>("BETTER_AUTH_SECRET") || this.config.getOrThrow<string>("APP_ENCRYPTION_SECRET");
 
     return betterAuth({
-      appName: "Freelancey",
+      appName: "Gigly",
       // The public origin of the web app: it proxies /api/auth to this API, so links in
       // emails and cookies are issued for that origin.
       baseURL: webUrl,
@@ -69,7 +69,7 @@ export class BetterAuthService {
         resetPasswordTokenExpiresIn: 60 * 60,
         sendResetPassword: async ({ user, url }) => {
           const html = await render(React.createElement(ResetPasswordEmail, { url }));
-          await this.mail.send(user.email, "Reset your Freelancey password", html);
+          await this.mail.send(user.email, "Reset your Gigly password", html);
         },
       },
       emailVerification: {

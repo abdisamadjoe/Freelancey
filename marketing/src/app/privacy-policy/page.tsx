@@ -3,8 +3,8 @@ import { pageMetadata } from "@/lib/seo";
 import { LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Freelancey: Privacy Policy",
-  description: "How the Freelancey website and hosted service handle your information.",
+  title: "Gigly: Privacy Policy",
+  description: "How the Gigly website and hosted service handle your information.",
   path: "/privacy-policy",
 });
 
@@ -18,19 +18,19 @@ export default function PrivacyPolicyPage() {
         {
           heading: "This website",
           paragraphs: [
-            "The Freelancey marketing site is a static page. It has no accounts and no forms, and it does not set advertising cookies. Our hosting provider may keep standard server logs, such as IP address and requested URL, for security and reliability.",
+            "The Gigly marketing site is a static page. It has no accounts and no forms, and it does not set advertising cookies. Our hosting provider may keep standard server logs, such as IP address and requested URL, for security and reliability.",
           ],
         },
         {
-          heading: "Self-hosted Freelancey",
+          heading: "Self-hosted Gigly",
           paragraphs: [
-            "When you run Freelancey on your own infrastructure, your clients, projects, files and invoices are stored in the database and storage bucket you choose. We do not receive that data and cannot access it.",
+            "When you run Gigly on your own infrastructure, your clients, projects, files and invoices are stored in the database and storage bucket you choose. We do not receive that data and cannot access it.",
           ],
         },
         {
-          heading: "Hosted Freelancey",
+          heading: "Hosted Gigly",
           paragraphs: [
-            "If we run Freelancey for you, we store the data you and your clients enter so that the service can work, and we process it only on your behalf. We do not sell it or use it for advertising.",
+            "If we run Gigly for you, we store the data you and your clients enter so that the service can work, and we process it only on your behalf. We do not sell it or use it for advertising.",
             "Payments and email are handled by third-party processors such as Stripe and Resend, under their own privacy policies.",
           ],
         },
@@ -42,7 +42,7 @@ export default function PrivacyPolicyPage() {
         },
         {
           heading: "Contact",
-          paragraphs: ["Questions about this policy can be raised as an issue on the Freelancey GitHub repository."],
+          paragraphs: ["Questions about this policy can be raised as an issue on the Gigly GitHub repository."],
         },
       ]}
     />

@@ -112,7 +112,7 @@ export function GeneralSection() {
   return (
     <div className="space-y-5">
       <form onSubmit={save} className="space-y-5">
-        <Panel title="Email" description="Configure how Freelancey sends emails (invitations, password resets, etc.)">
+        <Panel title="Email" description="Configure how Gigly sends emails (invitations, password resets, etc.)">
           <div className="space-y-4">
             <FormGrid>
               <SelectInput
@@ -203,7 +203,7 @@ export function GeneralSection() {
         </Panel>
       </form>
 
-      <Panel title="Error reporting" description="Share anonymous crash reports and error data with the Freelancey team to help fix bugs. No personal data or client information is included.">
+      <Panel title="Error reporting" description="Share anonymous crash reports and error data with the Gigly team to help fix bugs. No personal data or client information is included.">
         <SwitchInput
           label="Share anonymous error reports"
           checked={settings.telemetryEnabled === true}

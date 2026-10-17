@@ -14,7 +14,7 @@ export default function BillingPage() {
       <PageHeader title="Billing" description="Your plan, usage and payment methods for this workspace." />
       <PageBody className="mt-5">
         {config && !billingEnabled ? (
-          <Notice status="info">Billing is not configured on this Freelancey instance.</Notice>
+          <Notice status="info">Billing is not configured on this Gigly instance.</Notice>
         ) : (
           <Suspense>
             <BillingSection />

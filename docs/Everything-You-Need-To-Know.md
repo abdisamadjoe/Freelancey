@@ -1,12 +1,12 @@
 # Everything You Need To Know
 
-Welcome to Freelancey! This document combines our deployment architecture, environment configuration, and future roadmap.
+Welcome to Gigly! This document combines our deployment architecture, environment configuration, and future roadmap.
 
 ---
 
 ## 1. Deployment Architecture
 
-Freelancey is designed to run on managed cloud infrastructure:
+Gigly is designed to run on managed cloud infrastructure:
 - **Frontend App**: Deployed on **Vercel**
 - **Backend API**: Deployed on **Railway**
 - **Database**: Hosted on **Neon Postgres**
@@ -65,7 +65,7 @@ Authentication is handled by [Better Auth](https://www.better-auth.com), self-ho
 
 ## 4. Roadmap
 
-A living document tracking what's been shipped and what's planned for Freelancey.
+A living document tracking what's been shipped and what's planned for Gigly.
 
 ### Shipped
 
@@ -145,4 +145,4 @@ Transform from portal to platform.
 
 ---
 
-Have a feature request? [Open an issue](https://github.com/GroundworkTechnologies/Freelancey/issues) or start a [discussion](https://github.com/GroundworkTechnologies/Freelancey/discussions).
+Have a feature request? [Open an issue](https://github.com/GroundworkTechnologies/Gigly/issues) or start a [discussion](https://github.com/GroundworkTechnologies/Gigly/discussions).

@@ -246,14 +246,14 @@ describe("SettingsService", () => {
     expect(result.from).toBe("fallback@example.com");
   });
 
-  test("getEffectiveEmailConfig defaults from to noreply@freelancey.local when no config", async () => {
+  test("getEffectiveEmailConfig defaults from to noreply@gigly.local when no config", async () => {
     prisma.systemSettings.findUnique.mockImplementation(() =>
       Promise.resolve(null),
     );
 
     const result = await service.getEffectiveEmailConfig("org-1");
 
-    expect(result.from).toBe("noreply@freelancey.local");
+    expect(result.from).toBe("noreply@gigly.local");
   });
 
   // --- getEffectiveMaxFileSize ---

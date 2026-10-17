@@ -34,7 +34,7 @@ export function Overview() {
           <SectionTitle
             badge={<SectionBadge icon={<BadgeIconMeet />}>What you get</SectionBadge>}
             title="Everything a freelance business runs on"
-            text="Freelancey follows you from the first lead to the final handover, so clients, projects and payments live in one place instead of across drives, spreadsheets and inboxes."
+            text="Gigly follows you from the first lead to the final handover, so clients, projects and payments live in one place instead of across drives, spreadsheets and inboxes."
           />
         </InView>
 

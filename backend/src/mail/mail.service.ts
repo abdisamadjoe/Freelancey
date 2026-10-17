@@ -28,7 +28,7 @@ export class MailService {
     // Initialize default Resend client from env vars (fallback)
     const apiKey = this.config.get("RESEND_API_KEY");
     this.resend = apiKey ? new Resend(apiKey) : null;
-    this.from = this.config.get("EMAIL_FROM", "noreply@freelancey.local");
+    this.from = this.config.get("EMAIL_FROM", "noreply@gigly.local");
   }
 
   private getSmtpTransporter(smtp: SmtpConfig, organizationId?: string): nodemailer.Transporter {

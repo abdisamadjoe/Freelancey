@@ -4,7 +4,7 @@ import { faqs } from "@/components/home/faq-data";
 import { pageMetadata, softwareJsonLd } from "@/lib/seo";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Freelancey: Win Clients and Deliver Projects Faster",
+  title: "Gigly: Win Clients and Deliver Projects Faster",
   description:
     "Open-source client and project management for freelancers. Manage leads, proposals, contracts, projects and invoices in one app.",
   path: "/",

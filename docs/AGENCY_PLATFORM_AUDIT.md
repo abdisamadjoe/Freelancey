@@ -3,7 +3,7 @@
 
 | | |
 |---|---|
-| **Repository** | Freelancey (`/Freelancey`, single commit `57414f2`, "Freelancey is Ready") |
+| **Repository** | Gigly (`/Gigly`, single commit `57414f2`, "Freelancey is Ready") |
 | **Audit date** | 2026-09-20 |
 | **Scope** | Investigation and documentation only. No source, schema, API, UI, dependency or config was changed. |
 | **Working tree at audit time** | 3 uncommitted changes that pre-date this audit: `backend/src/app.controller.ts` (greeting text), `backend/tsconfig.json` (removed `"baseUrl": "./"`), untracked `frontend/public/logo/icon.svg`. Assessed in §3.4; none is harmful. |
@@ -34,7 +34,7 @@ Priority legend: **P0** critical (security, data integrity, core blockers) · **
 
 # 1. Executive Summary
 
-**The single most important finding.** The repository is **Freelancey**, an already-substantial *client portal + project + invoicing* product for agencies and freelancers. It is **not** a CRM-to-cash system. The "front half" of the workflow you described (Lead → Contacted → Discovery → Qualified → Proposal → Negotiation → Won) does not exist in any form: there is no `Lead`, `Proposal`, `Meeting`, `SupportTicket`, `Milestone`, `Expense`, `Deliverable` or intake-form model in the database. What exists is strong in the "back half": projects, tasks, updates, files, e-signature, invoices, Stripe payment, time tracking, portal, white-labelling.
+**The single most important finding.** The repository is **Gigly**, an already-substantial *client portal + project + invoicing* product for agencies and freelancers. It is **not** a CRM-to-cash system. The "front half" of the workflow you described (Lead → Contacted → Discovery → Qualified → Proposal → Negotiation → Won) does not exist in any form: there is no `Lead`, `Proposal`, `Meeting`, `SupportTicket`, `Milestone`, `Expense`, `Deliverable` or intake-form model in the database. What exists is strong in the "back half": projects, tasks, updates, files, e-signature, invoices, Stripe payment, time tracking, portal, white-labelling.
 
 **The second most important finding.** There is **no Client entity**. A "client" is a *login account* (a Neon Auth user, with a `Member` row of role `member`, an optional `ClientProfile`, and `ProjectClient` rows linking them to projects). You cannot record a client who has no login. That single design decision is why leads, proposals, pre-sale contracts and "client history" have nowhere to live, and it is the main obstacle to your "enter once, flow through" principle.
 
@@ -145,20 +145,20 @@ Owner signs up → creates Organization (setup wizard)
 
 | Change | Assessment |
 |---|---|
-| `app.controller.ts`: "Freelance" → "Freelancey" in the `GET /` greeting | Cosmetic; safe. |
+| `app.controller.ts`: "Freelance" → "Gigly" in the `GET /` greeting | Cosmetic; safe. |
 | `tsconfig.json`: removed `"baseUrl": "./"` | Safe for builds: Nest CLI's path-rewrite hook defaults `baseUrl` to `./` (verified in `@nestjs/cli/lib/compiler/hooks/tsconfig-paths.hook.js`), and `tsc --noEmit` passes. **It is not the cause of the failing tests** — I re-ran vitest with the HEAD tsconfig (baseUrl restored) and got the identical 30 failures. |
 | `frontend/public/logo/icon.svg` (untracked) | Asset; commit or ignore. |
 
 ## 3.5 Stale structure documentation — [FACT]
 
-The README and `railway.json` describe a monorepo with `backend/packages/{database,email,shared}` as npm workspaces (`@freelancey/database`, etc.) and a root `package.json` ("`npm run dev -w backend`"). **There is no root `package.json` in the repository**, and the code has moved those packages to `backend/src/{database,email,shared}` imported through the `@/` alias. `backend/packages/*` on disk contains only ignored build leftovers. `railway.json`'s `buildCommand` (`npm run build -w @freelancey/database -w @freelancey/shared ...`) can therefore not work as written unless Railway is configured with a different root/override. **[UNVERIFIED]** how production is actually deployed; the docs and config are inconsistent with each other.
+The README and `railway.json` describe a monorepo with `backend/packages/{database,email,shared}` as npm workspaces (`@gigly/database`, etc.) and a root `package.json` ("`npm run dev -w backend`"). **There is no root `package.json` in the repository**, and the code has moved those packages to `backend/src/{database,email,shared}` imported through the `@/` alias. `backend/packages/*` on disk contains only ignored build leftovers. `railway.json`'s `buildCommand` (`npm run build -w @gigly/database -w @gigly/shared ...`) can therefore not work as written unless Railway is configured with a different root/override. **[UNVERIFIED]** how production is actually deployed; the docs and config are inconsistent with each other.
 
 ---
 
 # 4. Repository Structure
 
 ```
-Freelancey/
+Gigly/
 ├── CLAUDE.md  COPY.md  README.md  LICENSE  .nvmrc  railway.json
 ├── docs/Everything-You-Need-To-Know.md         (env vars, deployment, roadmap)
 ├── backend/

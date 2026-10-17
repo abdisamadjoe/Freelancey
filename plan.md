@@ -1,4 +1,4 @@
-# Freelancey Plan
+# Gigly Plan
 
 The build spec and the source of truth for this project. Work top to bottom, one phase at a time, tick boxes as items land. The goal is a **production-ready** product that follows the workflow in Appendix A exactly.
 
@@ -10,24 +10,24 @@ Appendix A (the 25-step workflow) is authoritative. If any other part of this fi
 
 ## Core idea
 
-A **Lead** is a potential client. It can enter Freelancey manually, through a public form, referral, import, or another source. Every source lands in the same Lead system.
+A **Lead** is a potential client. It can enter Gigly manually, through a public form, referral, import, or another source. Every source lands in the same Lead system.
 
-Freelancey follows a freelancer from "I found this business" to "the project is finished and I'm maintaining it."
+Gigly follows a freelancer from "I found this business" to "the project is finished and I'm maintaining it."
 
 Two rules drive every design choice:
 
 1. **Type it once.** Data carries forward: Lead → Proposal → Contract → Client → Project. Nothing is re-entered.
-2. **Forms only collect information from the client.** Everything else is a workflow the freelancer runs inside Freelancey.
+2. **Forms only collect information from the client.** Everything else is a workflow the freelancer runs inside Gigly.
 
 | Step | Who does it | Where |
 |---|---|---|
-| Lead, Discovery, Qualified | Freelancer | Freelancey |
-| Proposal | Freelancer creates | Freelancey, client responds on a secure link |
-| Contract | Freelancey generates, client signs | Freelancey + secure link |
-| Client onboarding | Client | Freelancey-hosted public form |
-| Project | Freelancer | Freelancey |
-| Project brief | Client | Freelancey-hosted public form |
-| Tasks, milestones, files | Freelancer | Freelancey |
+| Lead, Discovery, Qualified | Freelancer | Gigly |
+| Proposal | Freelancer creates | Gigly, client responds on a secure link |
+| Contract | Gigly generates, client signs | Gigly + secure link |
+| Client onboarding | Client | Gigly-hosted public form |
+| Project | Freelancer | Gigly |
+| Project brief | Client | Gigly-hosted public form |
+| Tasks, milestones, files | Freelancer | Gigly |
 | Deliverable review | Client | Portal / secure link |
 | Support request | Client | Public / secure form |
 
@@ -35,7 +35,7 @@ Two rules drive every design choice:
 
 | Topic | Decision |
 |---|---|
-| Onboarding and brief forms | **Built into Freelancey** (public token pages, no account). Tally is not used. Reuses `FormTemplate` / `FormResponse`. Submission saves directly, no webhook. |
+| Onboarding and brief forms | **Built into Gigly** (public token pages, no account). Tally is not used. Reuses `FormTemplate` / `FormResponse`. Submission saves directly, no webhook. |
 | Proposal acceptance | Accept button plus typed full name and timestamp, stored with the proposal. Reject takes an optional reason. |
 | Lead sources | Fixed set: `manual`, `google_maps`, `website_inquiry`, `referral`, `import`, `other`. Detail goes in notes. |
 | ESLint | Not added (needs new packages). `npm run lint` stays `tsc --noEmit`. |
@@ -178,7 +178,7 @@ Done when: signing a contract makes an active client with full history and nothi
 - [x] Client page shows "Client onboarding incomplete" with **Send Client Onboarding Form** when no completed onboarding exists.
 - [x] `FormLink` (generic, used for onboarding and the project brief): `clientId`, `kind`, hashed `token`, `status` (`pending`, `completed`), `answers`, `createdAt`, `completedAt`, `expiresAt` (30 days).
 - [x] Link `/onboarding/[token]`: copy link, send email. WhatsApp later.
-- [x] Freelancey-hosted public form, no account. Sections: Business, Audience, Goals, Branding (logo, colours, guidelines, images), Requirements (pages, features, integrations, references).
+- [x] Gigly-hosted public form, no account. Sections: Business, Audience, Goals, Branding (logo, colours, guidelines, images), Requirements (pages, features, integrations, references).
 - [x] Submit saves answers to the client, sets `completed`, logs activity, notifies the freelancer. Reject unknown, expired or reused tokens.
 - [x] Client page shows "Onboarding completed".
 - [x] Reuse `OnboardingItem` checklist rather than rebuilding it.
@@ -261,10 +261,10 @@ Done when: a client fills the link without logging in and the client page shows 
 
 ## 1. Where Leads come from
 
-A Lead is a potential client. It can enter Freelancey manually, through a public form, import, referral, etc. Everything eventually enters the same Lead system.
+A Lead is a potential client. It can enter Gigly manually, through a public form, import, referral, etc. Everything eventually enters the same Lead system.
 
 - **A. Manually.** You find a business on Google Maps and call, WhatsApp or email them, or simply want to pursue them. Leads → + New Lead. Enter: Business (ABC Construction), Contact (Ahmed Hassan), Email, Phone, Website, Source (Google Maps), Service interested in (Website), Notes (Website looks outdated). Click Create Lead.
-- **B. Public Project Inquiry.** Someone visits your website → Start a Project → public form → Freelancey → New Lead. The system creates the Lead automatically.
+- **B. Public Project Inquiry.** Someone visits your website → Start a Project → public form → Gigly → New Lead. The system creates the Lead automatically.
 - **C. Referral.** Create manually with Source: Referral.
 - **D. Import.** Later, CSV/imports.
 
@@ -274,21 +274,21 @@ Sources: Manual, Public Inquiry, Referral, Import, Other → all become LEAD.
 
 Follows a real freelancer from "I found this business" to "The project is finished and I'm maintaining it."
 
-**Step 1: Create a Lead.** Option 1: you find the client yourself (for example restaurants in Nairobi → XYZ Restaurant); Leads → New Lead with business name, contact person, email, phone, website, source, notes. Option 2: they fill your public Start a Project form and Freelancey creates the Lead. Both become a Lead with a name, a source (Google Maps or Website Inquiry) and Status: New.
+**Step 1: Create a Lead.** Option 1: you find the client yourself (for example restaurants in Nairobi → XYZ Restaurant); Leads → New Lead with business name, contact person, email, phone, website, source, notes. Option 2: they fill your public Start a Project form and Gigly creates the Lead. Both become a Lead with a name, a source (Google Maps or Website Inquiry) and Status: New.
 
 **Step 2: Work with the Lead.** Contact them. Status moves New → Contacted → Discovery → Qualified. Also: follow-up date, notes, calls, WhatsApp, meetings, activities. The Lead record becomes the history of the relationship.
 
-**Step 3: Discovery.** Learn what they need, why, budget, timeline, requirements. Record it inside Freelancey. A Discovery / Requirements form may be sent if necessary, but don't force it; sometimes you talk to the client and enter the information yourself.
+**Step 3: Discovery.** Learn what they need, why, budget, timeline, requirements. Record it inside Gigly. A Discovery / Requirements form may be sent if necessary, but don't force it; sometimes you talk to the client and enter the information yourself.
 
 **Step 4: Qualified.** You decide it is a real opportunity worth proposing. Set Lead Status to Qualified. Now you can create a proposal.
 
-**Step 5: Create a Proposal.** Inside the Lead: Proposal → Create Proposal. Freelancey already knows client/lead, company, contact, project information; do not re-enter. Add: proposal title, scope, services, deliverables, price, timeline, payment terms, revision limits, validity date, optional services. Example: Website Development: Discovery $200, UI/UX Design $500, Development $1,500, Deployment $200, Total $2,400. Then Send Proposal.
+**Step 5: Create a Proposal.** Inside the Lead: Proposal → Create Proposal. Gigly already knows client/lead, company, contact, project information; do not re-enter. Add: proposal title, scope, services, deliverables, price, timeline, payment terms, revision limits, validity date, optional services. Example: Website Development: Discovery $200, UI/UX Design $500, Development $1,500, Deployment $200, Total $2,400. Then Send Proposal.
 
 **Step 6: Proposal is sent.** Lead status becomes Proposal Sent. Record Proposal Status: Sent, with the sent date. Track: Sent, Viewed, Accepted, Rejected, Expired.
 
-**Step 7: Client accepts proposal.** Freelancey makes the next step obvious: "Proposal accepted. Create contract." with a Create Contract button. Automatically carry client, project, scope, price, deliverables, timeline, payment terms into the contract. Do not type again.
+**Step 7: Client accepts proposal.** Gigly makes the next step obvious: "Proposal accepted. Create contract." with a Create Contract button. Automatically carry client, project, scope, price, deliverables, timeline, payment terms into the contract. Do not type again.
 
-**Step 8: Create Contract.** Choose a template (Website Development Agreement). Freelancey fills known information. Review/edit: client, project, scope, price, timeline, payment terms, responsibilities, revisions, termination, confidentiality, other terms. Then Send Contract.
+**Step 8: Create Contract.** Choose a template (Website Development Agreement). Gigly fills known information. Review/edit: client, project, scope, price, timeline, payment terms, responsibilities, revisions, termination, confidentiality, other terms. Then Send Contract.
 
 **Step 9: Contract is signed.** Record Contract Status: Signed, with the signed date. Activity: "Client signed Website Development Agreement". Show: "✅ Contract signed. Next step: Create Project".
 
@@ -296,33 +296,33 @@ Follows a real freelancer from "I found this business" to "The project is finish
 
 **Step 11: Create the Client onboarding.** When the Client is created, check whether onboarding is complete. If not, show "⚠️ Client onboarding incomplete" with [Send Client Onboarding Form].
 
-**Step 12: Generate onboarding form.** Create an onboarding session (Client: XYZ Restaurant, Status: Pending, Created date). Generate a secure link (freelancey.com/onboarding/<token>). Freelancer can Copy Link, Send Email, or eventually Send WhatsApp.
+**Step 12: Generate onboarding form.** Create an onboarding session (Client: XYZ Restaurant, Status: Pending, Created date). Generate a secure link (gigly.com/onboarding/<token>). Freelancer can Copy Link, Send Email, or eventually Send WhatsApp.
 
-**Step 13: Client fills onboarding.** No Freelancey account needed. Form asks: Business (name, description, industry, location, website, social media), Audience (target customers, demographics), Goals (what to achieve, problem to solve), Branding (logo, colors, brand guidelines, images), Requirements (pages, features, integrations, references). They submit.
+**Step 13: Client fills onboarding.** No Gigly account needed. Form asks: Business (name, description, industry, location, website, social media), Audience (target customers, demographics), Goals (what to achieve, problem to solve), Branding (logo, colors, brand guidelines, images), Requirements (pages, features, integrations, references). They submit.
 
-**Step 14: Freelancey receives the onboarding.** (The original used Tally and a webhook; the decision is to build the form inside Freelancey, so submission goes straight to the API.) Find the onboarding session, find the Client, save the information, set Onboarding Status = Completed. The Client page says "✅ Onboarding completed".
+**Step 14: Gigly receives the onboarding.** (The original used Tally and a webhook; the decision is to build the form inside Gigly, so submission goes straight to the API.) Find the onboarding session, find the Client, save the information, set Onboarding Status = Completed. The Client page says "✅ Onboarding completed".
 
 **Step 15: Create the Project.** Client → Projects → New Project. Because you are inside the Client, clientId is known automatically. Enter project name, description, start date, deadline, budget, project type.
 
-**Step 16: Send Project Brief.** Freelancey asks: "Project requirements haven't been completed." Button: Send Project Brief. This differs from onboarding. Client onboarding: "Tell me about your business." Project brief: "Tell me about this project." Client fills: project goals, pages, features, integrations, references, technical requirements, content, deadline, success criteria.
+**Step 16: Send Project Brief.** Gigly asks: "Project requirements haven't been completed." Button: Send Project Brief. This differs from onboarding. Client onboarding: "Tell me about your business." Project brief: "Tell me about this project." Client fills: project goals, pages, features, integrations, references, technical requirements, content, deadline, success criteria.
 
 **Step 17: Project is ready.** Client → Onboarding ✓; Project → Project Brief ✓; Contract → Signed ✓. Work can start.
 
-**Step 18: Create project workflow.** Use a project template. Website Project: 1 Discovery, 2 Content, 3 UI/UX Design, 4 Development, 5 Testing, 6 Launch, 7 Handover. Freelancey creates the milestones/tasks.
+**Step 18: Create project workflow.** Use a project template. Website Project: 1 Discovery, 2 Content, 3 UI/UX Design, 4 Development, 5 Testing, 6 Launch, 7 Handover. Gigly creates the milestones/tasks.
 
 **Step 19: Work on the project.** Manage tasks, milestones, files, comments, meetings, time, expenses, deliverables. Everything is connected to the Project.
 
 **Step 20: Send deliverable to client.** Example: Homepage Design v1. Client gets [Approve] and [Request Changes].
 
-**Step 21: Client requests changes.** They click Request Changes and enter a message (for example "Please change the hero section."). Freelancey creates a revision/request associated with the Client, Project and Deliverable. You fix it.
+**Step 21: Client requests changes.** They click Request Changes and enter a message (for example "Please change the hero section."). Gigly creates a revision/request associated with the Client, Project and Deliverable. You fix it.
 
 **Step 22: Client approves.** Client clicks Approve. Deliverable Status: Approved. Activity: "Client approved Homepage Design v2."
 
-**Step 23: Finish project.** When tasks, milestones, deliverables and client approvals are complete, mark Project → Completed. Freelancey shows "Project completed. Start Handover".
+**Step 23: Finish project.** When tasks, milestones, deliverables and client approvals are complete, mark Project → Completed. Gigly shows "Project completed. Start Handover".
 
 **Step 24: Handover.** Give the client final files, documentation, credentials/access information, training, deployment information. Then Handover Complete.
 
-**Step 25: Maintenance / Support.** The client remains a Client; the Project remains in history. Later, if the client says "The website has a problem", they submit a Support Request. Freelancey creates a Support Ticket tied to the Client and Project. You handle it.
+**Step 25: Maintenance / Support.** The client remains a Client; the Project remains in history. Later, if the client says "The website has a problem", they submit a Support Request. Gigly creates a Support Ticket tied to the Client and Project. You handle it.
 
 ## Full lifecycle diagram
 
@@ -340,15 +340,15 @@ CLIENT → CLIENT ONBOARDING → PROJECT → PROJECT REQUIREMENTS → PROJECT WO
 
 ## The most important design decision
 
-Don't make every step a form. Forms are only for collecting information from the client. Freelancey itself handles the workflow.
+Don't make every step a form. Forms are only for collecting information from the client. Gigly itself handles the workflow.
 
-- Lead: freelancer works in Freelancey.
-- Proposal: freelancer creates in Freelancey.
-- Contract: Freelancey generates/sends it.
+- Lead: freelancer works in Gigly.
+- Proposal: freelancer creates in Gigly.
+- Contract: Gigly generates/sends it.
 - Client onboarding: public form.
-- Project: freelancer creates in Freelancey.
+- Project: freelancer creates in Gigly.
 - Project requirements: public form.
-- Tasks: freelancer manages in Freelancey.
+- Tasks: freelancer manages in Gigly.
 - Deliverable review: client portal / public secure link.
 - Support: public/secure form.
 

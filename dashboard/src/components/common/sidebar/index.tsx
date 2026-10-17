@@ -49,9 +49,9 @@ export default function Sidebar({
             >
                 <Link
                     href={homeHref}
-                    aria-label='Freelancey home'
+                    aria-label='Gigly home'
                 >
-                    {/* Always the Freelancey mark; a workspace's own logo is never used here. */}
+                    {/* Always the Gigly mark; a workspace's own logo is never used here. */}
                     {isSidebarOpen ? <LogoWithText /> : <Logo />}
                 </Link>
 

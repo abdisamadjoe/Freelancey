@@ -13,7 +13,7 @@ export function Cta() {
           <div className="relative z-[1] flex max-w-[803px] flex-col items-center gap-9 text-center">
             <h2 className="t-h2 !font-semibold text-white">Start running your client work from one place.</h2>
             <p className="t-lead max-w-[566px] text-white">
-              Self-host Freelancey for free or ask for a hosted setup. Either way, your clients, projects and data stay yours.
+              Self-host Gigly for free or ask for a hosted setup. Either way, your clients, projects and data stay yours.
             </p>
             <Button href={githubUrl} variant="light">
               Get started
